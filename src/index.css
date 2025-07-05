@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* Theme layer for custom properties */
+@layer theme {
+  :root {
+    --color-primary: hwb(146 0% 52%);         /* #007A20 */
+    --color-background: hsl(0, 0%, 98%);          /* Light mode bg */
+    --color-surface: #EFEFEF;                     /* Light surface (search, active, etc.) */
+    --color-accent: #00b34d;
+    --color-muted: hsl(0, 0%, 83%);
+    --color-text: #363636;                        /* Primary text color (light) */
+    --color-primary-text: #363636;                /* Primary text color (light) */
+    --color-secondary-text: #595959;              /* Secondary text color (light) */
+    --color-shadow: rgba(0, 0, 0, 0.08);
+  }
+  .dark {
+    --color-background: hsl(0, 0%, 7%);           /* #121212 */
+    --color-surface: hsl(0, 0%, 11%);                     /* Dark surface (search, active, etc.) */
+    --color-muted: hsl(0, 0%, 20%);
+    --color-text: #E0E0E0;                        /* Primary text color (dark) */
+    --color-primary-text: #E0E0E0;                /* Primary text color (dark) */
+    --color-secondary-text: #B0B0B0;   
+    --color-shadow: hsla(0, 0%, 0%, 0.4);           /* Secondary text color (dark) */
+  }
+}
+
+/* Base styles for body */
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    transition: background 0.2s, color 0.2s;
+  }
+}
+
