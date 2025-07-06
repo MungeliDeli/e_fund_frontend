@@ -1,5 +1,10 @@
 import React from 'react';
 
+// Dropdown.jsx
+// This file defines a reusable Dropdown component for selecting options from a list.
+// It is designed to be used in forms or anywhere a dropdown selection is needed in the app.
+// The component supports custom options, labels, and integrates with form state.
+
 function Dropdown({
   options = [],
   value,

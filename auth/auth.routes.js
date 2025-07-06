@@ -1,3 +1,6 @@
+// auth.routes.js
+// This file defines the authentication API routes for the backend.
+// It handles user registration, login, password reset, and email verification endpoints.
 import express from "express";
 import { catchAsync } from "../../middlewares/errorHandler.js";
 import { authenticate, requireEmailVerification, requireSupportAdmin } from "../../middlewares/auth.middleware.js";

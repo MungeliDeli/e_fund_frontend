@@ -1,4 +1,6 @@
 // src/modules/auth/auth.validation.js
+// This file defines validation schemas and middleware for authentication endpoints.
+// It uses Joi to validate request data for registration, login, and password operations.
 
 import Joi from "joi";
 import { ValidationError } from "../../utils/appError.js";

@@ -1,3 +1,6 @@
+// App.jsx
+// This file defines the main App component and routing configuration for the FundFlow application.
+// It sets up the theme provider, router, and defines all application routes with appropriate layouts.
 import { ThemeProvider } from "./contexts/ThemeContext";
 import MainLayout from "./layout/MainLayout";
 import HomePage from "./pages/HomePage";

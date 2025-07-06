@@ -1,3 +1,7 @@
+// SidebarItem.jsx
+// This file defines the SidebarItem component for rendering individual navigation items in the sidebar.
+// It displays icons, labels, and handles active states with consistent styling.
+
 function SidebarItem({ icon: Icon, label, active = false, onClick }) {
   return (
     <button

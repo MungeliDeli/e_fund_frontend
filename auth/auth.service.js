@@ -1,4 +1,6 @@
 // src/modules/auth/auth.service.js
+// This file defines the authentication service layer containing business logic.
+// It handles user operations, password hashing, JWT token management, and email services.
 
 import authRepository from "./auth.repository.js";
 import { hashPassword, comparePasswords } from "../../utils/password.utils.js";

@@ -1,3 +1,6 @@
+// ResetPasswordPage.jsx
+// This file defines the ResetPasswordPage component for setting new passwords.
+// It handles password reset token validation and new password submission.
 import React, { useState } from 'react';
 import FormField from '../components/FormField';
 import { api } from '../features/auth/services/authApi';

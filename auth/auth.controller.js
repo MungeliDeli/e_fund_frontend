@@ -1,4 +1,6 @@
 // src/modules/auth/auth.controller.js
+// This file defines the authentication controller functions for handling HTTP requests.
+// It processes user registration, login, password reset, and email verification logic.
 
 import authService from "./auth.service.js";
 import { ResponseFactory } from "../../utils/response.utils.js";

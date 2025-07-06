@@ -1,3 +1,6 @@
+// LoginPage.jsx
+// This file defines the LoginPage component for user authentication.
+// It handles login form, validation, API calls, and token storage upon successful login.
 import React, { useState } from 'react';
 import FormField from '../components/FormField';
 import GoogleIcon from '../assets/devicon_google.svg';

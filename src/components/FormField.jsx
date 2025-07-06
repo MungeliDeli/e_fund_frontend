@@ -1,3 +1,6 @@
+// FormField.jsx
+// This file defines a reusable FormField component for rendering labeled input fields with error messages.
+// It is used throughout the app to standardize form input appearance and validation feedback.
 import React from 'react';
 
 function FormField({

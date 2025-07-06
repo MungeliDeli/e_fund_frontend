@@ -1,6 +1,10 @@
 import { FiHome, FiFlag, FiCalendar, FiBarChart2, FiX } from "react-icons/fi";
 import SidebarItem from "../../components/SidebarItem/SidebarItem";
 
+// Sidebar.jsx
+// This file defines the Sidebar component, which renders the main navigation menu for the app.
+// It displays navigation items, handles active state, and supports responsive behavior for mobile and desktop.
+
 const navItems = [
   { label: "Home", icon: FiHome, key: "home" },
   { label: "Campaign", icon: FiFlag, key: "campaign" },

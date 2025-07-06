@@ -1,3 +1,6 @@
+// auth.repository.js
+// This file defines the authentication repository layer for database operations.
+// It handles user data persistence, queries, and database interactions for authentication.
 import { query, transaction } from "../../db/index.js";
 import { DatabaseError, ConflictError, NotFoundError } from "../../utils/appError.js";
 import logger from "../../utils/logger.js";

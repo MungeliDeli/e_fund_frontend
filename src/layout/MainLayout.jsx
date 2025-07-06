@@ -1,3 +1,6 @@
+// MainLayout.jsx
+// This file defines the MainLayout component, which provides the overall page structure for the app.
+// It includes the Header, Sidebar, and main content area, and manages sidebar visibility and layout.
 import { useState } from "react";
 import Header from "./Header/Header";
 import Sidebar from "./Sidebar/Sidebar";

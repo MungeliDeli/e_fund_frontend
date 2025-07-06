@@ -1,3 +1,6 @@
+// EmailVerifiedPage.jsx
+// This file defines the EmailVerifiedPage component for successful email verification.
+// It displays confirmation messages and redirects users after email verification.
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';

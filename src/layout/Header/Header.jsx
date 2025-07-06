@@ -1,3 +1,6 @@
+// Header.jsx
+// This file defines the Header component for the application's top navigation bar.
+// It includes the logo, search bar, theme toggle, and authentication buttons.
 import { FiMenu } from "react-icons/fi";
 import { FaRegSun, FaRegMoon } from "react-icons/fa";
 import SearchBar from "../../components/SearchBar/SearchBar";

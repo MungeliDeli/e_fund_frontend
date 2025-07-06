@@ -1,3 +1,7 @@
+// HomePage.jsx
+// This file defines the HomePage component, which serves as the landing page for the FundFlow app.
+// It welcomes users and provides a brief introduction to the platform.
+
 function HomePage() {
   return (
     <div className="w-full flex flex-col items-center justify-center py-8 ">

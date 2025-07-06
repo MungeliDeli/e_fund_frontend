@@ -1,3 +1,6 @@
+// ForgotPasswordPage.jsx
+// This file defines the ForgotPasswordPage component for password recovery.
+// It handles password reset requests, rate limiting, and provides user feedback.
 import React, { useState, useEffect } from 'react';
 import FormField from '../components/FormField';
 import { api } from '../features/auth/services/authApi';

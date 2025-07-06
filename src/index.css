@@ -1,3 +1,7 @@
+/* index.css
+   This file contains the global CSS styles and theme variables for the FundFlow app.
+   It sets up color schemes, dark mode, and base styles using Tailwind CSS and custom properties.
+*/
 @import "tailwindcss";
 
 /* Theme layer for custom properties */
