@@ -3,7 +3,7 @@
 // It handles email verification tokens and provides resend functionality with rate limiting.
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { api } from '../features/auth/services/authApi';
+import { api } from '../../auth/services/authApi';
 
 function VerifyEmailPage() {
   const location = useLocation();

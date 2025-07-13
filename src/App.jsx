@@ -3,13 +3,13 @@
 // It sets up the theme provider, router, and defines all application routes with appropriate layouts.
 import { ThemeProvider } from "./contexts/ThemeContext";
 import MainLayout from "./layout/MainLayout";
-import HomePage from "./pages/HomePage";
-import SignUpPage from "./pages/SignUpPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
-import EmailVerifiedPage from "./pages/EmailVerifiedPage";
-import LoginPage from "./pages/LoginPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
+import HomePage from "./features/home/pages/HomePage";
+import SignUpPage from "./features/auth/pages/SignUpPage";
+import VerifyEmailPage from "./features/auth/pages/VerifyEmailPage";
+import EmailVerifiedPage from "./features/auth/pages/EmailVerifiedPage";
+import LoginPage from "./features/auth/pages/LoginPage";
+import ForgotPasswordPage from "./features/auth/pages/ForgotPasswordPage";
+import ResetPasswordPage from "./features/auth/pages/ResetPasswordPage";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 function AppRoutes() {

@@ -2,11 +2,11 @@
 // This file defines the ResetPasswordPage component for setting new passwords.
 // It handles password reset token validation and new password submission.
 import React, { useState } from 'react';
-import FormField from '../components/FormField';
-import { api } from '../features/auth/services/authApi';
+import FormField from '../../../components/FormField';
+import { api } from '../../auth/services/authApi';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { resetPasswordSchema } from '../features/auth/services/authValidation';
+import { resetPasswordSchema } from '../../auth/services/authValidation';
 
 function ResetPasswordPage() {
   const [password, setPassword] = useState('');

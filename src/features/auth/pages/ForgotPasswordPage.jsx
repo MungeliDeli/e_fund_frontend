@@ -2,13 +2,13 @@
 // This file defines the ForgotPasswordPage component for password recovery.
 // It handles password reset requests, rate limiting, and provides user feedback.
 import React, { useState, useEffect } from 'react';
-import FormField from '../components/FormField';
-import { api } from '../features/auth/services/authApi';
+import FormField from '../../../components/FormField';
+import { api } from '../../auth/services/authApi';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Joi from 'joi';
 
-// Validation schema for forgot password
+
 const forgotPasswordSchema = Joi.object({
   email: Joi.string()
     .email({ tlds: { allow: false } })
@@ -28,7 +28,7 @@ function ForgotPasswordPage() {
   const [hasRequested, setHasRequested] = useState(false);
   const navigate = useNavigate();
 
-  // Countdown timer for resend functionality
+
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => setTimer((t) => t - 1), 1000);
@@ -36,7 +36,7 @@ function ForgotPasswordPage() {
     }
   }, [timer]);
 
-  // Validate form data using Joi
+
   const validateForm = () => {
     const { error } = forgotPasswordSchema.validate(formData, { abortEarly: false });
     if (!error) return {};
@@ -49,17 +49,17 @@ function ForgotPasswordPage() {
     return fieldErrors;
   };
 
-  // Handle input changes
+ 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear field-specific error when user starts typing
+  
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
     
-    // Clear success message when user modifies the form
+  
     if (success) {
       setSuccess('');
     }
@@ -94,7 +94,7 @@ function ForgotPasswordPage() {
     }
   };
 
-  // Handle API errors
+ 
   const handleApiError = (err) => {
     if (axios.isAxiosError(err)) {
       const errorData = err.response?.data;
@@ -102,7 +102,7 @@ function ForgotPasswordPage() {
       if (errorData?.errorCode === 'PASSWORD_RESET_RATE_LIMITED') {
         setErrors({ email: 'Too many password reset requests. Please wait before trying again.' });
       } else if (errorData?.message) {
-        // For security, show the same message regardless of whether email exists
+      
         setSuccess('If an account with that email exists, a password reset link has been sent.');
       } else {
         setErrors({ email: 'Something went wrong. Please try again.' });
@@ -112,7 +112,7 @@ function ForgotPasswordPage() {
     }
   };
 
-  // Get button text based on current state
+ 
   const getButtonText = () => {
     if (submitting) {
       return hasRequested ? 'Resending...' : 'Requesting...';
@@ -123,7 +123,7 @@ function ForgotPasswordPage() {
     return hasRequested ? 'Resend reset link' : 'Request reset link';
   };
 
-  // Check if button should be disabled
+  
   const isButtonDisabled = () => {
     return submitting || timer > 0 || !formData.email || Object.keys(errors).length > 0;
   };

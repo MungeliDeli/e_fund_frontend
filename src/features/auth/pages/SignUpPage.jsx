@@ -2,11 +2,11 @@
 // This file defines the SignUpPage component for user registration.
 // It handles user signup form, validation, API calls, and redirects to email verification.
 import React, { useState } from 'react';
-import FormField from '../components/FormField';
-import Dropdown from '../components/Dropdown';
-import { signUpSchema } from '../features/auth/services/authValidation';
-import { register } from '../features/auth/services/authApi';
-import GoogleIcon from '../assets/devicon_google.svg';
+import FormField from '../../../components/FormField';
+import Dropdown from '../../../components/Dropdown';
+import { signUpSchema } from '../../auth/services/authValidation';
+import { register } from '../../auth/services/authApi';
+import GoogleIcon from '../../../assets/devicon_google.svg';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 

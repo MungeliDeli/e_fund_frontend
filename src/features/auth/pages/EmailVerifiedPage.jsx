@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { api } from '../features/auth/services/authApi';
+import { api } from '../../auth/services/authApi';
 
 function EmailVerifiedPage() {
   const location = useLocation();

@@ -2,12 +2,12 @@
 // This file defines the LoginPage component for user authentication.
 // It handles login form, validation, API calls, and token storage upon successful login.
 import React, { useState } from 'react';
-import FormField from '../components/FormField';
-import GoogleIcon from '../assets/devicon_google.svg';
-import { login } from '../features/auth/services/authApi';
+import FormField from '../../../components/FormField';
+import GoogleIcon from '../../../assets/devicon_google.svg';
+import { login } from '../../auth/services/authApi';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { loginSchema } from '../features/auth/services/authValidation';
+import { loginSchema } from '../../auth/services/authValidation';
 
 const initialState = {
   email: '',
