@@ -1,6 +1,63 @@
+/**
+ * Authentication Controller Module
+ * 
+ * This module handles all HTTP requests and responses for authentication operations.
+ * It serves as the presentation layer that receives client requests, validates input,
+ * calls the appropriate service methods, and returns formatted responses.
+ * 
+ * CONTROLLER RESPONSIBILITIES:
+ * - Request validation and sanitization
+ * - Response formatting using ResponseFactory
+ * - Error handling and logging
+ * - HTTP status code management
+ * - Request/response logging for monitoring
+ * 
+ * ENDPOINTS HANDLED:
+ * - POST /register: Individual user registration
+ * - POST /login: User authentication
+ * - GET /profile: Get user profile
+ * - POST /verify-email: Email verification
+ * - POST /change-password: Password change for authenticated users
+ * - POST /forgot-password: Password reset initiation
+ * - POST /reset-password: Password reset completion
+ * - POST /logout: User logout
+ * - POST /refresh-token: Token refresh
+ * - POST /admin/users/create-organization-user: Admin creates org user
+ * - POST /activate-and-set-password: Org user activation
+ * - POST /resend-verification: Resend verification email
+ * - GET /health: Health check endpoint
+ * 
+ * SECURITY FEATURES:
+ * - Input validation through validation middleware
+ * - Rate limiting on sensitive endpoints
+ * - Authentication middleware for protected routes
+ * - Role-based access control
+ * 
+ * RESPONSE FORMATTING:
+ * - Consistent response structure using ResponseFactory
+ * - Proper HTTP status codes
+ * - Error message standardization
+ * - Success message formatting
+ * 
+ * LOGGING:
+ * - API request/response logging
+ * - Performance monitoring
+ * - Error tracking
+ * - Security event logging
+ * 
+ * DEPENDENCIES:
+ * - authService: For business logic operations
+ * - ResponseFactory: For standardized response formatting
+ * - logger: For application logging
+ * - Validation middleware: For input validation
+ * - Authentication middleware: For route protection
+ * 
+ * @author Your Name
+ * @version 1.0.0
+ * @since 2024
+ */
+
 // src/modules/auth/auth.controller.js
-// This file defines the authentication controller functions for handling HTTP requests.
-// It processes user registration, login, password reset, and email verification logic.
 
 import authService from "./auth.service.js";
 import { ResponseFactory } from "../../utils/response.utils.js";
@@ -78,6 +135,7 @@ export const login = async (req, res, next) => {
           createdAt: result.user.createdAt
         },
         token: result.token,
+
         refreshToken: result.refreshToken
       }
     );
@@ -125,6 +183,8 @@ export const getProfile = async (req, res, next) => {
 export const verifyEmail = async (req, res, next) => {
   try {
     const verificationToken = req.query.token || req.body.token;
+    logger.info(req.query.token  )
+    
     if (!verificationToken) {
       return ResponseFactory.badRequest(res, "Verification token is required");
     }
@@ -268,6 +328,23 @@ export const activateAndSetPassword = async (req, res, next) => {
     const { token, newPassword } = req.body;
     const result = await authService.activateAndSetPassword(token, newPassword);
     ResponseFactory.ok(res, "Account activated and password set successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Resend verification email
+ * @route POST /api/v1/auth/resend-verification
+ */
+export const resendVerificationEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return ResponseFactory.badRequest(res, "Email is required");
+    }
+    await authService.resendVerificationEmail(email);
+    ResponseFactory.ok(res, "Verification email resent if the account exists and is not verified");
   } catch (error) {
     next(error);
   }

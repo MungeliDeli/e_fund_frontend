@@ -1,20 +1,53 @@
-import { FiHome, FiFlag, FiCalendar, FiBarChart2, FiX } from "react-icons/fi";
+import { FiHome, FiFlag, FiCalendar, FiBarChart2, FiUsers, FiSettings, FiUserPlus, FiSearch, FiPlusCircle, FiUser, FiBarChart, FiX } from "react-icons/fi";
 import SidebarItem from "../../components/SidebarItem/SidebarItem";
+import { useAuth } from "../../contexts/AuthContext";
 
-// Sidebar.jsx
-// This file defines the Sidebar component, which renders the main navigation menu for the app.
-// It displays navigation items, handles active state, and supports responsive behavior for mobile and desktop.
-
-const navItems = [
-  { label: "Home", icon: FiHome, key: "home" },
-  { label: "Campaign", icon: FiFlag, key: "campaign" },
-  { label: "Event", icon: FiCalendar, key: "event" },
-  { label: "Leader Board", icon: FiBarChart2, key: "leaderboard" },
+// Public navigation items (always visible)
+const publicNavItems = [
+  { label: "Home", icon: FiHome, key: "home", path: "/" },
+  { label: "Campaigns", icon: FiFlag, key: "campaigns", path: "/campaigns" },
 ];
 
+// Role-based navigation config
+const adminNavItems = [
+  { label: "Admin Dashboard", icon: FiHome, key: "admin-dashboard", path: "/admin/dashboard" },
+  { label: "User Management", icon: FiUsers, key: "admin-users", path: "/admin/users", allowedRoles: ["super_admin", "support_admin"] },
+  { label: "Campaign Approvals", icon: FiFlag, key: "admin-campaigns", path: "/admin/campaign-approvals", allowedRoles: ["super_admin", "event_moderator"] },
+  { label: "Financial Reports", icon: FiBarChart2, key: "admin-financial", path: "/admin/financial-reports", allowedRoles: ["super_admin", "financial_admin"] },
+  { label: "Settings", icon: FiSettings, key: "admin-settings", path: "/admin/settings", allowedRoles: ["super_admin"] },
+];
 
-function Sidebar({ open, onClose, activeItem, onNav, className }) { 
+const navConfig = {
+  individual_user: [
+    { label: "Add Post", icon: FiPlusCircle, key: "add-post", path: "/add-post" },
+    { label: "Profile", icon: FiUser, key: "profile-view", path: "/profile-view" },
+  ],
+  organization_user: [
+    { label: "Dashboard", icon: FiHome, key: "organizer-dashboard", path: "/organizer/dashboard" },
+    { label: "My Campaigns", icon: FiFlag, key: "my-campaigns", path: "/organizer/my-campaigns" },
+    { label: "Create Campaign", icon: FiPlusCircle, key: "create-campaign", path: "/organizer/create-campaign" },
+    { label: "Metrics", icon: FiBarChart, key: "metrics", path: "/organizer/metrics" },
+  ],
+  admin: adminNavItems,
+};
+
+const adminRoles = ["super_admin", "support_admin", "event_moderator", "financial_admin"];
+
+function Sidebar({ open, onClose, className }) {
   const headerHeight = 56;
+  const { user, isAuthenticated } = useAuth();
+  const userType = user?.userType;
+
+  let roleNavItems = [];
+  if (isAuthenticated && userType) {
+    if (adminRoles.includes(userType)) {
+      roleNavItems = navConfig.admin.filter(
+        (item) => !item.allowedRoles || item.allowedRoles.includes(userType) || userType === "super_admin"
+      );
+    } else {
+      roleNavItems = navConfig[userType] || [];
+    }
+  }
 
   return (
     <>
@@ -24,24 +57,32 @@ function Sidebar({ open, onClose, activeItem, onNav, className }) {
         onClick={onClose}
         aria-hidden={!open}
       />
-
-    
       <aside
-        className={`fixed left-0  z-40 h-[calc(100vh-56px)] w-64 bg-[color:var(--color-background)] border-r border-[color:var(--color-muted)] flex flex-col pt-4 transition-transform 
-                    lg:static lg:border-r lg:border-[color:var(--color-muted)]
+        className={`fixed left-0  z-40 h-[calc(100vh-56px)] w-64 bg-[color:var(--color-background)] border-r border-[color:var(--color-muted)] flex flex-col pt-4 transition-transform \
+                    lg:static lg:border-r lg:border-[color:var(--color-muted)]\
                     ${open ? "translate-x-0" : "-translate-x-full"} ${className || ''}  lg:translate-x-0`}
         style={{ top: headerHeight }}
         aria-label="Sidebar"
       >
-        
-        <nav className={"flex-1 flex flex-col gap-1 px-3"}> 
-          {navItems.map((item) => (
+        <nav className={"flex-1 flex flex-col gap-1 px-3"}>
+          {/* Public nav items */}
+          {publicNavItems.map((item) => (
             <SidebarItem
               key={item.key}
               icon={item.icon}
               label={item.label}
-              active={activeItem === item.key}
-              onClick={() => onNav?.(item.key)}
+              path={item.path}
+            />
+          ))}
+          {/* Divider if there are role-based items */}
+          {roleNavItems.length > 0 && <div className="my-2 border-t border-[color:var(--color-muted)]" />}
+          {/* Role-based nav items */}
+          {roleNavItems.map((item) => (
+            <SidebarItem
+              key={item.key}
+              icon={item.icon}
+              label={item.label}
+              path={item.path}
             />
           ))}
         </nav>

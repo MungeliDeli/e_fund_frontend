@@ -4,10 +4,11 @@
 import React, { useState } from 'react';
 import FormField from '../../../components/FormField';
 import GoogleIcon from '../../../assets/devicon_google.svg';
-import { login } from '../../auth/services/authApi';
+import { login as loginApi } from '../../auth/services/authApi';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { loginSchema } from '../../auth/services/authValidation';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const initialState = {
   email: '',
@@ -21,6 +22,7 @@ function LoginPage() {
   const [apiError, setApiError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,15 +53,23 @@ function LoginPage() {
       return;
     }
     try {
-      const res = await login({ email: form.email, password: form.password });
-      if (res.data?.data?.token) {
-        localStorage.setItem('token', res.data.data.token);
-      }
-      if (res.data?.data?.refreshToken) {
-        localStorage.setItem('refreshToken', res.data.data.refreshToken);
+      const res = await loginApi({ email: form.email, password: form.password });
+      const data = res.data?.data;
+      if (data?.token && data?.user) {
+        login(data.user, data.token, data.refreshToken);
+        if (data.user.userType === 'individual_user') {
+          navigate('/dashboard', { replace: true });
+        } else if (data.user.userType === 'organization_user') {
+          navigate('/organizer/dashboard', { replace: true });
+        } else if (data.user.userType === 'admin') {
+          navigate('/admin/dashboard', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+      } else {
+        setApiError('Login failed. Please try again.');
       }
       setForm(initialState);
-      navigate('/', { replace: true });
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const errorData = err.response?.data;
@@ -84,9 +94,7 @@ function LoginPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-xl bg-[color:var(--color-background)] rounded-2xl shadow-[0_2px_16px_0_var(--color-shadow)] px-6 py-8 flex flex-col items-center"
       >
-        <div className="w-full flex justify-end mb-2">
-          {/* Optionally add a close button here if needed */}
-        </div>
+     
         <h2 className="text-2xl font-bold text-center mb-2">Log In</h2>
         <p className="text-center text-[color:var(--color-secondary-text)] text-sm mb-6">
           By continuing, you agree to our <a href="#" className="text-blue-600 underline">User Agreement</a> and acknowledge that you understand the <a href="#" className="text-blue-600 underline">Privacy Policy</a>.

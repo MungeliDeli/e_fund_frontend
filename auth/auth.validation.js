@@ -1,10 +1,95 @@
+/**
+ * Authentication Validation Module
+ * 
+ * This module provides comprehensive input validation for all authentication-related
+ * operations using Joi validation schemas. It ensures data integrity, security,
+ * and proper formatting of user inputs before processing.
+ * 
+ * VALIDATION SCHEMAS:
+ * - registerSchema: Individual user registration validation
+ * - loginSchema: User login credentials validation
+ * - createOrganizationUserSchema: Organization user creation validation
+ * - passwordSetupSchema: Password setup/activation validation
+ * 
+ * VALIDATION FEATURES:
+ * - Email format validation with TLD checking
+ * - Strong password requirements with regex patterns
+ * - Password confirmation matching
+ * - Name format validation (letters, spaces, hyphens, apostrophes)
+ * - Phone number format validation (10-15 digits)
+ * - Gender selection validation
+ * - Date of birth validation (no future dates)
+ * - Address and location validation
+ * - Organization-specific field validation
+ * 
+ * PASSWORD SECURITY:
+ * - Minimum 8 characters, maximum 128 characters
+ * - At least one uppercase letter
+ * - At least one lowercase letter
+ * - At least one digit
+ * - At least one special character
+ * - Allowed special characters: !@#$%^&*()_+-=[]{};':"|,.<>/?`~
+ * 
+ * INPUT SANITIZATION:
+ * - String trimming and normalization
+ * - Email case normalization (lowercase)
+ * - Optional field handling
+ * - Unknown field stripping
+ * - Data type conversion
+ * 
+ * ERROR HANDLING:
+ * - Detailed error messages for each validation rule
+ * - Multiple error collection (abortEarly: false)
+ * - User-friendly error descriptions
+ * - Field-specific error messages
+ * 
+ * VALIDATION MIDDLEWARE:
+ * - validateRegistration: Registration data validation
+ * - validateLogin: Login data validation
+ * - validateCreateOrganizationUser: Organization user validation
+ * - validatePasswordSetup: Password setup validation
+ * - validateEmail: Email format validation utility
+ * - validatePassword: Password strength validation utility
+ * 
+ * SECURITY CONSIDERATIONS:
+ * - Input sanitization to prevent injection attacks
+ * - Strong password requirements
+ * - Email format validation
+ * - Phone number format validation
+ * - Name format restrictions
+ * 
+ * CUSTOM VALIDATION RULES:
+ * - Password strength regex pattern
+ * - Name format regex pattern
+ * - Phone number regex pattern
+ * - Email TLD validation
+ * - Date range validation
+ * 
+ * DEPENDENCIES:
+ * - Joi: For schema validation
+ * - appError: For custom error handling
+ * - Custom regex patterns for specific validations
+ * 
+ * @author Your Name
+ * @version 1.0.0
+ * @since 2024
+ */
+
 // src/modules/auth/auth.validation.js
-// This file defines validation schemas and middleware for authentication endpoints.
-// It uses Joi to validate request data for registration, login, and password operations.
 
 import Joi from "joi";
 import { ValidationError } from "../../utils/appError.js";
 
+
+const strongPasswordRegex = new RegExp(
+  "^(?=.*[a-z])" + // At least one lowercase letter
+  "(?=.*[A-Z])" + // At least one uppercase letter
+  "(?=.*\\d)" +   // At least one digit
+  // Define allowed special characters. Remember to escape special regex characters like -, [, ], etc.
+  "(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\|,.<>/?`~])" + // At least one special character
+  // Allowed characters for the entire string, and length constraint
+  "[A-Za-z\\d!@#$%^&*()_+\\-=\\[\\]{};':\"\\|,.<>/?`~]{8,128}$"
+);
 /**
  * Validation schemas for authentication operations
  */
@@ -19,15 +104,11 @@ const registerSchema = Joi.object({
       "any.required": "Email is required",
     }),
   password: Joi.string()
-    .min(8)
-    .max(128)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .pattern(strongPasswordRegex)
     .required()
     .messages({
-      "string.min": "Password must be at least 8 characters long",
-      "string.max": "Password must not exceed 128 characters",
-      "string.pattern.base": "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
-      "any.required": "Password is required",
+      'string.pattern.base': 'Password must be 8-128 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (e.g., !@#$%^&*).',
+      'any.required': 'Password is required.',
     }),
   confirmPassword: Joi.string()
     .valid(Joi.ref("password"))
@@ -59,7 +140,7 @@ const registerSchema = Joi.object({
       "any.required": "Last name is required",
     }),
   phoneNumber: Joi.string()
-    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .pattern(/^\d{10,15}$/)
     .optional()
     .messages({
       "string.pattern.base": "Please provide a valid phone number",
@@ -143,9 +224,7 @@ const createOrganizationUserSchema = Joi.object({
 const passwordSetupSchema = Joi.object({
   token: Joi.string().required(),
   newPassword: Joi.string()
-    .min(8)
-    .max(128)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .pattern(strongPasswordRegex)
     .required(),
   confirmPassword: Joi.string().valid(Joi.ref("newPassword")).required()
 });
@@ -222,7 +301,7 @@ export const validatePassword = (password) => {
   const passwordSchema = Joi.string()
     .min(8)
     .max(128)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/);
+    .pattern(strongPasswordRegex);
 
   const { error } = passwordSchema.validate(password);
   

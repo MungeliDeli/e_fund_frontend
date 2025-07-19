@@ -2,6 +2,7 @@
 // This file defines the main App component and routing configuration for the FundFlow application.
 // It sets up the theme provider, router, and defines all application routes with appropriate layouts.
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import MainLayout from "./layout/MainLayout";
 import HomePage from "./features/home/pages/HomePage";
 import SignUpPage from "./features/auth/pages/SignUpPage";
@@ -11,46 +12,66 @@ import LoginPage from "./features/auth/pages/LoginPage";
 import ForgotPasswordPage from "./features/auth/pages/ForgotPasswordPage";
 import ResetPasswordPage from "./features/auth/pages/ResetPasswordPage";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import ProtectedRoute from "./components/ProtectedRoute";
+import UserProfilePage from "./features/users/pages/individual/UserProfilePage";
+import OrganizerProfilePage from "./features/users/pages/individual/OrganizerProfilePage";
+
+// Lazy load role-specific dashboards, AccessDeniedPage, and NotFoundPage
+const UserDashboardPage = lazy(() => import("./features/home/pages/UserDashboardPage"));
+const OrganizerDashboardPage = lazy(() => import("./features/campaigns/pages/OrganizerDashboardPage"));
+const AdminDashboardPage = lazy(() => import("./features/users/pages/AdminDashboardPage"));
+const AccessDeniedPage = lazy(() => import("./features/auth/pages/AccessDeniedPage"));
+const NotFoundPage = lazy(() => import("./features/auth/pages/NotFoundPage"));
 
 function AppRoutes() {
   const location = useLocation();
-  // Only show MainLayout for main app pages
-  if (location.pathname === '/verify-email') {
-    return (
-      <Routes>
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
-      </Routes>
-    );
-  }
-  if (location.pathname === '/email-verified') {
-    return (
-      <Routes>
-        <Route path="/email-verified" element={<EmailVerifiedPage />} />
-      </Routes>
-    );
-  }
-  if (location.pathname === '/forgot-password') {
-    return (
-      <Routes>
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      </Routes>
-    );
-  }
-  if (location.pathname === '/reset-password') {
-    return (
-      <Routes>
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-      </Routes>
-    );
-  }
+
+  const authRoutes = [
+    '/signup',
+    '/login',
+    '/verify-email',
+    '/email-verified',
+    '/forgot-password',
+    '/reset-password',
+  ];
+  const shouldHideMainLayout = authRoutes.includes(location.pathname);
+
+  const LayoutWrapper = ({ children }) =>
+    shouldHideMainLayout ? <>{children}</> : <MainLayout>{children}</MainLayout>;
+
   return (
-    <MainLayout>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/login" element={<LoginPage />} />
-      </Routes>
-    </MainLayout>
+    <LayoutWrapper>
+      <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading page...</div>}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/email-verified" element={<EmailVerifiedPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          {/* Catch-all for undefined public routes */}
+          <Route path="*" element={<NotFoundPage />} />
+
+          {/* Protected Routes (using ProtectedRoute) */}
+          <Route path="/dashboard" element={<ProtectedRoute element={<UserDashboardPage />} requiredRole="individual_user" />} />
+          {/* Single profile page for both owner and public view */}
+          <Route path="/profile-view" element={<ProtectedRoute element={<UserProfilePage />} requiredRole="individual_user" />} />
+          <Route path="/users/:userId" element={<UserProfilePage />} />
+          {/* Organizer profile routes */}
+          <Route path="/organizer/profile-view" element={<ProtectedRoute element={<OrganizerProfilePage />} requiredRole="organization_user" />} />
+          <Route path="/organizer/:userId" element={<OrganizerProfilePage />} />
+          <Route path="/organizer/dashboard" element={<ProtectedRoute element={<OrganizerDashboardPage />} requiredRole="organization_user" />} />
+          <Route path="/admin/dashboard" element={<ProtectedRoute element={<AdminDashboardPage />} requiredRole={["super_admin", "support_admin", "event_moderator", "financial_admin"]} />} />
+          {/* ...other protected routes... */}
+          <Route path="/access-denied" element={<AccessDeniedPage />} />
+          {/* Catch-all for undefined protected routes */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </LayoutWrapper>
   );
 }
 
@@ -58,7 +79,9 @@ function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
-        <AppRoutes />
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   );

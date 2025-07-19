@@ -1,6 +1,51 @@
+/**
+ * Authentication Service Module
+ * 
+ * This module contains the core business logic for all authentication and user management operations.
+ * It serves as the service layer between the controller and repository layers, handling:
+ * 
+ * USER REGISTRATION & VERIFICATION:
+ * - Individual user registration with email verification
+ * - Organization user creation by admin with invitation system
+ * - Email verification process with token-based activation
+ * - Account activation for organization users
+ * 
+ * AUTHENTICATION & SESSION MANAGEMENT:
+ * - User login with credential validation
+ * - JWT token generation and refresh token management
+ * - Password change functionality for authenticated users
+ * - Logout with token invalidation
+ * 
+ * PASSWORD MANAGEMENT:
+ * - Forgot password functionality with email reset
+ * - Password reset using secure tokens
+ * - Password setup for organization users during activation
+ * 
+ * SECURITY FEATURES:
+ * - Password hashing and verification
+ * - Token-based email verification
+ * - Secure password reset flow
+ * - Account status management (active/inactive)
+ * 
+ * EMAIL NOTIFICATIONS:
+ * - Verification email sending
+ * - Password reset email notifications
+ * - Organization setup invitation emails
+ * 
+ * DEPENDENCIES:
+ * - authRepository: For database operations
+ * - password.utils: For password hashing and comparison
+ * - jwt.utils: For JWT token operations
+ * - email.utils: For email sending functionality
+ * - appError: For custom error handling
+ * - logger: For application logging
+ * 
+ * @author Your Name
+ * @version 1.0.0
+ * @since 2024
+ */
+
 // src/modules/auth/auth.service.js
-// This file defines the authentication service layer containing business logic.
-// It handles user operations, password hashing, JWT token management, and email services.
 
 import authRepository from "./auth.repository.js";
 import { hashPassword, comparePasswords } from "../../utils/password.utils.js";
@@ -62,10 +107,10 @@ class AuthService {
         }
       }
 
-      // Hash the password
+      
       const passwordHash = await hashPassword(password);
 
-      // Prepare user data
+      
       const userData = {
         email: email.toLowerCase().trim(),
         passwordHash,
@@ -74,7 +119,7 @@ class AuthService {
         isActive: false
       };
 
-      // Prepare profile data
+      
       const profileData = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -86,27 +131,39 @@ class AuthService {
         address: address ? address.trim() : null
       };
 
-      // Create user with profile in a transaction
+      
       const result = await authRepository.createUserAndProfile(userData, profileData);
 
-      // Generate email verification token
+      
       const verificationToken = crypto.randomBytes(32).toString("hex");
       const verificationTokenHash = createHash("sha256").update(verificationToken).digest("hex");
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); 
       await authRepository.createEmailVerificationToken(result.user.userId, verificationTokenHash, expiresAt);
 
-      // Send email with verification link (containing the token)
-      await sendVerificationEmail(email, verificationToken);
+       
+      sendVerificationEmail(email, verificationToken)
+        .then(() => {
+          logger.info(`Verification email sent successfully to ${email} in background.`);
+        })
+        .catch(emailError => {
+          logger.error(`Failed to send verification email to ${email} in background: ${emailError.message}`, {
+            userId: result.user.userId,
+            email: result.user.email,
+            error: emailError
+          });
+          
+          
+        });
 
-      logger.info("Individual user registered successfully (pending email verification)", {
+      logger.info("Individual user registered successfully (pending email verification) - Email sending initiated in background.", {
         userId: result.user.userId,
         email: result.user.email
       });
 
+
       return {
         user: result.user,
         profile: result.profile,
-        verificationToken // to be removed in prod
       };
     } catch (error) {
       logger.error("Failed to register individual user", {
@@ -137,7 +194,8 @@ class AuthService {
       }
       await authRepository.updateEmailVerification(user.userId, true);
       await authRepository.updateUserStatus(user.userId, true);
-      await authRepository.deleteEmailVerificationToken(verificationTokenHash);
+      // Delete all email verification tokens for this user (cleanup)
+      await authRepository.deleteEmailVerificationTokenByUserId(user.userId);
   
       const token = signToken({
         userId: user.userId,
@@ -255,8 +313,18 @@ class AuthService {
     const setupTokenHash = createHash('sha256').update(setupToken).digest('hex');
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
     await authRepository.createPasswordSetupToken(result.user.userId, setupTokenHash, expiresAt);
-    // Send email with setupToken
-    await sendSetupEmail(userData.email, setupToken);
+      
+    sendSetupEmail(userData.email, setupToken)
+      .then(() => {
+        logger.info(`Setup email sent successfully to ${userData.email} in background.`);
+      })
+      .catch(emailError => {
+        logger.error(`Failed to send setup email to ${userData.email} in background: ${emailError.message}`, {
+          userId: result.user.userId,
+
+        })
+      });
+
     logger.info(`Organization user created successfully (pending verification )`, {
       userId: result.user.userId,
       email: result.user.email,
@@ -500,14 +568,27 @@ class AuthService {
    * @returns {Promise<Object>} Success message (do not reveal if email exists)
    */
   async forgotPassword(email) {
-    const user = await authRepository.findByEmail(email);
+    const user = await authRepository.findByEmail(email.toLowerCase().trim());
     if (user && user.isActive) {
+      // Delete any existing password reset tokens for this user
+      await authRepository.deletePasswordResetTokenByUserId(user.userId);
+      
       const resetToken = crypto.randomBytes(32).toString("hex");
       const resetTokenHash = createHash("sha256").update(resetToken).digest("hex");
       const expiresAt = new Date(Date.now() + 20 * 60 * 1000); // 20 min
       await authRepository.createPasswordResetToken(user.userId, resetTokenHash, expiresAt);
-      // Send actual email with reset link containing the token
-      await sendPasswordResetEmail(email, resetToken);
+    
+      sendPasswordResetEmail(email, resetToken)
+        .then(() => {
+          logger.info(`Password Reset email sent successfully to ${email}`);
+        })
+        .catch(emailError => {
+          logger.error(`Failed to send password reset email to ${email}: ${emailError.message}`, {
+            userId: user.userId,
+            email: user.email,
+            error: emailError
+          });
+        });
     }
     return { message: "If the email exists, password reset instructions have been sent." };
   }
@@ -526,12 +607,36 @@ class AuthService {
     }
     const newPasswordHash = await hashPassword(newPassword);
     await authRepository.updatePassword(user.userId, newPasswordHash);
-    await authRepository.deletePasswordResetToken(resetTokenHash);
+    // Delete all password reset tokens for this user (cleanup)
+    await authRepository.deletePasswordResetTokenByUserId(user.userId);
     return { message: "Password has been reset successfully." };
   }
 
+  /**
+   * Resends email verification link for unverified users
+   * @param {string} email
+   * @returns {Promise<void>}
+   */
+  async resendVerificationEmail(email) {
+    // Find user by email
+    const user = await authRepository.findByEmail(email.toLowerCase().trim());
+    if (!user || user.isEmailVerified) {
+      // For security, do not reveal if user exists or is already verified
+      return;
+    }
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenHash = createHash("sha256").update(verificationToken).digest("hex");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // Remove any existing token for this user (optional, for safety)
+    await authRepository.deleteEmailVerificationTokenByUserId(user.userId);
+    // Insert new token
+    await authRepository.createEmailVerificationToken(user.userId, verificationTokenHash, expiresAt);
+    // Send email
+    await sendVerificationEmail(user.email, verificationToken);
+    logger.info("Resent verification email", { userId: user.userId, email: user.email });
+  }
 
- 
 }
 
 export default new AuthService(); 
