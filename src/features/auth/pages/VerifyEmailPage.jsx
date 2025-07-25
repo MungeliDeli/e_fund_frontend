@@ -3,7 +3,7 @@
 // It handles email verification tokens and provides resend functionality with rate limiting.
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { api } from '../../auth/services/authApi';
+import { resendVerificationEmail } from '../../auth/services/authApi';
 
 function VerifyEmailPage() {
   const location = useLocation();
@@ -26,7 +26,7 @@ function VerifyEmailPage() {
     setResendStatus('sending');
     setResendMsg('');
     try {
-      await api.post('/resend-verification', { email });
+      await resendVerificationEmail(email);
       setResendStatus('success');
       setResendMsg('A new verification email has been sent. Please check your inbox.');
       setTimer(60);

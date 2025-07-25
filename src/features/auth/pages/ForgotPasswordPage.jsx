@@ -3,7 +3,7 @@
 // It handles password reset requests, rate limiting, and provides user feedback.
 import React, { useState, useEffect } from 'react';
 import FormField from '../../../components/FormField';
-import { api } from '../../auth/services/authApi';
+import { forgotPassword } from '../services/authApi';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Joi from 'joi';
@@ -82,7 +82,7 @@ function ForgotPasswordPage() {
     setSuccess('');
 
     try {
-      await api.post('/forgot-password', { email: formData.email });
+      await forgotPassword(formData.email);
       
       setSuccess('If an account with that email exists, a password reset link has been sent.');
       setHasRequested(true);

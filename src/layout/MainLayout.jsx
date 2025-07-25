@@ -10,7 +10,7 @@ import { useAuth } from "../contexts/AuthContext";
 function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth() || {};
 
 
 
@@ -40,7 +40,7 @@ function MainLayout({ children }) {
           user={user}
         />
       </div>
-      <main className={`mt-14 lg:ml-60   sm:px-4 max-w-6xl mx-auto`}>
+      <main className={`mt-14 lg:ml-64     mx-auto`}>
         {children}
       </main>
     </div>

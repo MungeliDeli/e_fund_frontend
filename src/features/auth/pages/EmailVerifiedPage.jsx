@@ -4,11 +4,13 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { api } from '../../auth/services/authApi';
+import { verifyEmail } from '../../auth/services/authApi';
+import { useAuth } from '../../../contexts/AuthContext';
 
 function EmailVerifiedPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [status, setStatus] = useState('loading'); // 'loading', 'success', 'error'
   const [message, setMessage] = useState('');
 
@@ -17,14 +19,14 @@ function EmailVerifiedPage() {
   const token = params.get('token');
 
   useEffect(() => {
-    async function verifyEmail() {
+    async function verifyEmailFunction() {
       if (!token) {
         setStatus('error');
         setMessage('Invalid or missing verification token.');
         return;
       }
       try {
-        const res = await api.post('/verify-email', { token });
+        const res = await verifyEmail(token);
         // Store tokens if provided
         if (res.data?.data?.token) {
           localStorage.setItem('token', res.data.data.token);
@@ -32,11 +34,29 @@ function EmailVerifiedPage() {
         if (res.data?.data?.refreshToken) {
           localStorage.setItem('refreshToken', res.data.data.refreshToken);
         }
+        // Try to decode user info if available
+        let userData = null;
+        try {
+          const { jwtDecode } = await import('jwt-decode');
+          const decoded = jwtDecode(res.data.data.token);
+          userData = {
+            userId: decoded.userId,
+            email: decoded.email,
+            userType: decoded.userType,
+          };
+        } catch (e) {
+          // If decoding fails, fallback to null
+        }
+        // Update AuthContext state
+        if (res.data?.data?.token && res.data?.data?.refreshToken) {
+          login(userData, res.data.data.token, res.data.data.refreshToken);
+        }
         setStatus('success');
         setMessage('Your email has been verified and your account is now active! Redirecting to home...');
         setTimeout(() => {
           navigate('/', { replace: true });
         }, 2000);
+        
       } catch (err) {
         setStatus('error');
         if (axios.isAxiosError(err) && err.response?.data?.message) {
@@ -46,7 +66,7 @@ function EmailVerifiedPage() {
         }
       }
     }
-    verifyEmail();
+    verifyEmailFunction();
     // eslint-disable-next-line
   }, [token]);
 
@@ -78,15 +98,16 @@ function EmailVerifiedPage() {
         <p className="text-center text-[color:var(--color-secondary-text)] text-base mb-6">
           {message}
         </p>
+        {/* No button for success, auto-redirects after 2 seconds */}
         {status === 'error' && (
           <button
             onClick={() => navigate('/signup' , { replace: true })}
-            className="w-full px-6 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 transition mt-2"
+            className="w-full px-6 py-2 rounded-lg bg-[color:var(--color-primary)] text-white font-semibold hover:bg-[color:var(--color-accent)] transition mt-2"
           >
             Return to Sign Up Page
           </button>
         )}
-      </div>
+  </div>
     </div>
   );
 }

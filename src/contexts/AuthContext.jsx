@@ -12,15 +12,15 @@
  * - Login/logout helpers for use throughout the app
  *
  * Usage:
- *   Wrap your app with <AuthProvider> to provide authentication context.
- *   Use the useAuth() hook to access auth state and actions in any component.
+ * Wrap your app with <AuthProvider> to provide authentication context.
+ * Use the useAuth() hook to access auth state and actions in any component.
  *
  * @author FundFlow Team
  * @version 1.0.0
  */
 
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react'; // MODIFIED: Import useRef
+import { useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { refreshToken as refreshTokenApi } from '../features/auth/services/authApi';
 
@@ -32,50 +32,89 @@ const AuthContext = createContext(null);
  */
 export const AuthProvider = ({ children }) => {
   // Auth state
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [refreshToken, setRefreshToken] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true); 
-  const navigate = useNavigate(); 
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ADDED: Ref to track if initializeAuth has already run for this component mount
+  const hasInitialized = useRef(false);
 
   /**
-   * On mount: Check for existing session in localStorage and validate JWT expiry
-   * If valid, restore session; otherwise, clear all auth data
+   * On mount: Initialize authentication state.
+   * Checks for tokens in localStorage, validates the access token, and attempts
+   * to refresh the session if the access token is expired.
    */
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedRefreshToken = localStorage.getItem('refreshToken');
-    const storedUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+    // MODIFIED: Only run initializeAuth if it hasn't run yet for this mount cycle
+    if (hasInitialized.current) {
+      return;
+    }
+    hasInitialized.current = true; // Mark as initialized
 
-    let tokenValid = false;
-    if (storedToken) {
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem('token');
+      const storedRefreshToken = localStorage.getItem('refreshToken');
+
+      if (!storedToken || !storedRefreshToken) {
+        // If on a public route (like /email-verified), don't force logout
+        const publicRoutes = ['/','/email-verified', '/verify-email', '/signup', '/login', '/forgot-password', '/reset-password'];
+        if (publicRoutes.includes(location.pathname)) {
+          setLoading(false);
+          return;
+        }
+        console.log('No tokens found, ensuring user is logged out and stop loading.');
+        logout();
+        setLoading(false);
+        return;
+      }
+
       try {
         const decoded = jwtDecode(storedToken);
-        if (decoded.exp && Date.now() < decoded.exp * 1000) {
-          tokenValid = true;
-        }
-      } catch (e) {
-        tokenValid = false;
-      }
-    }
+        const isExpired = Date.now() >= decoded.exp * 1000;
 
-    if (storedToken && storedRefreshToken && storedUser && tokenValid) {
-      setToken(storedToken);
-      setRefreshToken(storedRefreshToken);
-      setUser(storedUser);
-      setIsAuthenticated(true);
-    } else {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      setToken(null);
-      setRefreshToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-    }
-    setLoading(false);
-  }, []);
+        if (!isExpired) {
+          // Token is valid, restore session from localStorage
+          const storedUser = JSON.parse(localStorage.getItem('user'));
+          setToken(storedToken);
+          setRefreshToken(storedRefreshToken);
+          setUser(storedUser);
+          setIsAuthenticated(true);
+        } else {
+          // Token is expired, attempt to refresh it
+         
+          const res = await refreshTokenApi(storedRefreshToken);
+         
+          
+          const { token: newAccessToken, refreshToken: newRefreshToken } = res.data?.data || res.data || {};
+
+          if (newAccessToken && newRefreshToken) {
+            const newDecodedUser = jwtDecode(newAccessToken);
+            const userData = {
+              userId: newDecodedUser.userId,
+              email: newDecodedUser.email,
+              userType: newDecodedUser.userType,
+            };
+            login(userData, newAccessToken, newRefreshToken);
+          } else {
+            // Refresh failed, logout user
+            throw new Error('Token refresh failed on load.');
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization failed:', error.message);
+        logout();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+  }, []); // Dependencies remain empty, meaning it runs on mount
 
   /**
    * Log in a user and persist session to localStorage
@@ -88,6 +127,7 @@ export const AuthProvider = ({ children }) => {
     setToken(accessToken);
     setRefreshToken(refresh);
     setIsAuthenticated(true);
+    setLoading(false);
     localStorage.setItem('token', accessToken);
     localStorage.setItem('refreshToken', refresh);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -97,14 +137,17 @@ export const AuthProvider = ({ children }) => {
    * Log out the user and clear all session data
    */
   const logout = () => {
+    
     setUser(null);
     setToken(null);
     setRefreshToken(null);
+ 
     setIsAuthenticated(false);
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     navigate('/login');
+
   };
 
   /**
@@ -164,4 +207,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};

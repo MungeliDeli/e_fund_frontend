@@ -1,4 +1,4 @@
-import { FiHome, FiFlag, FiCalendar, FiBarChart2, FiUsers, FiSettings, FiUserPlus, FiSearch, FiPlusCircle, FiUser, FiBarChart, FiX } from "react-icons/fi";
+import { FiHome, FiFlag, FiCalendar, FiBarChart2, FiUsers, FiSettings, FiUserPlus, FiSearch, FiPlusCircle, FiUser, FiBarChart, FiX, FiBriefcase } from "react-icons/fi";
 import SidebarItem from "../../components/SidebarItem/SidebarItem";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -11,8 +11,9 @@ const publicNavItems = [
 // Role-based navigation config
 const adminNavItems = [
   { label: "Admin Dashboard", icon: FiHome, key: "admin-dashboard", path: "/admin/dashboard" },
+  { label: "Organizers", icon: FiBriefcase, key: "admin-organizers", path: "/admin/organizers", allowedRoles: ["super_admin", "support_admin"] },
   { label: "User Management", icon: FiUsers, key: "admin-users", path: "/admin/users", allowedRoles: ["super_admin", "support_admin"] },
-  { label: "Campaign Approvals", icon: FiFlag, key: "admin-campaigns", path: "/admin/campaign-approvals", allowedRoles: ["super_admin", "event_moderator"] },
+  { label: "Campaign", icon: FiFlag, key: "admin-campaigns", path: "/admin/campaign-approvals", allowedRoles: ["super_admin", "event_moderator"] },
   { label: "Financial Reports", icon: FiBarChart2, key: "admin-financial", path: "/admin/financial-reports", allowedRoles: ["super_admin", "financial_admin"] },
   { label: "Settings", icon: FiSettings, key: "admin-settings", path: "/admin/settings", allowedRoles: ["super_admin"] },
 ];

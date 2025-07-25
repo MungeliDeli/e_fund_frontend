@@ -1,14 +1,11 @@
-// ResetPasswordPage.jsx
-// This file defines the ResetPasswordPage component for setting new passwords.
-// It handles password reset token validation and new password submission.
 import React, { useState } from 'react';
 import FormField from '../../../components/FormField';
-import { resetPassword } from '../services/authApi';
+import { activateAndSetPassword } from '../services/authApi';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { passwordSchema } from '../../auth/services/authValidation';
+import { passwordSchema } from '../services/authValidation';
 
-function ResetPasswordPage() {
+function OrganizerSetupPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -45,25 +42,24 @@ function ResetPasswordPage() {
       return;
     }
     if (!token) {
-      setError('Invalid or missing reset token.');
+      setError('Invalid or missing setup token. Please use the link from your email.');
       setSubmitting(false);
       return;
     }
     try {
-      await resetPassword({ token, password });
-      setSuccess('Your password has been reset. Redirecting to login...');
-      setTimeout(() => navigate('/login', { replace: true }), 2000);
+      await activateAndSetPassword({ token, password });
+      setSuccess('Your account has been activated and password set! Redirecting to login...');
+      setTimeout(() => navigate('/login', { replace: true }), 2500);
     } catch (err) {
-   
       if (axios.isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 400 || status === 401) {
-          setError(err.response?.data?.message || 'Invalid or expired reset token.');
+          setError(err.response?.data?.message || 'Invalid or expired setup link. Please contact your administrator.');
         } else {
-          setError('Failed to reset password. Please try again.');
+          setError('Failed to set up your account. Please try again or contact support.');
         }
       } else {
-        setError('Failed to reset password. Please try again.');
+        setError('Failed to set up your account. Please try again later.');
       }
     } finally {
       setSubmitting(false);
@@ -76,9 +72,9 @@ function ResetPasswordPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-md bg-[color:var(--color-background)] rounded-2xl shadow-[0_2px_16px_0_var(--color-shadow)] px-8 py-10 flex flex-col items-center"
       >
-        <h1 className="text-3xl font-bold text-center mb-2 text-[color:var(--color-primary-text)]">Reset your password</h1>
+        <h1 className="text-3xl font-bold text-center mb-2 text-[color:var(--color-primary-text)]">Set up your account</h1>
         <p className="text-center text-[color:var(--color-secondary-text)] text-base mb-6">
-          Enter your new password below.
+          Please choose a strong password to activate your organization account.
         </p>
         <div className="relative w-full mb-4">
           <FormField
@@ -128,7 +124,7 @@ function ResetPasswordPage() {
             className="w-full bg-[color:var(--color-primary)] hover:bg-[color:var(--color-accent)] text-white font-semibold py-3 rounded-full text-lg transition disabled:opacity-50 mb-2"
             disabled={submitting}
           >
-            {submitting ? 'Resetting...' : 'Reset Password'}
+            {submitting ? 'Setting up...' : 'Set Password & Activate'}
           </button>
         )}
         {success && (
@@ -153,4 +149,4 @@ function ResetPasswordPage() {
   );
 }
 
-export default ResetPasswordPage; 
+export default OrganizerSetupPasswordPage; 

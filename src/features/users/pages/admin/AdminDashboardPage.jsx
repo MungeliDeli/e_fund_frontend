@@ -1,6 +1,6 @@
 // AdminDashboardPage.jsx
 // Dashboard for admins
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 function AdminDashboardPage() {
   const { user } = useAuth();

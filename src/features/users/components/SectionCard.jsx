@@ -26,7 +26,7 @@ import { FiEdit3 } from "react-icons/fi";
 
 function SectionCard({ title, isOwner, editable, onEdit, children }) {
   return (
-    <div className="bg-[color:var(--color-surface)] rounded-lg border border-[color:var(--color-muted)] p-6">
+    <div className="bg-[color:var(--color-background)] rounded-lg border border-[color:var(--color-muted)] p-6">
       {/* Card Header with Title and Edit Button */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-[color:var(--color-text)]">
@@ -43,7 +43,7 @@ function SectionCard({ title, isOwner, editable, onEdit, children }) {
           </button>
         )}
       </div>
-      
+      <hr className="my-2 border-[color:var(--color-muted)]" />
       {/* Card Content */}
       <div className="text-[color:var(--color-text)]">
         {children}

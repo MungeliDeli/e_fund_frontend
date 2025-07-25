@@ -14,79 +14,45 @@
  * @version 1.0.0
  */
 
-import axios from 'axios';
+import apiClient from '../../../services/apiClient';
 
-// Base URL for user-related API endpoints
-const API_BASE_URL = 'http://localhost:3000/api/v1/users';
-
-/**
- * Configured axios instance with default settings and interceptors
- * - Base URL: Points to user API endpoints
- * - Timeout: 10 seconds for all requests
- * - Content-Type: JSON by default (overridden for file uploads)
- */
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000,
-});
-
-/**
- * Request interceptor to automatically inject authentication tokens
- * This ensures all authenticated requests include the user's JWT token
- */
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 /**
  * Fetch public profile data for any user
- * 
- * @param {string} userId - The ID of the user whose profile to fetch
- * @returns {Promise<Object>} Public profile data (limited fields for privacy)
+ * @param {string} userId - The ID of the user to fetch
+ * @returns {Promise<Object>} Public profile data
  * 
  * @example
- * const profile = await fetchPublicProfile('user123');
+ * const profile = await fetchPublicProfile('user-123');
  * // Returns: { firstName, lastName, gender, country, city, etc. }
  */
 export const fetchPublicProfile = async (userId) => {
-  return api.get(`/${userId}/profile`).then(res => res.data);
+  return apiClient.get(`/users/${userId}/public`).then(res => res.data);
 };
 
 /**
- * Fetch private profile data for the authenticated user
- * 
- * @returns {Promise<Object>} Complete profile data including private fields
+ * Fetch private profile data for the currently authenticated user
+ * @returns {Promise<Object>} Private profile data
  * 
  * @example
- * const profile = await fetchPrivateProfile();
+ * const myProfile = await fetchPrivateProfile();
  * // Returns: { email, phoneNumber, dateOfBirth, address, etc. }
  */
 export const fetchPrivateProfile = async () => {
-  return api.get('/me').then(res => res.data);
+  return apiClient.get('/users/me').then(res => res.data);
 };
 
+
 /**
- * Generate a signed URL for accessing media files stored in S3
- * 
- * @param {string} mediaId - The media record ID from the database
- * @returns {Promise<Object>} Media data including signed URL and metadata
+ * Update the profile information for the authenticated user
+ * @param {Object} data - The profile data to update
+ * @returns {Promise<Object>} Updated profile data
  * 
  * @example
- * const mediaData = await getMediaUrl('media123');
- * // Returns: { url: 'https://s3...', expiresAt: '2024-...', ... }
+ * await updateUserProfile({ firstName: 'John', city: 'New York' });
  */
-export const getMediaUrl = async (mediaId) => {
-  return api.get(`/media/${mediaId}/url`).then(res => res.data);
+export const updateUserProfile = async (data) => {
+  return apiClient.put('/users/me/profile', data);
 };
 
 /**
@@ -105,10 +71,46 @@ export const getMediaUrl = async (mediaId) => {
  */
 export const uploadProfileImages = async ({ profileFile, coverFile }) => {
   const formData = new FormData();
-  if (profileFile) formData.append('profilePicture', profileFile);
-  if (coverFile) formData.append('coverPicture', coverFile);
+  if (profileFile) {
+    formData.append('profilePicture', profileFile);
+  }
+  if (coverFile) {
+    formData.append('coverPicture', coverFile);
+  }
+
+  return apiClient.patch('/users/me/profile-image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    timeout: 60000, // 60 seconds for large/compressed images
+  });
+};
+
+/**
+ * Get the full URL for a media file
+ * @param {string} mediaId - The ID of the media file
+ * @returns {string} The full URL to the media file
+ */
+export const getMediaUrl = async (mediaId) => {
+  const data = await apiClient.get(`users/media/${mediaId}/url`).then(res => res.data.data);
+
   
-  return api.patch('/me/profile-image', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }).then(res => res.data);
-}; 
+  return data;
+};
+
+/**
+ * Fetch a list of organizers (organization users) with optional filters
+ * @param {Object} filters - { verified, active }
+ * @returns {Promise<Array>} List of organizers
+ *
+ * @example
+ * const organizers = await fetchOrganizers({ verified: true, active: true });
+ */
+export const fetchOrganizers = async (filters = {}) => {
+  const params = new URLSearchParams();
+  if (filters.verified !== undefined) params.append('verified', filters.verified);
+  if (filters.active !== undefined) params.append('active', filters.active);
+  const url = `/users/organizers${params.toString() ? '?' + params.toString() : ''}`;
+  const res = await apiClient.get(url);
+  return res.data.data;
+};

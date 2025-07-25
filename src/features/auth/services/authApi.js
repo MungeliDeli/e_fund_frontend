@@ -14,112 +14,7 @@
  * @version 1.0.0
  */
 
-import axios from 'axios';
-
-// Set your backend base URL here
-const API_BASE_URL = 'http://localhost:3000/api/v1/auth';
-
-/**
- * Configured axios instance for auth endpoints
- * - Injects JWT token into headers
- * - Handles token refresh on 401 errors
- */
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000, // 10 seconds
-});
-
-/**
- * Request interceptor: injects JWT token from localStorage if present
- */
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Token refresh state and queue for concurrent requests
-let isRefreshing = false;
-let failedQueue = [];
-
-/**
- * Helper to process queued requests after token refresh
- */
-function processQueue(error, token = null) {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-}
-
-/**
- * Response interceptor: handles 401 errors and triggers token refresh
- * - Retries original request after refresh
- * - Logs out user on refresh failure
- */
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // Queue requests while refresh is in progress
-        return new Promise(function(resolve, reject) {
-          failedQueue.push({ resolve, reject });
-        })
-        .then(token => {
-          originalRequest.headers['Authorization'] = 'Bearer ' + token;
-          return api(originalRequest);
-        })
-        .catch(err => Promise.reject(err));
-      }
-      originalRequest._retry = true;
-      isRefreshing = true;
-      try {
-        // Dynamically import jwt-decode to avoid circular dependency
-        const { jwtDecode } = await import('jwt-decode');
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) throw new Error('No refresh token');
-        // Call refresh endpoint
-        const refreshRes = await api.post('/refresh-token', { refreshToken });
-        const { token: newToken, refreshToken: newRefreshToken } = refreshRes.data?.data || refreshRes.data || {};
-        if (newToken && newRefreshToken) {
-          // Store new tokens
-          localStorage.setItem('token', newToken);
-          localStorage.setItem('refreshToken', newRefreshToken);
-          isRefreshing = false;
-          processQueue(null, newToken);
-          originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
-          return api(originalRequest);
-        } else {
-          throw new Error('No new token returned');
-        }
-      } catch (err) {
-        isRefreshing = false;
-        processQueue(err, null);
-        // Log out user on refresh failure
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return Promise.reject(err);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+import apiClient from '../../../services/apiClient';
 
 /**
  * Register a new user
@@ -127,7 +22,7 @@ api.interceptors.response.use(
  * @returns {Promise}
  */
 export const register = async (data) => {
-  return api.post('/register', data);
+  return apiClient.post('/auth/register', data);
 };
 
 /**
@@ -136,7 +31,7 @@ export const register = async (data) => {
  * @returns {Promise}
  */
 export const login = async (data) => {
-  return api.post('/login', data);
+  return apiClient.post('/auth/login', data);
 };
 
 /**
@@ -145,9 +40,75 @@ export const login = async (data) => {
  * @returns {Promise}
  */
 export const refreshToken = async (refreshToken) => {
-  return api.post('/refresh-token', { refreshToken });
+  return apiClient.post('/auth/refresh-token', { refreshToken },{ skipAuthInterceptor: true });
 };
 
-export { api };
+/**
+ * Verify user's email address
+ * @param {string} token - The email verification token
+ * @returns {Promise}
+ */
+export const verifyEmail = async (token) => {
+  return apiClient.post('/auth/verify-email', { token });
+};
+
+/**
+ * Resend the verification email
+ * @param {string} email - The user's email address
+ * @returns {Promise}
+ */
+export const resendVerificationEmail = async (email) => {
+  return apiClient.post('/auth/resend-verification', { email });
+};
+
+/**
+ * Send a password reset email
+ * @param {string} email - The user's email address
+ * @returns {Promise}
+ */
+export const forgotPassword = async (email) => {
+  return apiClient.post('/auth/forgot-password', { email });
+};
+
+/**
+ * Reset the user's password
+ * @param {Object} data - The reset data
+ * @param {string} data.token - The password reset token
+ * @param {string} data.password - The new password
+ * @returns {Promise}
+ */
+export const resetPassword = async (data) => {
+  // The backend expects { resetToken, newPassword }
+  return apiClient.post('/auth/reset-password', {
+    resetToken: data.token,
+    newPassword: data.password
+  });
+};
+
+/**
+ * Create an organization user (admin only)
+ * @param {FormData} formData - All fields and files as FormData
+ * @returns {Promise}
+ */
+export const createOrganizationUser = (formData) => {
+  return apiClient.post('auth/create-organization-user', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+/**
+ * Activate and set password for organization user (account setup)
+ * @param {Object} data - The setup data
+ * @param {string} data.token - The setup token
+ * @param {string} data.password - The new password
+ * @returns {Promise}
+ */
+export const activateAndSetPassword = async (data) => {
+  return apiClient.post('/auth/activate-and-set-password', {
+    token: data.token,
+    newPassword: data.password
+  });
+};
+
 
 // Add more auth-related API calls as needed 
