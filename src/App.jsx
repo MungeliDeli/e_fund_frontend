@@ -26,6 +26,7 @@ const OrganizerPanel = lazy(() => import("./features/users/pages/admin/organizer
 const AccessDeniedPage = lazy(() => import("./features/auth/pages/AccessDeniedPage"));
 const NotFoundPage = lazy(() => import("./features/auth/pages/NotFoundPage"));
 const AddOrganizationPage = lazy(() => import("./features/users/pages/admin/organizerPanel/AddOrganizationPage"));
+const CampaignPanel = lazy(() => import("./features/users/pages/admin/campaignPanel/campaignPanel"));
 
 function AppRoutes() {
   const location = useLocation();
@@ -68,10 +69,10 @@ function AppRoutes() {
           <Route path="/organizer/profile-view" element={<ProtectedRoute element={<OrganizerProfilePage />} requiredRole="organization_user" />} />
           <Route path="/organizer/:userId" element={<OrganizerProfilePage />} />
           <Route path="/organizer/dashboard" element={<ProtectedRoute element={<OrganizerDashboardPage />} requiredRole="organization_user" />} />
-          <Route path="/admin/dashboard" element={<ProtectedRoute element={<AdminDashboardPage />} requiredRole={["super_admin", "support_admin", "event_moderator", "financial_admin"]} />}
-          />
+          <Route path="/admin/dashboard" element={<ProtectedRoute element={<AdminDashboardPage />} requiredRole={["super_admin", "support_admin", "event_moderator", "financial_admin"]} />} />
           <Route path="/admin/organizers" element={<ProtectedRoute element={<OrganizerPanel />} requiredRole={["super_admin", "support_admin"]} />} />
           <Route path="/admin/organizers/add" element={<ProtectedRoute element={<AddOrganizationPage />} requiredRole={["super_admin", "support_admin"]} />} />
+          <Route path="/admin/campaigns" element={<ProtectedRoute element={<CampaignPanel />} requiredRole={["super_admin", "event_moderator"]} />} />
           {/* ...other protected routes... */}
           <Route path="/access-denied" element={<AccessDeniedPage />} />
           {/* Catch-all for undefined protected routes */}
