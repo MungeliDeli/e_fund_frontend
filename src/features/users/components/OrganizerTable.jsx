@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Table from '../../../components/Table';
+import { IconButton } from '../../../components/Buttons';
 import { FiEye, FiImage } from 'react-icons/fi';
 
 function getInitials(name) {
@@ -133,12 +134,13 @@ function OrganizerTable({ data = [], onView, filters = {} }) {
       sort={sort}
       scrollable={true}
       rowAction={(row) => (
-        <button
-          className="px-4 py-1 border rounded text-[color:var(--color-primary-text)] border-[color:var(--color-primary)] hover:bg-[color:var(--color-primary)] hover:text-white transition-colors"
+        <IconButton
+          icon={FiEye}
           onClick={() => onView?.(row.userId)}
+          className="px-4 py-1 border rounded text-[color:var(--color-primary-text)] border-[color:var(--color-primary)] hover:bg-[color:var(--color-primary)] hover:text-white transition-colors"
         >
-          <FiEye className="inline mr-1" /> View
-        </button>
+          View
+        </IconButton>
       )}
     />
   );

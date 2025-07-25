@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { FiFilter, FiPlus } from 'react-icons/fi';
+import { PrimaryButton, SecondaryButton } from '../../../../../components/Buttons';
+import { FiFilter, FiPlus, FiUsers, FiCheckCircle, FiUserX, FiActivity, FiUserMinus } from 'react-icons/fi';
 import SearchBar from '../../../../../components/SearchBar/SearchBar';
 import { useNavigate } from 'react-router-dom';
 import OrganizerTable from '../../../components/OrganizerTable';
 import FilterModal from '../../../../../components/FilterModal';
-import { fetchOrganizers } from '../../../services/usersApi';
+import { fetchOrganizers, fetchAllOrganizers } from '../../../services/usersApi';
+import { TotalStatsCard, PieStatsCard } from '../../../../../components/StatsCards';
 
 function OrganizerPanel() {
   const navigate = useNavigate();
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState({});
   const [organizers, setOrganizers] = useState([]);
+  const [allOrganizers, setAllOrganizers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -44,6 +47,13 @@ function OrganizerPanel() {
   ];
 
   useEffect(() => {
+    // Fetch all organizers for stats (only once)
+    fetchAllOrganizers()
+      .then(setAllOrganizers)
+      .catch(() => setAllOrganizers([]));
+  }, []);
+
+  useEffect(() => {
     setLoading(true);
     setError(null);
     fetchOrganizers(filters)
@@ -51,6 +61,13 @@ function OrganizerPanel() {
       .catch((err) => setError(err.message || 'Failed to fetch organizers'))
       .finally(() => setLoading(false));
   }, [filters]);
+
+  // Calculate stats from allOrganizers
+  const total = allOrganizers.length;
+  const verified = allOrganizers.filter(o => o.status === 'VERIFIED').length;
+  const unverified = total - verified;
+  const active = allOrganizers.filter(o => o.active).length;
+  const inactive = total - active;
 
   return (
     <div className="p-2 sm:p-2 bg-[color:var(--color-background)] min-h-screen transition-colors">
@@ -65,24 +82,59 @@ function OrganizerPanel() {
         {/* Controls:  Filter, Add */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           {/* Filter Button */}
-          <button
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-[color:var(--color-muted)] bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] hover:bg-[color:var(--color-muted)] transition-colors"
+          <SecondaryButton
+            icon={FiFilter}
             onClick={handleFilter}
-            type="button"
+            className="w-full sm:w-auto"
           >
-            <FiFilter className="text-lg" />
             <span className="hidden sm:inline">Filter</span>
-          </button>
+          </SecondaryButton>
           {/* Add Organizer Button */}
-          <button
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--color-primary)] text-white font-medium hover:bg-green-700 transition-colors"
+          <PrimaryButton
+            icon={FiPlus}
             onClick={() => navigate('/admin/organizers/add')}
-            type="button"
+            className="w-full sm:w-auto"
           >
-            <FiPlus className="text-lg" />
             <span className="hidden sm:inline">Add Organizer</span>
-          </button>
+          </PrimaryButton>
         </div>
+      </div>
+
+      {/* Stats Cards Row */}
+      <div className="flex flex-col sm:flex-row gap-6 mb-6 w-full">
+        <TotalStatsCard
+          title="Total Organizers"
+          value={total}
+          icon={FiUsers}
+          iconColor="#43e97b"
+          className="flex-1"
+        />
+        <PieStatsCard
+          title1="Verified"
+          value1={verified}
+          icon1={FiCheckCircle}
+          color1="#43e97b"
+          label1="Verified"
+          title2="Unverified"
+          value2={unverified}
+          icon2={FiUserX}
+          color2="#3b82f6"
+          label2="Unverified"
+          className="flex-1"
+        />
+        <PieStatsCard
+          title1="Active"
+          value1={active}
+          icon1={FiActivity}
+          color1="#facc15"
+          label1="Active"
+          title2="Inactive"
+          value2={inactive}
+          icon2={FiUserMinus}
+          color2="#f87171"
+          label2="Inactive"
+          className="flex-1"
+        />
       </div>
 
       {/* Table */}

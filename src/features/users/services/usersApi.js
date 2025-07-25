@@ -114,3 +114,15 @@ export const fetchOrganizers = async (filters = {}) => {
   const res = await apiClient.get(url);
   return res.data.data;
 };
+
+/**
+ * Fetch all organizers (organization users) without filters (for stats)
+ * @returns {Promise<Array>} List of all organizers
+ *
+ * @example
+ * const allOrganizers = await fetchAllOrganizers();
+ */
+export const fetchAllOrganizers = async () => {
+  const res = await apiClient.get('/users/organizers');
+  return res.data.data;
+};

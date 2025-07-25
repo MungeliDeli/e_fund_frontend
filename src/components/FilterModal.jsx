@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiX } from 'react-icons/fi';
+import { PrimaryButton, SecondaryButton } from './Buttons';
 
 /**
  * Filter Modal Component
@@ -65,18 +66,12 @@ function FilterModal({ isOpen, onClose, filters, onFiltersChange, filterOptions 
 
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-[color:var(--color-muted)]">
-          <button
-            onClick={clearAllFilters}
-            className="px-4 py-2 text-[color:var(--color-secondary-text)] hover:text-[color:var(--color-primary-text)] transition-colors"
-          >
+          <SecondaryButton onClick={clearAllFilters}>
             Clear All
-          </button>
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-[color:var(--color-primary)] text-white rounded-lg hover:bg-green-700 transition-colors"
-          >
+          </SecondaryButton>
+          <PrimaryButton onClick={onClose}>
             Apply
-          </button>
+          </PrimaryButton>
         </div>
       </div>
     </div>
