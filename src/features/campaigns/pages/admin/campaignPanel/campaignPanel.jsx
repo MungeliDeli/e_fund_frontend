@@ -21,6 +21,8 @@ import {
   FiEdit2,
   FiPauseCircle,
   FiStopCircle,
+  FiChevronUp,
+  FiChevronDown,
 } from "react-icons/fi";
 import CampaignTable from "../../../../users/components/CampaignTable";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +33,7 @@ function CampaignPanel() {
   const navigate = useNavigate();
 
   const [allCampaigns, setAllCampaigns] = useState([]);
+  const [showStats, setShowStats] = useState(false);
 
   // TODO: Fetch all campaigns for stats
   useEffect(() => {
@@ -117,10 +120,10 @@ function CampaignPanel() {
 
   return (
     <div className="p-2 sm:p-2 bg-[color:var(--color-background)] min-h-screen transition-colors">
-      {/* Top Bar */}
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 w-full">
-        {/* Title */}
-        <h1 className="text-3xl font-bold text-[color:var(--color-primary-text)]">
+       
+        <h1 className="text-2xl font-bold text-[color:var(--color-primary-text)]">
           Campaigns
         </h1>
         {/* SearchBar */}
@@ -131,7 +134,7 @@ function CampaignPanel() {
             onChange={handleSearch}
           />
         </div>
-        {/* Controls: Filter, Categories */}
+      
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           <SecondaryButton
             icon={FiFilter}
@@ -150,21 +153,40 @@ function CampaignPanel() {
         </div>
       </div>
 
-      {/* Stats Cards Row */}
-      <div className="flex flex-col sm:flex-row gap-6 mb-6 w-full">
-        <TotalStatsCard
-          title="Total Campaigns"
-          value={total}
-          icon={FiFlag}
-          iconColor="#3b82f6"
-          className="flex-1"
-        />
-        <StatusStatsCard
-          statuses={campaignStatuses}
-          valueMap={valueMap}
-          initialStatusKey={campaignStatuses[0].key}
-          className="flex-1"
-        />
+      {/* Stats Cards Section with Toggle Button on Top */}
+      <div className="mb-6 w-full">
+        {/* Top Row: Toggle Button aligned right */}
+        <div className="flex justify-end mb-2 w-full">
+          <button
+            className="flex items-center gap-1 px-3 py-2 border border-[color:var(--color-muted)] rounded bg-[color:var(--color-background)] text-[color:var(--color-primary-text)] hover:bg-[color:var(--color-muted)] transition-colors"
+            onClick={() => setShowStats((prev) => !prev)}
+            aria-label={showStats ? "Hide stats" : "Show stats"}
+            type="button"
+          >
+            {showStats ? <FiChevronUp /> : <FiChevronDown />}
+            <span className="hidden sm:inline text-xs font-medium">
+              {showStats ? "Hide Stats" : "Show Stats"}
+            </span>
+          </button>
+        </div>
+        {/* Bottom Row: Stats Cards (responsive) */}
+        {showStats && (
+          <div className="flex flex-col sm:flex-row gap-6 w-full w-full">
+            <TotalStatsCard
+              title="Total Campaigns"
+              value={total}
+              icon={FiFlag}
+              iconColor="#3b82f6"
+              className="flex-1"
+            />
+            <StatusStatsCard
+              statuses={campaignStatuses}
+              valueMap={valueMap}
+              initialStatusKey={campaignStatuses[0].key}
+              className="flex-1"
+            />
+          </div>
+        )}
       </div>
 
       {/* Table */}

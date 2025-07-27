@@ -11,6 +11,8 @@ import {
   FiFilter,
   FiCheckCircle,
   FiXCircle,
+  FiChevronUp,
+  FiChevronDown,
 } from "react-icons/fi";
 import FormField from "../../../../../components/FormField";
 import { FiX } from "react-icons/fi";
@@ -45,6 +47,7 @@ function CampaignCategories() {
   const [editFormError, setEditFormError] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({});
+  const [showStats, setShowStats] = useState(false);
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -74,7 +77,7 @@ function CampaignCategories() {
       category.description.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilter =
-      !filters.isActive || category.isActive === (filters.isActive === "true");
+      filters.isActive === undefined || category.isActive === filters.isActive;
 
     return matchesSearch && matchesFilter;
   });
@@ -255,28 +258,47 @@ function CampaignCategories() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="flex flex-col sm:flex-row gap-6 mb-6 w-full">
-        <TotalStatsCard
-          title="Total Categories"
-          value={categories.length}
-          icon={FiPlus}
-          iconColor="#43e97b"
-          className="flex-1"
-        />
-        <PieStatsCard
-          title1="Active"
-          value1={categories.filter((cat) => cat.isActive).length}
-          icon1={FiCheckCircle}
-          color1="#43e97b"
-          label1="Active"
-          title2="Inactive"
-          value2={categories.filter((cat) => !cat.isActive).length}
-          icon2={FiXCircle}
-          color2="#f87171"
-          label2="Inactive"
-          className="flex-1"
-        />
+      {/* Stats Cards Section with Toggle Button on Top */}
+      <div className="mb-6 w-full">
+        {/* Top Row: Toggle Button aligned right */}
+        <div className="flex justify-end mb-2 w-full">
+          <button
+            className="flex items-center gap-1 px-3 py-2 border border-[color:var(--color-muted)] rounded bg-[color:var(--color-background)] text-[color:var(--color-primary-text)] hover:bg-[color:var(--color-muted)] transition-colors"
+            onClick={() => setShowStats((prev) => !prev)}
+            aria-label={showStats ? "Hide stats" : "Show stats"}
+            type="button"
+          >
+            {showStats ? <FiChevronUp /> : <FiChevronDown />}
+            <span className=" text-xs font-medium">
+              {showStats ? "Hide Stats" : "Show Stats"}
+            </span>
+          </button>
+        </div>
+        {/* Bottom Row: Stats Cards (responsive) */}
+        {showStats && (
+          <div className="flex flex-col sm:flex-row gap-6 w-full w-full">
+            <TotalStatsCard
+              title="Total Categories"
+              value={categories.length}
+              icon={FiPlus}
+              iconColor="#43e97b"
+              className="flex-1"
+            />
+            <PieStatsCard
+              title1="Active"
+              value1={categories.filter((cat) => cat.isActive).length}
+              icon1={FiCheckCircle}
+              color1="#43e97b"
+              label1="Active"
+              title2="Inactive"
+              value2={categories.filter((cat) => !cat.isActive).length}
+              icon2={FiXCircle}
+              color2="#f87171"
+              label2="Inactive"
+              className="flex-1"
+            />
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -300,19 +322,20 @@ function CampaignCategories() {
             </div>
           </div>
         ) : (
-        <Table
-          columns={columns}
-          data={filteredCategories}
-          rowAction={(category) => (
-            <IconButton
-              onClick={() => openViewModal(category)}
-              className="px-4 py-1 border rounded text-[color:var(--color-primary-text)] border-[color:var(--color-primary)] hover:bg-[color:var(--color-primary)] hover:text-white transition-colors"
-              aria-label="View"
-            >
-              View
-            </IconButton>
-          )}
-        />
+          <Table
+            columns={columns}
+            data={filteredCategories}
+            scrollable={true}
+            rowAction={(category) => (
+              <IconButton
+                onClick={() => openViewModal(category)}
+                className="px-4 py-1 border rounded text-[color:var(--color-primary-text)] border-[color:var(--color-primary)] hover:bg-[color:var(--color-primary)] hover:text-white transition-colors"
+                aria-label="View"
+              >
+                View
+              </IconButton>
+            )}
+          />
         )}
       </div>
 
