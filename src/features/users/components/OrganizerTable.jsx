@@ -135,7 +135,7 @@ function OrganizerTable({ data = [], onView, filters = {} }) {
       scrollable={true}
       rowAction={(row) => (
         <IconButton
-          icon={FiEye}
+          
           onClick={() => onView?.(row.userId)}
           className="px-4 py-1 border rounded text-[color:var(--color-primary-text)] border-[color:var(--color-primary)] hover:bg-[color:var(--color-primary)] hover:text-white transition-colors"
         >
