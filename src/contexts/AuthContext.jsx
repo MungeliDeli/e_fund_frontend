@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
 
       if (!storedToken || !storedRefreshToken) {
         // If on a public route (like /email-verified), don't force logout
-        const publicRoutes = ['/','/email-verified', '/verify-email', '/signup', '/login', '/forgot-password', '/reset-password'];
+        const publicRoutes = ['/','/email-verified','/template-preview', '/verify-email', '/signup', '/login', '/forgot-password', '/reset-password'];
         if (publicRoutes.includes(location.pathname)) {
           setLoading(false);
           return;
