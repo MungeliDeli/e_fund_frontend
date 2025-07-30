@@ -47,6 +47,9 @@ const CampaignPanel = lazy(() =>
 const CampaignCategories = lazy(() =>
   import("./features/campaigns/pages/admin/campaignPanel/campaignCategories")
 );
+const TemplateSelector = lazy(() =>
+  import("./features/campaigns/builder/TemplateSelector")
+);
 
 function AppRoutes() {
   const location = useLocation();
@@ -135,6 +138,16 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<OrganizerDashboardPage />}
+                requiredRole="organization_user"
+              />
+            }
+          />
+          {/* Campaign Builder Routes */}
+          <Route
+            path="/campaign-templates"
+            element={
+              <ProtectedRoute
+                element={<TemplateSelector />}
                 requiredRole="organization_user"
               />
             }
