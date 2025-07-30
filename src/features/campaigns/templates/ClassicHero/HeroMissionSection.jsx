@@ -3,15 +3,13 @@ import heroImg from "./templateAssets/hero image.jpg"; // Example hero image pat
 
 const HeroMissionSection = ({ config }) => {
   const heroSection = config.sections?.find((s) => s.key === "hero");
-  const globaeBg = config.theme.backgroundColor;
-  const globaeTextColor = config.theme.textColor;
+  const bgColor = config.theme.backgroundColor;
+  const textColor = config.theme.textColor;
 
   const title = heroSection?.content?.title;
   const subtitle = heroSection?.content?.subtitle;
   const image = heroSection?.content?.image || heroImg;
   const mission = heroSection?.content?.mission;
-  const bgColor = heroSection?.backgroundColor || globaeBg;
-  const textColor = heroSection?.textColor || globaeTextColor;
 
   return (
     <section
@@ -27,7 +25,7 @@ const HeroMissionSection = ({ config }) => {
       <img
         src={image}
         alt="Hero"
-        className="w-full h-64 object-cover rounded-lg border"
+        className="w-full h-100 object-cover rounded-lg "
         style={{ background: "#eee" }}
       />
       <div className="text-base mt-2" style={{ opacity: 0.8 }}>

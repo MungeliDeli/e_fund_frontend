@@ -3,18 +3,17 @@ import weLogo from "./templateAssets/organizerLogo.png";
 import { FiX, FiLinkedin, FiFacebook } from "react-icons/fi";
 
 const HeaderSection = ({ config }) => {
-  const headerSection = config.sections?.find((s) => s.key === "hero");
+  const headerSection = config.sections?.find((s) => s.key === "header");
 
-  const orgName = config?.orgName || "Relief Operations Internations";
-  const logo = config?.logo || weLogo;
-  const globaeBg = config.theme.backgroundColor;
-  const globaeTextColor = config.theme.textColor;
-  const bgColor = headerSection?.backgroundColor || globaeBg;
-  const textColor = headerSection?.textColor || globaeTextColor;
+  const orgName = headerSection?.content?.orgName;
+    const logo = headerSection?.content?.image || weLogo;
+  const bgColor = config.theme.backgroundColor;
+  const textColor = config.theme.textColor;
+
 
   return (
     <header
-      className="header-section flex items-center gap-2 sm:gap-4 py-2 px-1 min-w-0 flex-wrap"
+      className="header-section flex items-center gap-2 sm:gap-4 py-2 px-1 rounded-lg min-w-0 flex-wrap"
       style={{ background: bgColor, color: textColor }}
     >
       <img
@@ -23,7 +22,7 @@ const HeaderSection = ({ config }) => {
         className="w-10 h-10 sm:w-12 sm:h-12 rounded object-contain bg-transparent flex-shrink-0"
       />
       <div
-        className="font-semibold text-md  min-w-0 whitespace-normal leading-tight flex-1"
+        className="font-semibold text-2xl  min-w-0 whitespace-normal leading-tight flex-1"
         title={orgName}
       >
         {orgName}

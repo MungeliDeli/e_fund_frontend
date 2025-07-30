@@ -3,10 +3,9 @@
 const classicHeroConfig = {
   templateId: "classic-hero",
   theme: {
-    backgroundColor: "#fff", // black background
-    primaryColor: "#3b82f6",
+    backgroundColor: "#ffffff", 
     accentColor: "#facc15",
-    textColor: "#222",
+    textColor: "#222222",
   },
   sections: [
     {
@@ -15,10 +14,9 @@ const classicHeroConfig = {
       visible: true,
       allowToggle: false,
       allowEdit: true,
-      backgroundColor: "#fff",
-      textColor: "#222",
       content: {
         orgName: "Unza Nasa",
+        image: null,
       },
     },
     {
@@ -27,8 +25,6 @@ const classicHeroConfig = {
       visible: true,
       allowToggle: false,
       allowEdit: true,
-      backgroundColor: "#fff",
-      textColor: "#222",
       content: {
         title: "Help Us Make a Difference",
         subtitle: "Your support changes lives",

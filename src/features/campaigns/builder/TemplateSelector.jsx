@@ -13,7 +13,6 @@ const TemplateSelector = () => {
 
   const handleNext = () => {
     if (selectedTemplate) {
-      // Navigate to builder with selected template
       navigate("/campaign-builder", {
         state: { selectedTemplate: selectedTemplate.id },
       });
@@ -44,7 +43,7 @@ const TemplateSelector = () => {
           {templates.map((template) => (
             <div
               key={template.id}
-              className={`relative bg-[color:var(--color-surface)] rounded-lg p-6 cursor-pointer transition-all duration-300 hover:shadow-lg border-2 ${
+              className={`relative bg-[color:var(--color-surface)] rounded-lg p-2 cursor-pointer transition-all duration-300 hover:shadow-lg border-2 ${
                 selectedTemplate?.id === template.id
                   ? "border-[color:var(--color-primary)] shadow-lg"
                   : "border-transparent hover:border-[color:var(--color-muted)]"
@@ -74,15 +73,7 @@ const TemplateSelector = () => {
                 {template.description}
               </p>
 
-              {/* Template Features */}
-              <div className="mt-4 pt-4 border-t border-[color:var(--color-muted)]">
-                <div className="flex items-center text-xs text-[color:var(--color-secondary-text)]">
-                  <span className="bg-[color:var(--color-primary)] text-white px-2 py-1 rounded mr-2">
-                    Popular
-                  </span>
-                  <span>Perfect for fundraising campaigns</span>
-                </div>
-              </div>
+             
             </div>
           ))}
         </div>

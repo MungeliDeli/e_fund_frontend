@@ -29,7 +29,7 @@ const DonationFormSection = ({ config }) => {
         ))}
       </div>
       <input
-      type="number"
+        type="number"
         className="w-full mb-2 p-2 outline-none rounded"
         placeholder="k 50.00"
         style={{ color: textColor, border: `1px solid ${textColor}` }}
@@ -40,7 +40,7 @@ const DonationFormSection = ({ config }) => {
       <textarea
         className="w-full mb-2 p-2 outline-none  rounded"
         placeholder="Leave a Message"
-        style={{ border: `1px solid ${textColor}` }}
+        style={{ color: textColor, border: `1px solid ${textColor}` }}
       />
       <button
         className="w-full py-2  text-white rounded font-bold"

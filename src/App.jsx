@@ -50,6 +50,9 @@ const CampaignCategories = lazy(() =>
 const TemplateSelector = lazy(() =>
   import("./features/campaigns/builder/TemplateSelector")
 );
+const CampaignBuilderPage = lazy(() =>
+  import("./features/campaigns/builder/CampaignBuilderPage")
+);
 
 function AppRoutes() {
   const location = useLocation();
@@ -62,6 +65,7 @@ function AppRoutes() {
     "/forgot-password",
     "/reset-password",
     "/template-preview",
+    "/campaign-builder",
   ];
   const shouldHideMainLayout = authRoutes.includes(location.pathname);
 
@@ -148,6 +152,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<TemplateSelector />}
+                requiredRole="organization_user"
+              />
+            }
+          />
+          <Route
+            path="/campaign-builder"
+            element={
+              <ProtectedRoute
+                element={<CampaignBuilderPage />}
                 requiredRole="organization_user"
               />
             }

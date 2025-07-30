@@ -38,7 +38,7 @@ const ClassicHeroTemplate = ({ config }) => {
   // Main render
   return (
     <div
-      className="classic-hero-template min-h-screen w-full bg-black text-white"
+      className="classic-hero-template min-h-screen w-full  "
       style={{ background: config?.theme?.backgroundColor || "#000" }}
     >
       {/* Signup sliding banner on mobile */}
@@ -46,9 +46,9 @@ const ClassicHeroTemplate = ({ config }) => {
         <SignupPrompt config={config} mobileBanner={true} show={showSignup} />
       )}
       {/* Desktop layout: grid, mobile: stacked */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full max-w-7xl mx-auto p-2 lg:p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3  w-full max-w-7xl mx-auto p-2 lg:p-6">
         {/* Main Content (2/3 on desktop, all on mobile) */}
-        <div className="col-span-2 flex flex-col gap-4">
+        <div className="col-span-2 flex flex-col ">
           <HeaderSection config={config} />
           <HeroMissionSection config={config} />
           {/* On mobile, goal meter and donation form come next */}
@@ -64,7 +64,7 @@ const ClassicHeroTemplate = ({ config }) => {
           </div>
         </div>
         {/* Sidebar (1/3) on desktop only */}
-        <aside className="hidden lg:flex flex-col gap-4 p-4 bg-white/10 rounded-lg shadow-md">
+        <aside className="hidden lg:flex flex-col gap-4 p-4  rounded-lg ">
           <SignupPrompt config={config} />
           <SuccessStoriesSection config={config} />
           <GoalMeterSection config={config} />
