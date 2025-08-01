@@ -120,9 +120,7 @@ function CampaignPanel() {
 
   return (
     <div className="p-2 sm:p-2 bg-[color:var(--color-background)] min-h-screen transition-colors">
-      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 w-full">
-       
         <h1 className="text-2xl font-bold text-[color:var(--color-primary-text)]">
           Campaigns
         </h1>
@@ -134,7 +132,7 @@ function CampaignPanel() {
             onChange={handleSearch}
           />
         </div>
-      
+
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           <SecondaryButton
             icon={FiFilter}

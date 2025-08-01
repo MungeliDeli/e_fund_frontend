@@ -1,24 +1,39 @@
-import React, { useEffect, useState, useMemo, useCallback, Suspense, lazy } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  Suspense,
+  lazy,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import templates, { getTemplateWithConfig } from "../templates/templateRegistry";
+import templates, {
+  getTemplateWithConfig,
+} from "../templates/templateRegistry";
 import { useImmer } from "use-immer";
 import SidebarInspector from "./components/SidebarInspector";
 import BuilderHeader from "./components/BuilderHeader";
+import CampaignSubmissionForm from "./components/CampaignSubmissionForm";
 import ConfirmationModal from "../../../components/ConfirmationModal";
+import { saveCampaignDraft } from "../services/campaignApi";
 
 // Lazy load template components for code splitting
 const templateComponents = {
-  "classic-hero": lazy(() => import("../templates/ClassicHero/ClassicHeroTemplate")),
+  "classic-hero": lazy(() =>
+    import("../templates/ClassicHero/ClassicHeroTemplate")
+  ),
 };
 
 // Memoized components
 const LivePreview = React.memo(({ templateComponent: Template, config }) => (
   <div className="h-full w-full bg-white rounded-lg shadow  overflow-auto">
-    <Suspense fallback={
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--color-primary)]"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--color-primary)]"></div>
+        </div>
+      }
+    >
       <Template config={config} />
     </Suspense>
   </div>
@@ -30,8 +45,8 @@ const CampaignBuilderPage = () => {
   const selectedTemplateId = location.state?.selectedTemplate;
 
   // Memoize template lookup
-  const selectedTemplate = useMemo(() => 
-    templates.find((t) => t.id === selectedTemplateId),
+  const selectedTemplate = useMemo(
+    () => templates.find((t) => t.id === selectedTemplateId),
     [selectedTemplateId]
   );
 
@@ -44,10 +59,13 @@ const CampaignBuilderPage = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedCampaignId, setSavedCampaignId] = useState(null);
+  const [showSubmissionForm, setShowSubmissionForm] = useState(false);
+
   // Use immer for efficient immutable updates
-    const [customPageSettings, updateCustomPageSettings] = useImmer(null);
-  
+  const [customPageSettings, updateCustomPageSettings] = useImmer(null);
+
   // Effect to load initial config from localStorage or fallback to default
   useEffect(() => {
     if (!selectedTemplate) return;
@@ -58,12 +76,14 @@ const CampaignBuilderPage = () => {
 
     const loadDefaultConfig = async () => {
       try {
-        const templateWithConfig = await getTemplateWithConfig(selectedTemplateId);
+        const templateWithConfig = await getTemplateWithConfig(
+          selectedTemplateId
+        );
         if (templateWithConfig) {
           updateCustomPageSettings(templateWithConfig.config);
         }
       } catch (error) {
-        console.error('Failed to load template config:', error);
+        console.error("Failed to load template config:", error);
       } finally {
         setIsLoading(false);
       }
@@ -74,7 +94,10 @@ const CampaignBuilderPage = () => {
         updateCustomPageSettings(JSON.parse(savedConfig));
         setIsLoading(false);
       } catch (error) {
-        console.error("Failed to parse saved config, falling back to default:", error);
+        console.error(
+          "Failed to parse saved config, falling back to default:",
+          error
+        );
         loadDefaultConfig();
       }
     } else {
@@ -92,13 +115,19 @@ const CampaignBuilderPage = () => {
 
   // Memoized template component
   const TemplateComponent = useMemo(() => {
-    return templateComponents[selectedTemplateId] || (() => <div>Template not found</div>);
+    return (
+      templateComponents[selectedTemplateId] ||
+      (() => <div>Template not found</div>)
+    );
   }, [selectedTemplateId]);
 
   // Memoized config change handler
-  const handleConfigChange = useCallback((updater) => {
-    updateCustomPageSettings(updater);
-  }, [updateCustomPageSettings]);
+  const handleConfigChange = useCallback(
+    (updater) => {
+      updateCustomPageSettings(updater);
+    },
+    [updateCustomPageSettings]
+  );
 
   const handleBack = () => {
     setIsModalOpen(true);
@@ -112,21 +141,91 @@ const CampaignBuilderPage = () => {
     navigate("/campaign-templates");
   };
 
+  const handleNext = () => {
+    setShowSubmissionForm(true);
+  };
+
+  const handleBackToBuilder = () => {
+    setShowSubmissionForm(false);
+  };
+
+  // Handle saving campaign as draft
+  const handleSaveAsDraft = async () => {
+    if (!customPageSettings || !selectedTemplate) return;
+
+    setIsSaving(true);
+    try {
+      const campaignData = {
+        customPageSettings,
+        templateId: selectedTemplate.id,
+        // Optional fields that can be filled later
+        title: null,
+        description: null,
+        startDate: null,
+        endDate: null,
+        mainMediaId: null,
+        campaignLogoMediaId: null,
+        categoryIds: [],
+      };
+
+      const savedCampaign = await saveCampaignDraft(
+        campaignData,
+        savedCampaignId
+      );
+
+      // Update the saved campaign ID for future updates
+      setSavedCampaignId(savedCampaign.data.campaignId);
+
+      // Clear localStorage since it's now saved in the database
+      if (selectedTemplate) {
+        const storageKey = `campaignBuilder-${selectedTemplate.id}`;
+        localStorage.removeItem(storageKey);
+      }
+
+      // Show success message (you can add a toast notification here)
+      console.log("Campaign draft saved successfully!", savedCampaign);
+    } catch (error) {
+      console.error("Failed to save campaign draft:", error);
+      // Show error message (you can add a toast notification here)
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Show loading state while config loads
   if (isLoading || !customPageSettings) {
     return (
       <div className="min-h-screen bg-[color:var(--color-background)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[color:var(--color-primary)] mx-auto mb-4"></div>
-          <p className="text-[color:var(--color-secondary-text)]">Loading template...</p>
+          <p className="text-[color:var(--color-secondary-text)]">
+            Loading template...
+          </p>
         </div>
       </div>
     );
   }
 
+  // Show submission form if requested
+  if (showSubmissionForm) {
+    return (
+      <CampaignSubmissionForm
+        campaignId={savedCampaignId}
+        customPageSettings={customPageSettings}
+        templateId={selectedTemplate?.id}
+        onBack={handleBackToBuilder}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[color:var(--color-background)] text-[color:var(--color-primary-text)] flex flex-col">
-      <BuilderHeader onBack={handleBack} />
+      <BuilderHeader
+        onBack={handleBack}
+        onSaveAsDraft={handleSaveAsDraft}
+        onSubmit={handleNext}
+        isSaving={isSaving}
+      />
       <div className=" mx-auto w-full flex flex-col lg:flex-row gap-2 py-8 px-2 lg:px-6">
         {/* Live Preview (left) */}
         <div className="flex-1 min-w-0">
