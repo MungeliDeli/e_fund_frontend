@@ -190,8 +190,8 @@ function CampaignCategories() {
     }
   };
 
-  const handleSearch = (value) => {
-    setSearchTerm(value);
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   const handleFilter = () => {
@@ -241,7 +241,7 @@ function CampaignCategories() {
           <SearchBar
             placeholder="Search categories..."
             value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={handleSearch}
           />
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
@@ -302,7 +302,17 @@ function CampaignCategories() {
       </div>
 
       {/* Table */}
-      <div className="bg-[color:var(--color-background)] p-2 rounded-lg border border-[color:var(--color-muted)] shadow-md min-h-[120px]">
+      <div
+        className="bg-[color:var(--color-background)] p-2 rounded-lg border border-[color:var(--color-muted)] shadow-md flex-1 min-h-0"
+        style={{
+          height: showStats
+            ? "calc(100vh - 400px - 2rem)"
+            : "calc(100vh - 180px - 2rem)",
+          maxHeight: showStats
+            ? "calc(100vh - 400px - 2rem)"
+            : "calc(100vh - 180px - 2rem)",
+        }}
+      >
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <div className="text-[color:var(--color-secondary-text)]">
@@ -322,20 +332,22 @@ function CampaignCategories() {
             </div>
           </div>
         ) : (
-          <Table
-            columns={columns}
-            data={filteredCategories}
-            scrollable={true}
-            rowAction={(category) => (
-              <IconButton
-                onClick={() => openViewModal(category)}
-                className="px-4 py-1 border rounded text-[color:var(--color-primary-text)] border-[color:var(--color-primary)] hover:bg-[color:var(--color-primary)] hover:text-white transition-colors"
-                aria-label="View"
-              >
-                View
-              </IconButton>
-            )}
-          />
+          <div className="h-full overflow-hidden">
+            <Table
+              columns={columns}
+              data={filteredCategories}
+              scrollable={true}
+              rowAction={(category) => (
+                <IconButton
+                  onClick={() => openViewModal(category)}
+                  className="px-4 py-1 border rounded text-[color:var(--color-primary-text)] border-[color:var(--color-primary)] hover:bg-[color:var(--color-primary)] hover:text-white transition-colors"
+                  aria-label="View"
+                >
+                  View
+                </IconButton>
+              )}
+            />
+          </div>
         )}
       </div>
 

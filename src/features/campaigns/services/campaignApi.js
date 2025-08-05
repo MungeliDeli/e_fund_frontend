@@ -78,7 +78,7 @@ export const getCampaignById = async (campaignId) => {
 
 /**
  * Get campaigns by organizer with optional filters
- * @param {Object} filters - Optional filters (status, limit, offset)
+ * @param {Object} filters - Optional filters (status, search, limit, offset)
  * @returns {Promise<Array>} List of campaigns
  */
 export const getCampaignsByOrganizer = async (filters = {}) => {
@@ -89,6 +89,23 @@ export const getCampaignsByOrganizer = async (filters = {}) => {
     return response.data;
   } catch (error) {
     console.error("Failed to get campaigns:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get all campaigns with optional filters (for admin)
+ * @param {Object} filters - Optional filters (status, search, limit, offset)
+ * @returns {Promise<Array>} List of campaigns
+ */
+export const getAllCampaigns = async (filters = {}) => {
+  try {
+    const response = await apiClient.get("/campaigns/all", {
+      params: filters,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get all campaigns:", error);
     throw error;
   }
 };
@@ -114,9 +131,11 @@ export const saveCampaignDraft = async (
     let response;
     if (campaignId) {
       // Update existing draft
+
       response = await apiClient.put(`/campaigns/draft/${campaignId}`, payload);
     } else {
       // Create new draft
+
       response = await apiClient.post("/campaigns/draft", payload);
     }
 
@@ -129,18 +148,27 @@ export const saveCampaignDraft = async (
 
 /**
  * Submit campaign for approval
- * @param {string} campaignId - Campaign ID
- * @param {Object} campaignData - Campaign data to update before submission
- * @returns {Promise<Object>} Updated campaign
+ * @param {string|null} campaignId - Campaign ID (null for new campaigns)
+ * @param {Object} campaignData - Campaign data for submission
+ * @returns {Promise<Object>} Created or updated campaign
  */
 export const submitCampaignForApproval = async (campaignId, campaignData) => {
   try {
-    // First update the campaign with the provided data
-    const updateResponse = await apiClient.put(`/campaigns/${campaignId}`, campaignData);
-    
-    // Then submit for approval
-    const submitResponse = await apiClient.post(`/campaigns/${campaignId}/submit`);
-    return submitResponse.data;
+    if (campaignId) {
+      // Update existing draft and submit for approval
+      const updateResponse = await apiClient.put(`/campaigns/${campaignId}`, {
+        ...campaignData,
+        status: "pending",
+      });
+      return updateResponse.data;
+    } else {
+      // Create new campaign with pending approval status
+      const createResponse = await apiClient.post("/campaigns", {
+        ...campaignData,
+        status: "pending",
+      });
+      return createResponse.data;
+    }
   } catch (error) {
     console.error("Failed to submit campaign for approval:", error);
     throw error;

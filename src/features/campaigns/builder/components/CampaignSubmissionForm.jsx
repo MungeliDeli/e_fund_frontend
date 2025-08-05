@@ -62,7 +62,9 @@ function CampaignSubmissionForm({
     mutationFn: async (formData) => {
       setApiError("");
       setApiSuccess("");
-      return submitCampaignForApproval(campaignId, formData);
+      // Pass null if campaignId is undefined or empty
+      const id = campaignId || null;
+      return submitCampaignForApproval(id, formData);
     },
     onSuccess: (data) => {
       setApiSuccess("Campaign submitted for approval successfully!");

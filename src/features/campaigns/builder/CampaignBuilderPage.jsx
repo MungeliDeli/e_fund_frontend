@@ -168,6 +168,7 @@ const CampaignBuilderPage = () => {
         categoryIds: [],
       };
 
+      console.log("campaignData", campaignData);
       const savedCampaign = await saveCampaignDraft(
         campaignData,
         savedCampaignId

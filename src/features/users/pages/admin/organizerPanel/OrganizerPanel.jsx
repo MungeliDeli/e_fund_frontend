@@ -36,12 +36,15 @@ function OrganizerPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showStats, setShowStats] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleFilter = () => {
     setIsFilterModalOpen(true);
   };
 
-  const handleSearch = () => {};
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
   const handleView = (organizerId) => {
     navigate(`/admin/organizers/${organizerId}`);
@@ -67,20 +70,28 @@ function OrganizerPanel() {
   ];
 
   useEffect(() => {
-    // Fetch all organizers for stats (only once)
     fetchAllOrganizers()
       .then(setAllOrganizers)
       .catch(() => setAllOrganizers([]));
   }, []);
 
+  // Debounced search effect
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    fetchOrganizers(filters)
-      .then(setOrganizers)
-      .catch((err) => setError(err.message || "Failed to fetch organizers"))
-      .finally(() => setLoading(false));
-  }, [filters]);
+    const timeoutId = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      const searchFilters = {
+        ...filters,
+        search: searchTerm,
+      };
+      fetchOrganizers(searchFilters)
+        .then(setOrganizers)
+        .catch((err) => setError(err.message || "Failed to fetch organizers"))
+        .finally(() => setLoading(false));
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [filters, searchTerm]);
 
   // Calculate stats from allOrganizers
   const total = allOrganizers.length;
@@ -100,8 +111,8 @@ function OrganizerPanel() {
         {/* SearchBar */}
         <div className="flex-1 min-w-[180px]">
           <SearchBar
-            placeholder="Search..."
-            value={""}
+            placeholder="Search organizers..."
+            value={searchTerm}
             onChange={handleSearch}
           />
         </div>
@@ -183,7 +194,17 @@ function OrganizerPanel() {
       </div>
 
       {/* Table */}
-      <div className="bg-[color:var(--color-background)] p-2 rounded-lg border border-[color:var(--color-muted)] shadow-md min-h-[120px]">
+      <div
+        className="bg-[color:var(--color-background)] p-2 rounded-lg border border-[color:var(--color-muted)] shadow-md flex-1 min-h-0"
+        style={{
+          height: showStats
+            ? "calc(100vh - 400px - 2rem)"
+            : "calc(100vh - 180px - 2rem)",
+          maxHeight: showStats
+            ? "calc(100vh - 400px - 2rem)"
+            : "calc(100vh - 180px - 2rem)",
+        }}
+      >
         {loading ? (
           <div className="text-center text-[color:var(--color-secondary-text)] py-8">
             Loading organizers...
@@ -191,11 +212,13 @@ function OrganizerPanel() {
         ) : error ? (
           <div className="text-center text-red-500 py-8">{error}</div>
         ) : (
-          <OrganizerTable
-            data={organizers}
-            onView={handleView}
-            filters={filters}
-          />
+          <div className="h-full overflow-hidden">
+            <OrganizerTable
+              data={organizers}
+              onView={handleView}
+              filters={filters}
+            />
+          </div>
         )}
       </div>
 

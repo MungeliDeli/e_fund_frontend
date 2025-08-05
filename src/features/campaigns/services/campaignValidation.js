@@ -46,3 +46,8 @@ export const campaignSubmissionSchema = Joi.object({
 export const validateCampaignSubmission = (data) => {
   return campaignSubmissionSchema.validate(data, { abortEarly: false });
 };
+
+// Helper function to check if campaign is new (no ID)
+export const isNewCampaign = (campaignId) => {
+  return !campaignId || campaignId === null || campaignId === undefined;
+};

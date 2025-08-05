@@ -1,38 +1,35 @@
 import React, { useState, useEffect } from "react";
-import {
-  SecondaryButton,
-  PrimaryButton,
-} from "../../../../../components/Buttons";
-import SearchBar from "../../../../../components/SearchBar/SearchBar";
-import FilterModal from "../../../../../components/FilterModal";
+import { SecondaryButton, PrimaryButton } from "../../../../components/Buttons";
+import SearchBar from "../../../../components/SearchBar/SearchBar";
+import FilterModal from "../../../../components/FilterModal";
 import {
   TotalStatsCard,
   StatusStatsCard,
-} from "../../../../../components/StatsCards";
+} from "../../../../components/StatsCards";
 import {
   FiFilter,
-  FiLayers,
+  FiPlusCircle,
   FiFlag,
   FiChevronUp,
   FiChevronDown,
 } from "react-icons/fi";
-import CampaignTable from "../../../../users/components/CampaignTable";
+import CampaignTable from "../../../users/components/CampaignTable";
 import { useNavigate } from "react-router-dom";
-import { campaignStatuses } from "../../../utils/campaignStatusConfig";
-import { getAllCampaigns } from "../../../services/campaignApi";
+import { campaignStatuses } from "../../utils/campaignStatusConfig";
+import { getCampaignsByOrganizer } from "../../services/campaignApi";
 
-function CampaignPanel() {
+function MyCampaignsPage() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState({});
   const navigate = useNavigate();
 
-  const [allCampaigns, setAllCampaigns] = useState([]);
+  const [myCampaigns, setMyCampaigns] = useState([]);
   const [showStats, setShowStats] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
 
-  // Fetch all campaigns
+  // Fetch organizer's campaigns
   const fetchCampaigns = async (searchFilters = {}) => {
     try {
       setLoading(true);
@@ -41,13 +38,14 @@ function CampaignPanel() {
         ...searchFilters,
         search: searchTerm,
       };
-      const response = await getAllCampaigns(filters);
-      setAllCampaigns(response.data || []);
+      const response = await getCampaignsByOrganizer(filters);
+      setMyCampaigns(response.data || []);
+      console.log("My campaigns:", response.data);
     } catch (error) {
       console.error("Failed to fetch campaigns:", error);
       setError("Failed to load campaigns. Please try again.");
       // Fallback to empty array on error
-      setAllCampaigns([]);
+      setMyCampaigns([]);
     } finally {
       setLoading(false);
     }
@@ -62,29 +60,34 @@ function CampaignPanel() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // Calculate stats from allCampaigns
-  const total = allCampaigns.length;
-  const draft = allCampaigns.filter((c) => c.status === "draft").length;
-  const pending = allCampaigns.filter((c) => c.status === "pending").length;
-  const active = allCampaigns.filter((c) => c.status === "active").length;
-  const successful = allCampaigns.filter(
+  // Calculate stats from myCampaigns
+  const total = myCampaigns.length;
+  const draft = myCampaigns.filter((c) => c.status === "draft").length;
+  const pending = myCampaigns.filter((c) => c.status === "pending").length;
+  const active = myCampaigns.filter((c) => c.status === "active").length;
+  const successful = myCampaigns.filter(
     (c) => c.status === "successful"
   ).length;
-  const closed = allCampaigns.filter((c) => c.status === "closed").length;
-  const cancelled = allCampaigns.filter((c) => c.status === "cancelled").length;
-  const rejected = allCampaigns.filter((c) => c.status === "rejected").length;
+  const closed = myCampaigns.filter((c) => c.status === "closed").length;
+  const cancelled = myCampaigns.filter((c) => c.status === "cancelled").length;
+  const rejected = myCampaigns.filter((c) => c.status === "rejected").length;
 
   const handleFilter = () => setIsFilterModalOpen(true);
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
-  const handleCategories = () => {
-    navigate("/admin/campaign-categories");
+  const handleCreateCampaign = () => {
+    navigate("/campaign-templates");
   };
 
   const handleView = (campaignId) => {
     // TODO: navigate to campaign details or open modal
     console.log("View campaign", campaignId);
+  };
+
+  const handleEdit = (campaignId) => {
+    // TODO: navigate to campaign builder with existing campaign data
+    navigate(`/campaign-builder?campaignId=${campaignId}`);
   };
 
   // Filter options
@@ -107,7 +110,7 @@ function CampaignPanel() {
 
   // Build valueMap for status counts
   const valueMap = campaignStatuses.reduce((acc, s) => {
-    acc[s.key] = allCampaigns.filter(
+    acc[s.key] = myCampaigns.filter(
       (c) => (c.status || "").toLowerCase() === s.key
     ).length;
     return acc;
@@ -117,7 +120,7 @@ function CampaignPanel() {
     <div className="p-2 sm:p-2 bg-[color:var(--color-background)] min-h-screen transition-colors">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 w-full">
         <h1 className="text-2xl font-bold text-[color:var(--color-primary-text)]">
-          Campaigns
+          My Campaigns
         </h1>
         {/* SearchBar */}
         <div className="flex-1 min-w-[180px]">
@@ -137,11 +140,11 @@ function CampaignPanel() {
             <span className="hidden sm:inline">Filter</span>
           </SecondaryButton>
           <PrimaryButton
-            icon={FiLayers}
-            onClick={handleCategories}
+            icon={FiPlusCircle}
+            onClick={handleCreateCampaign}
             className="w-full sm:w-auto"
           >
-            <span className="hidden sm:inline">Categories</span>
+            <span className="hidden sm:inline">Create Campaign</span>
           </PrimaryButton>
         </div>
       </div>
@@ -212,24 +215,26 @@ function CampaignPanel() {
               </button>
             </div>
           </div>
-        ) : allCampaigns.length === 0 ? (
+        ) : myCampaigns.length === 0 ? (
           <div className="flex items-center justify-center py-8">
             <div className="text-[color:var(--color-primary-text)] text-center">
               <div className="mb-2">No campaigns found</div>
               <div className="text-sm text-[color:var(--color-muted-text)]">
                 {searchTerm || Object.keys(filters).length > 0
                   ? "Try adjusting your search or filters"
-                  : "No campaigns have been created yet"}
+                  : "Create your first campaign to get started"}
               </div>
             </div>
           </div>
         ) : (
           <div className="h-full overflow-hidden">
             <CampaignTable
-              data={allCampaigns}
+              data={myCampaigns}
               onView={handleView}
+              onEdit={handleEdit}
               filters={filters}
-              viewMode="admin"
+              showEditButton={true}
+              viewMode="organizer"
             />
           </div>
         )}
@@ -250,4 +255,4 @@ function CampaignPanel() {
   );
 }
 
-export default CampaignPanel;
+export default MyCampaignsPage;

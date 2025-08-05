@@ -53,6 +53,9 @@ const TemplateSelector = lazy(() =>
 const CampaignBuilderPage = lazy(() =>
   import("./features/campaigns/builder/CampaignBuilderPage")
 );
+const MyCampaignsPage = lazy(() =>
+  import("./features/campaigns/pages/organizer/MyCampaignsPage")
+);
 
 function AppRoutes() {
   const location = useLocation();
@@ -161,6 +164,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<CampaignBuilderPage />}
+                requiredRole="organization_user"
+              />
+            }
+          />
+          <Route
+            path="/organizer/my-campaigns"
+            element={
+              <ProtectedRoute
+                element={<MyCampaignsPage />}
                 requiredRole="organization_user"
               />
             }
