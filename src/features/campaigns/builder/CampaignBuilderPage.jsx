@@ -15,7 +15,8 @@ import SidebarInspector from "./components/SidebarInspector";
 import BuilderHeader from "./components/BuilderHeader";
 import CampaignSubmissionForm from "./components/CampaignSubmissionForm";
 import ConfirmationModal from "../../../components/ConfirmationModal";
-import { saveCampaignDraft } from "../services/campaignApi";
+import Notification from "../../../components/Notification";
+import { saveCampaignDraft, getCampaignById } from "../services/campaignApi";
 
 // Lazy load template components for code splitting
 const templateComponents = {
@@ -42,42 +43,77 @@ const LivePreview = React.memo(({ templateComponent: Template, config }) => (
 const CampaignBuilderPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Parse campaignId from URL query parameters
+  const urlParams = new URLSearchParams(location.search);
+  const campaignId = urlParams.get("campaignId");
   const selectedTemplateId = location.state?.selectedTemplate;
 
-  // Memoize template lookup
-  const selectedTemplate = useMemo(
-    () => templates.find((t) => t.id === selectedTemplateId),
-    [selectedTemplateId]
-  );
+  // State for campaign data when editing
+  const [campaignData, setCampaignData] = useState(null);
+  const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
+  const [campaignError, setCampaignError] = useState(null);
 
-  // Redirect if no template selected
+  // Notification state
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    type: "success",
+    message: "",
+  });
+
+  // Memoize template lookup - use campaign's templateId if editing, otherwise use selected template
+  const selectedTemplate = useMemo(() => {
+    const templateId = campaignData?.templateId || selectedTemplateId;
+    return templates.find((t) => t.id === templateId);
+  }, [campaignData?.templateId, selectedTemplateId]);
+
+  // Redirect if no template selected and not editing
   useEffect(() => {
-    if (!selectedTemplate) {
+    if (!selectedTemplate && !campaignId) {
       navigate("/campaign-templates");
     }
-  }, [selectedTemplate, navigate]);
+  }, [selectedTemplate, campaignId, navigate]);
+
+  // Fetch campaign data if editing
+  useEffect(() => {
+    if (campaignId) {
+      const fetchCampaign = async () => {
+        setIsLoadingCampaign(true);
+        setCampaignError(null);
+        try {
+          const response = await getCampaignById(campaignId);
+          setCampaignData(response.data);
+        } catch (error) {
+          console.error("Failed to fetch campaign:", error);
+          setCampaignError("Failed to load campaign. Please try again.");
+        } finally {
+          setIsLoadingCampaign(false);
+        }
+      };
+      fetchCampaign();
+    }
+  }, [campaignId]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [savedCampaignId, setSavedCampaignId] = useState(null);
+  const [savedCampaignId, setSavedCampaignId] = useState(campaignId);
   const [showSubmissionForm, setShowSubmissionForm] = useState(false);
 
   // Use immer for efficient immutable updates
   const [customPageSettings, updateCustomPageSettings] = useImmer(null);
 
-  // Effect to load initial config from localStorage or fallback to default
+  // Effect to load initial config from campaign data, localStorage, or fallback to default
   useEffect(() => {
     if (!selectedTemplate) return;
 
     setIsLoading(true);
     const storageKey = `campaignBuilder-${selectedTemplate.id}`;
-    const savedConfig = localStorage.getItem(storageKey);
 
     const loadDefaultConfig = async () => {
       try {
         const templateWithConfig = await getTemplateWithConfig(
-          selectedTemplateId
+          selectedTemplate.id
         );
         if (templateWithConfig) {
           updateCustomPageSettings(templateWithConfig.config);
@@ -89,37 +125,45 @@ const CampaignBuilderPage = () => {
       }
     };
 
-    if (savedConfig) {
-      try {
-        updateCustomPageSettings(JSON.parse(savedConfig));
-        setIsLoading(false);
-      } catch (error) {
-        console.error(
-          "Failed to parse saved config, falling back to default:",
-          error
-        );
+    // Priority: 1. Campaign data, 2. localStorage, 3. default config
+    if (campaignData?.customPageSettings) {
+      // Use campaign's custom page settings
+      updateCustomPageSettings(campaignData.customPageSettings);
+      setIsLoading(false);
+    } else {
+      const savedConfig = localStorage.getItem(storageKey);
+      if (savedConfig) {
+        try {
+          updateCustomPageSettings(JSON.parse(savedConfig));
+          setIsLoading(false);
+        } catch (error) {
+          console.error(
+            "Failed to parse saved config, falling back to default:",
+            error
+          );
+          loadDefaultConfig();
+        }
+      } else {
         loadDefaultConfig();
       }
-    } else {
-      loadDefaultConfig();
     }
-  }, [selectedTemplate, selectedTemplateId, updateCustomPageSettings]);
+  }, [selectedTemplate, campaignData, updateCustomPageSettings]);
 
-  // Effect to save config changes to localStorage
+  // Effect to save config changes to localStorage (only for new campaigns)
   useEffect(() => {
-    if (customPageSettings && selectedTemplate) {
+    if (customPageSettings && selectedTemplate && !campaignId) {
       const storageKey = `campaignBuilder-${selectedTemplate.id}`;
       localStorage.setItem(storageKey, JSON.stringify(customPageSettings));
     }
-  }, [customPageSettings, selectedTemplate]);
+  }, [customPageSettings, selectedTemplate, campaignId]);
 
   // Memoized template component
   const TemplateComponent = useMemo(() => {
+    const templateId = selectedTemplate?.id;
     return (
-      templateComponents[selectedTemplateId] ||
-      (() => <div>Template not found</div>)
+      templateComponents[templateId] || (() => <div>Template not found</div>)
     );
-  }, [selectedTemplateId]);
+  }, [selectedTemplate?.id]);
 
   // Memoized config change handler
   const handleConfigChange = useCallback(
@@ -134,7 +178,7 @@ const CampaignBuilderPage = () => {
   };
 
   const handleConfirmBack = () => {
-    if (selectedTemplate) {
+    if (selectedTemplate && !campaignId) {
       const storageKey = `campaignBuilder-${selectedTemplate.id}`;
       localStorage.removeItem(storageKey);
     }
@@ -178,30 +222,50 @@ const CampaignBuilderPage = () => {
       setSavedCampaignId(savedCampaign.data.campaignId);
 
       // Clear localStorage since it's now saved in the database
-      if (selectedTemplate) {
+      if (selectedTemplate && !campaignId) {
         const storageKey = `campaignBuilder-${selectedTemplate.id}`;
         localStorage.removeItem(storageKey);
       }
 
-      // Show success message (you can add a toast notification here)
+      // Show success notification
+      setNotification({
+        isVisible: true,
+        type: "success",
+        message: "Campaign draft saved successfully!",
+      });
+
       console.log("Campaign draft saved successfully!", savedCampaign);
     } catch (error) {
       console.error("Failed to save campaign draft:", error);
-      // Show error message (you can add a toast notification here)
+
+      // Show error notification
+      setNotification({
+        isVisible: true,
+        type: "error",
+        message: "Failed to save campaign draft. Please try again.",
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Show loading state while config loads
-  if (isLoading || !customPageSettings) {
+  // Handle notification close
+  const handleNotificationClose = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
+  // Show loading state while config loads or campaign is being fetched
+  if (isLoading || isLoadingCampaign || !customPageSettings) {
     return (
       <div className="min-h-screen bg-[color:var(--color-background)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[color:var(--color-primary)] mx-auto mb-4"></div>
           <p className="text-[color:var(--color-secondary-text)]">
-            Loading template...
+            {isLoadingCampaign ? "Loading campaign..." : "Loading template..."}
           </p>
+          {campaignError && (
+            <p className="text-red-500 text-sm mt-2">{campaignError}</p>
+          )}
         </div>
       </div>
     );
@@ -214,6 +278,7 @@ const CampaignBuilderPage = () => {
         campaignId={savedCampaignId}
         customPageSettings={customPageSettings}
         templateId={selectedTemplate?.id}
+        campaignData={campaignData} // Pass campaign data for pre-filling
         onBack={handleBackToBuilder}
       />
     );
@@ -221,11 +286,21 @@ const CampaignBuilderPage = () => {
 
   return (
     <div className="min-h-screen bg-[color:var(--color-background)] text-[color:var(--color-primary-text)] flex flex-col">
+      {/* Notification */}
+      <Notification
+        type={notification.type}
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={handleNotificationClose}
+        duration={4000}
+      />
+
       <BuilderHeader
         onBack={handleBack}
         onSaveAsDraft={handleSaveAsDraft}
         onSubmit={handleNext}
         isSaving={isSaving}
+        isEditing={!!campaignId}
       />
       <div className=" mx-auto w-full flex flex-col lg:flex-row gap-2 py-8 px-2 lg:px-6">
         {/* Live Preview (left) */}

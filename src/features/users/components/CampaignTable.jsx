@@ -70,7 +70,7 @@ const baseColumns = [
                 key={cat.categoryId || cat.name}
                 className="inline-block  text-[color:var(--color-primary-text)] rounded px-2 py-0.5 text-xs font-medium"
               >
-                {cat.name}
+                {cat.name} 
               </span>
             ))}
           </div>

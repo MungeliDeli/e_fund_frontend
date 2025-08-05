@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { FiArrowLeft, FiPlus, FiX, FiUpload } from "react-icons/fi";
 import FormField from "../../../../components/FormField";
 import SearchableDropdown from "../../../../components/SearchableDropdown";
+import Notification from "../../../../components/Notification";
 import { getCategories } from "../../services/categoriesApi";
 import { submitCampaignForApproval } from "../../services/campaignApi";
 import { compressImage } from "../../../../utils/imageCompression";
@@ -20,36 +21,59 @@ function CampaignSubmissionForm({
   customPageSettings,
   templateId,
   onBack,
+  campaignData, // <-- new prop for editing
 }) {
   const navigate = useNavigate();
 
-  // Form state
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    goalAmount: "",
-    startDate: "",
-    endDate: "",
-    mainMediaId: null,
-    campaignLogoMediaId: null,
-  });
+  // Pre-fill form state if editing
+  const initialForm = {
+    title: campaignData?.title || "",
+    description: campaignData?.description || "",
+    goalAmount: campaignData?.goalAmount?.toString() || "",
+    startDate: campaignData?.startDate
+      ? campaignData.startDate.slice(0, 10)
+      : "",
+    endDate: campaignData?.endDate ? campaignData.endDate.slice(0, 10) : "",
+    mainMediaId: campaignData?.mainMediaId || null,
+    campaignLogoMediaId: campaignData?.campaignLogoMediaId || null,
+  };
+  const [form, setForm] = useState(initialForm);
 
   const [errors, setErrors] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const [apiError, setApiError] = useState("");
-  const [apiSuccess, setApiSuccess] = useState("");
 
-  // Image state
-  const [mainImage, setMainImage] = useState(null);
-  const [logoImage, setLogoImage] = useState(null);
+  // Notification state
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    type: "success",
+    message: "",
+  });
+
+  // Pre-fill images if editing (if you have URLs)
+  const [mainImage, setMainImage] = useState(
+    campaignData?.mainMediaUrl || null
+  ); // You may need to adjust the property name
+  const [logoImage, setLogoImage] = useState(
+    campaignData?.logoMediaUrl || null
+  ); // You may need to adjust the property name
   const [mainFile, setMainFile] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [warnMsg, setWarnMsg] = useState(null);
 
+  // Pre-fill categories if editing
+  const initialSelectedCategories = (campaignData?.categories || []).map(
+    (cat) => ({
+      id: cat.categoryId || cat.id || cat._id || cat.name, // fallback for unique id
+      categoryId: cat.categoryId || cat.id || cat._id || "",
+    })
+  );
+  const [selectedCategories, setSelectedCategories] = useState(
+    initialSelectedCategories.length > 0 ? initialSelectedCategories : []
+  );
+
   // Categories state
   const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
 
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
@@ -60,14 +84,17 @@ function CampaignSubmissionForm({
   // Submit mutation
   const mutation = useMutation({
     mutationFn: async (formData) => {
-      setApiError("");
-      setApiSuccess("");
+      setNotification((prev) => ({ ...prev, isVisible: false }));
       // Pass null if campaignId is undefined or empty
       const id = campaignId || null;
       return submitCampaignForApproval(id, formData);
     },
     onSuccess: (data) => {
-      setApiSuccess("Campaign submitted for approval successfully!");
+      setNotification({
+        isVisible: true,
+        type: "success",
+        message: "Campaign submitted for approval successfully!",
+      });
       setTimeout(() => {
         navigate("/campaigns/my-campaigns");
       }, 2000);
@@ -88,7 +115,12 @@ function CampaignSubmissionForm({
       } else if (error?.message) {
         msg = error.message;
       }
-      setApiError(msg);
+
+      setNotification({
+        isVisible: true,
+        type: "error",
+        message: msg,
+      });
     },
   });
 
@@ -212,8 +244,7 @@ function CampaignSubmissionForm({
     e.preventDefault();
     setSubmitAttempted(true);
     setErrors({});
-    setApiError("");
-    setApiSuccess("");
+    setNotification((prev) => ({ ...prev, isVisible: false })); // Hide previous notifications
 
     try {
       const validationErrors = validateForm();
@@ -241,8 +272,22 @@ function CampaignSubmissionForm({
     }
   };
 
+  // Handle notification close
+  const handleNotificationClose = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-8 bg-[color:var(--color-background)] min-h-screen transition-colors">
+      {/* Notification */}
+      <Notification
+        type={notification.type}
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={handleNotificationClose}
+        duration={4000}
+      />
+
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={onBack}
@@ -492,18 +537,6 @@ function CampaignSubmissionForm({
             </div>
           )}
         </div>
-
-        {/* API error/success messages */}
-        {(apiError || apiSuccess) && (
-          <div className="mt-6">
-            {apiError && (
-              <div className="text-red-600 text-sm mb-2">{apiError}</div>
-            )}
-            {apiSuccess && (
-              <div className="text-green-600 text-sm mb-2">{apiSuccess}</div>
-            )}
-          </div>
-        )}
 
         {/* Form Actions */}
         <div className="flex gap-4 mt-8">
