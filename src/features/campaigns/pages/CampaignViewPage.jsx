@@ -11,6 +11,7 @@ import ReasonModal from "../components/ReasonModal";
 import PreviewCollapse from "../components/PreviewCollapse";
 import { FaBullseye, FaRegCalendarCheck } from "react-icons/fa";
 import { FiCalendar, FiFlag } from "react-icons/fi";
+import Notification from "../../../components/Notification";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -50,6 +51,10 @@ export default function CampaignViewPage() {
   const [showReason, setShowReason] = useState(false);
   const [reasonPurpose, setReasonPurpose] = useState("rejected"); // 'rejected' | 'cancelled'
   const isAdmin = ADMIN_ROLES.includes(user?.userType);
+  const [actionError, setActionError] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -75,12 +80,19 @@ export default function CampaignViewPage() {
   const canCancel = status !== "pending" && status !== "cancelled"; // admin or organizer; organizer shares this page
 
   const handleApprove = async () => {
+    setActionError("");
+    setActionLoading(true);
     try {
       await updateCampaign(campaignId, { status: "active" });
       const refreshed = await getCampaignById(campaignId);
       setCampaign(refreshed.data || refreshed);
+      setToastMessage("Campaign approved successfully");
+      setToastVisible(true);
     } catch (e) {
-      console.error(e);
+      const msg = e?.response?.data?.message || e?.message || "Approval failed";
+      setActionError(msg);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -93,15 +105,25 @@ export default function CampaignViewPage() {
     setShowReason(true);
   };
   const handleReasonSubmit = async (note) => {
+    setActionError("");
+    setActionLoading(true);
     try {
       await updateCampaign(campaignId, {
         status: reasonPurpose /* statusNote planned */,
       });
       const refreshed = await getCampaignById(campaignId);
       setCampaign(refreshed.data || refreshed);
+      const successText =
+        reasonPurpose === "rejected"
+          ? "Campaign rejected successfully"
+          : "Campaign cancelled successfully";
+      setToastMessage(successText);
+      setToastVisible(true);
     } catch (e) {
-      console.error(e);
+      const msg = e?.response?.data?.message || e?.message || "Action failed";
+      setActionError(msg);
     } finally {
+      setActionLoading(false);
       setShowReason(false);
     }
   };
@@ -117,6 +139,13 @@ export default function CampaignViewPage() {
 
   return (
     <div className="p-4 md:p-6 lg:p-8">
+      <Notification
+        type="success"
+        message={toastMessage}
+        isVisible={toastVisible}
+        onClose={() => setToastVisible(false)}
+        duration={4000}
+      />
       {/* Header actions */}
       <div className="flex items-center justify-between mb-4">
         <SecondaryButton onClick={() => navigate(-1)}>Go Back</SecondaryButton>
@@ -160,28 +189,37 @@ export default function CampaignViewPage() {
       </div>
 
       {/* Actions row */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        {/* Preview toggle */}
-        {campaign.templateId && (
-          <PreviewCollapse
-            templateId={campaign.templateId}
-            customPageSettings={campaign.customPageSettings}
-          />
-        )}
+      <div className="mb-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Preview toggle */}
+          {campaign.templateId && (
+            <PreviewCollapse
+              templateId={campaign.templateId}
+              customPageSettings={campaign.customPageSettings}
+            />
+          )}
 
-        {/* Approve/Reject (admins only when pending) */}
-        {canApproveReject && (
-          <div className="flex gap-2">
-            <PrimaryButton onClick={handleApprove}>Approve</PrimaryButton>
-            <SecondaryButton onClick={openReject}>Reject</SecondaryButton>
-          </div>
-        )}
+          {/* Approve/Reject (admins only when pending) */}
+          {canApproveReject && (
+            <div className="flex items-center gap-2">
+              <PrimaryButton onClick={handleApprove} disabled={actionLoading}>
+                Approve
+              </PrimaryButton>
+              <SecondaryButton onClick={openReject} disabled={actionLoading}>
+                Reject
+              </SecondaryButton>
+            </div>
+          )}
 
-        {/* Cancel (both admin and organizer) */}
-        {canCancel && (
-          <SecondaryButton onClick={openCancel}>
-            Cancel Campaign
-          </SecondaryButton>
+          {/* Cancel (both admin and organizer) */}
+          {canCancel && (
+            <SecondaryButton onClick={openCancel} disabled={actionLoading}>
+              Cancel Campaign
+            </SecondaryButton>
+          )}
+        </div>
+        {actionError && (
+          <div className="mt-2 text-sm text-red-500">{actionError}</div>
         )}
       </div>
 
