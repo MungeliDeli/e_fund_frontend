@@ -81,8 +81,7 @@ function MyCampaignsPage() {
   };
 
   const handleView = (campaignId) => {
-    // TODO: navigate to campaign details or open modal
-    console.log("View campaign", campaignId);
+    navigate(`/campaigns/${campaignId}`);
   };
 
   const handleEdit = (campaignId) => {
