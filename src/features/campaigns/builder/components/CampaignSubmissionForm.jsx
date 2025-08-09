@@ -74,14 +74,20 @@ function CampaignSubmissionForm({
       return submitCampaignForApproval(id, formData);
     },
     onSuccess: (data) => {
+      const payload = data?.data || data;
+      const newId =
+        payload?.campaignId || payload?.data?.campaignId || campaignId; // fallback to existing id
       setNotification({
         isVisible: true,
         type: "success",
         message: "Campaign submitted for approval successfully!",
       });
-      setTimeout(() => {
-        navigate("/campaigns/my-campaigns");
-      }, 2000);
+      // Navigate to view page
+      if (newId) {
+        navigate(`/campaigns/${newId}`);
+      } else {
+        navigate("/organizer/my-campaigns");
+      }
     },
     onError: (error) => {
       let msg = "An error occurred. Please try again.";
@@ -379,8 +385,6 @@ function CampaignSubmissionForm({
               )}
             </div>
           </div>
-
-
         </div>
 
         {/* Form Actions */}

@@ -56,6 +56,9 @@ const CampaignBuilderPage = lazy(() =>
 const MyCampaignsPage = lazy(() =>
   import("./features/campaigns/pages/organizer/MyCampaignsPage")
 );
+const CampaignViewPage = lazy(() =>
+  import("./features/campaigns/pages/CampaignViewPage")
+);
 const OrganizerContactsPage = lazy(() =>
   import("./features/Outreach/pages/organizer/ContactsPage")
 );
@@ -64,6 +67,9 @@ const MyListsPage = lazy(() =>
 );
 const AddContactsPage = lazy(() =>
   import("./features/Outreach/pages/organizer/AddContactsPage")
+);
+const NotificationsPage = lazy(() =>
+  import("./features/notifications/pages/NotificationsPage")
 );
 
 function AppRoutes() {
@@ -110,6 +116,22 @@ function AppRoutes() {
           <Route path="/email-verified" element={<EmailVerifiedPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute
+                element={<NotificationsPage />}
+                requiredRole={[
+                  "individual_user",
+                  "organization_user",
+                  "super_admin",
+                  "support_admin",
+                  "event_moderator",
+                  "financial_admin",
+                ]}
+              />
+            }
+          />
           <Route
             path="/setup-account"
             element={<OrganizerSetupPasswordPage />}
@@ -201,6 +223,21 @@ function AppRoutes() {
               <ProtectedRoute
                 element={<CampaignBuilderPage />}
                 requiredRole="organization_user"
+              />
+            }
+          />
+          <Route
+            path="/campaigns/:campaignId"
+            element={
+              <ProtectedRoute
+                element={<CampaignViewPage />}
+                requiredRole={[
+                  "organization_user",
+                  "super_admin",
+                  "support_admin",
+                  "event_moderator",
+                  "financial_admin",
+                ]}
               />
             }
           />

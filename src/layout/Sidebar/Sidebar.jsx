@@ -12,6 +12,7 @@ import {
   FiBarChart,
   FiX,
   FiBriefcase,
+  FiBell,
 } from "react-icons/fi";
 import SidebarItem from "../../components/SidebarItem/SidebarItem";
 import { useAuth } from "../../contexts/AuthContext";
@@ -20,6 +21,12 @@ import { useAuth } from "../../contexts/AuthContext";
 const publicNavItems = [
   { label: "Home", icon: FiHome, key: "home", path: "/" },
   { label: "Campaigns", icon: FiFlag, key: "campaigns", path: "/campaigns" },
+  {
+    label: "Notifications",
+    icon: FiBell,
+    key: "notifications",
+    path: "/notifications",
+  },
 ];
 
 // Role-based navigation config
