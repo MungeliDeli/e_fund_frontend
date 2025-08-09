@@ -8,8 +8,12 @@ const HeroMissionSection = ({ config }) => {
 
   const title = heroSection?.content?.title;
   const subtitle = heroSection?.content?.subtitle;
-  const image = heroSection?.content?.image || heroImg;
+  const imageData = heroSection?.content?.image || heroImg;
   const mission = heroSection?.content?.mission;
+
+  // Handle image data - could be a string URL or an object with metadata
+  const imageUrl =
+    typeof imageData === "object" && imageData?.url ? imageData.url : imageData;
 
   return (
     <section
@@ -23,7 +27,7 @@ const HeroMissionSection = ({ config }) => {
         </div>
       )}
       <img
-        src={image}
+        src={imageUrl}
         alt="Hero"
         className="w-full h-100 object-cover rounded-lg "
         style={{ background: "#eee" }}

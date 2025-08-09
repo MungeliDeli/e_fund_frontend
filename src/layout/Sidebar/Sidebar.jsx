@@ -1,4 +1,18 @@
-import { FiHome, FiFlag, FiCalendar, FiBarChart2, FiUsers, FiSettings, FiUserPlus, FiSearch, FiPlusCircle, FiUser, FiBarChart, FiX, FiBriefcase } from "react-icons/fi";
+import {
+  FiHome,
+  FiFlag,
+  FiCalendar,
+  FiBarChart2,
+  FiUsers,
+  FiSettings,
+  FiUserPlus,
+  FiSearch,
+  FiPlusCircle,
+  FiUser,
+  FiBarChart,
+  FiX,
+  FiBriefcase,
+} from "react-icons/fi";
 import SidebarItem from "../../components/SidebarItem/SidebarItem";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -10,29 +24,105 @@ const publicNavItems = [
 
 // Role-based navigation config
 const adminNavItems = [
-  { label: "Admin Dashboard", icon: FiHome, key: "admin-dashboard", path: "/admin/dashboard" },
-  { label: "Organizers", icon: FiBriefcase, key: "admin-organizers", path: "/admin/organizers", allowedRoles: ["super_admin", "support_admin"] },
-  { label: "User Management", icon: FiUsers, key: "admin-users", path: "/admin/users", allowedRoles: ["super_admin", "support_admin"] },
-  { label: "Campaign", icon: FiFlag, key: "admin-campaigns", path: "/admin/campaigns", allowedRoles: ["super_admin", "event_moderator"] },
-  { label: "Financial Reports", icon: FiBarChart2, key: "admin-financial", path: "/admin/financial-reports", allowedRoles: ["super_admin", "financial_admin"] },
-  { label: "Settings", icon: FiSettings, key: "admin-settings", path: "/admin/settings", allowedRoles: ["super_admin"] },
+  {
+    label: "Admin Dashboard",
+    icon: FiHome,
+    key: "admin-dashboard",
+    path: "/admin/dashboard",
+  },
+  {
+    label: "Organizers",
+    icon: FiBriefcase,
+    key: "admin-organizers",
+    path: "/admin/organizers",
+    allowedRoles: ["super_admin", "support_admin"],
+  },
+  {
+    label: "User Management",
+    icon: FiUsers,
+    key: "admin-users",
+    path: "/admin/users",
+    allowedRoles: ["super_admin", "support_admin"],
+  },
+  {
+    label: "Campaign",
+    icon: FiFlag,
+    key: "admin-campaigns",
+    path: "/admin/campaigns",
+    allowedRoles: ["super_admin", "event_moderator"],
+  },
+  {
+    label: "Financial Reports",
+    icon: FiBarChart2,
+    key: "admin-financial",
+    path: "/admin/financial-reports",
+    allowedRoles: ["super_admin", "financial_admin"],
+  },
+  {
+    label: "Settings",
+    icon: FiSettings,
+    key: "admin-settings",
+    path: "/admin/settings",
+    allowedRoles: ["super_admin"],
+  },
 ];
 
 const navConfig = {
   individual_user: [
-    { label: "Add Post", icon: FiPlusCircle, key: "add-post", path: "/add-post" },
-    { label: "Profile", icon: FiUser, key: "profile-view", path: "/profile-view" },
+    {
+      label: "Add Post",
+      icon: FiPlusCircle,
+      key: "add-post",
+      path: "/add-post",
+    },
+    {
+      label: "Profile",
+      icon: FiUser,
+      key: "profile-view",
+      path: "/profile-view",
+    },
   ],
   organization_user: [
-    { label: "Dashboard", icon: FiHome, key: "organizer-dashboard", path: "/organizer/dashboard" },
-    { label: "My Campaigns", icon: FiFlag, key: "my-campaigns", path: "/organizer/my-campaigns" },
-    { label: "Create Campaign", icon: FiPlusCircle, key: "create-campaign", path: "/organizer/create-campaign" },
-    { label: "Metrics", icon: FiBarChart, key: "metrics", path: "/organizer/metrics" },
+    {
+      label: "Dashboard",
+      icon: FiHome,
+      key: "organizer-dashboard",
+      path: "/organizer/dashboard",
+    },
+    {
+      label: "My Campaigns",
+      icon: FiFlag,
+      key: "my-campaigns",
+      path: "/organizer/my-campaigns",
+    },
+    {
+      label: "My Contacts",
+      icon: FiUsers,
+      key: "my-contacts",
+      path: "/organizer/contacts",
+    },
+    {
+      label: "Create Campaign",
+      icon: FiPlusCircle,
+      key: "create-campaign",
+      path: "/organizer/create-campaign",
+    },
+    {
+      label: "Metrics",
+      icon: FiBarChart,
+      key: "metrics",
+      path: "/organizer/metrics",
+    },
   ],
   admin: adminNavItems,
 };
 
-const adminRoles = ["super_admin", "support_admin", "event_moderator", "financial_admin"];
+const adminRoles = [
+  "super_admin",
+  "support_admin",
+  "event_moderator",
+  "financial_admin",
+];
 
 function Sidebar({ open, onClose, className }) {
   const headerHeight = 56;
@@ -43,7 +133,10 @@ function Sidebar({ open, onClose, className }) {
   if (isAuthenticated && userType) {
     if (adminRoles.includes(userType)) {
       roleNavItems = navConfig.admin.filter(
-        (item) => !item.allowedRoles || item.allowedRoles.includes(userType) || userType === "super_admin"
+        (item) =>
+          !item.allowedRoles ||
+          item.allowedRoles.includes(userType) ||
+          userType === "super_admin"
       );
     } else {
       roleNavItems = navConfig[userType] || [];
@@ -53,7 +146,11 @@ function Sidebar({ open, onClose, className }) {
   return (
     <>
       <div
-        className={`fixed left-0 right-0 z-30 bg-black/40 transition-opacity lg:hidden ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"} `}
+        className={`fixed left-0 right-0 z-30 bg-black/40 transition-opacity lg:hidden ${
+          open
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        } `}
         style={{ top: headerHeight }}
         onClick={onClose}
         aria-hidden={!open}
@@ -61,7 +158,9 @@ function Sidebar({ open, onClose, className }) {
       <aside
         className={`fixed left-0  z-40 h-[calc(100vh-56px)] w-64 bg-[color:var(--color-background)] border-r border-[color:var(--color-muted)] flex flex-col pt-4 transition-transform \
                     lg:static lg:border-r lg:border-[color:var(--color-muted)]\
-                    ${open ? "translate-x-0" : "-translate-x-full"} ${className || ''}  lg:translate-x-0`}
+                    ${open ? "translate-x-0" : "-translate-x-full"} ${
+          className || ""
+        }  lg:translate-x-0`}
         style={{ top: headerHeight }}
         aria-label="Sidebar"
       >
@@ -76,7 +175,9 @@ function Sidebar({ open, onClose, className }) {
             />
           ))}
           {/* Divider if there are role-based items */}
-          {roleNavItems.length > 0 && <div className="my-2 border-t border-[color:var(--color-muted)]" />}
+          {roleNavItems.length > 0 && (
+            <div className="my-2 border-t border-[color:var(--color-muted)]" />
+          )}
           {/* Role-based nav items */}
           {roleNavItems.map((item) => (
             <SidebarItem

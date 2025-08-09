@@ -56,6 +56,15 @@ const CampaignBuilderPage = lazy(() =>
 const MyCampaignsPage = lazy(() =>
   import("./features/campaigns/pages/organizer/MyCampaignsPage")
 );
+const OrganizerContactsPage = lazy(() =>
+  import("./features/Outreach/pages/organizer/ContactsPage")
+);
+const MyListsPage = lazy(() =>
+  import("./features/Outreach/pages/organizer/MyListsPage")
+);
+const AddContactsPage = lazy(() =>
+  import("./features/Outreach/pages/organizer/AddContactsPage")
+);
 
 function AppRoutes() {
   const location = useLocation();
@@ -145,6 +154,33 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<OrganizerDashboardPage />}
+                requiredRole="organization_user"
+              />
+            }
+          />
+          <Route
+            path="/organizer/contacts"
+            element={
+              <ProtectedRoute
+                element={<OrganizerContactsPage />}
+                requiredRole="organization_user"
+              />
+            }
+          />
+          <Route
+            path="/organizer/my-lists"
+            element={
+              <ProtectedRoute
+                element={<MyListsPage />}
+                requiredRole="organization_user"
+              />
+            }
+          />
+          <Route
+            path="/organizer/add-contacts"
+            element={
+              <ProtectedRoute
+                element={<AddContactsPage />}
                 requiredRole="organization_user"
               />
             }

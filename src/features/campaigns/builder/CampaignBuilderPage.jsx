@@ -17,6 +17,7 @@ import CampaignSubmissionForm from "./components/CampaignSubmissionForm";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 import Notification from "../../../components/Notification";
 import { saveCampaignDraft, getCampaignById } from "../services/campaignApi";
+import { v4 as uuidv4 } from "uuid";
 
 // Lazy load template components for code splitting
 const templateComponents = {
@@ -39,6 +40,17 @@ const LivePreview = React.memo(({ templateComponent: Template, config }) => (
     </Suspense>
   </div>
 ));
+
+// Add a function to get or generate a stable draft UUID
+function getDraftUUID(selectedTemplateId) {
+  const storageKey = `campaignBuilder-draftUUID-${selectedTemplateId}`;
+  let draftUUID = localStorage.getItem(storageKey);
+  if (!draftUUID) {
+    draftUUID = uuidv4();
+    localStorage.setItem(storageKey, draftUUID);
+  }
+  return draftUUID;
+}
 
 const CampaignBuilderPage = () => {
   const location = useLocation();
@@ -173,6 +185,20 @@ const CampaignBuilderPage = () => {
     [updateCustomPageSettings]
   );
 
+  // Update handleImageMetadata to update customPageSettings directly
+  const handleImageMetadata = useCallback(
+    (sectionKey, field, metadata) => {
+      updateCustomPageSettings((draft) => {
+        if (!draft.sections) return;
+        const section = draft.sections.find((s) => s.key === sectionKey);
+        if (section && section.content && field in section.content) {
+          section.content[field] = metadata;
+        }
+      });
+    },
+    [updateCustomPageSettings]
+  );
+
   const handleBack = () => {
     setIsModalOpen(true);
   };
@@ -207,8 +233,6 @@ const CampaignBuilderPage = () => {
         description: null,
         startDate: null,
         endDate: null,
-        mainMediaId: null,
-        campaignLogoMediaId: null,
         categoryIds: [],
       };
 
@@ -284,6 +308,14 @@ const CampaignBuilderPage = () => {
     );
   }
 
+  // Generate deterministic keys for each image slot
+  const getImageKey = (slot) => {
+    // Use campaignId if available, otherwise use draft UUID
+    const id = savedCampaignId || getDraftUUID(selectedTemplate?.id);
+    // slot: e.g., 'logo', 'main', 'hero', etc.
+    return `${slot}-${id}.jpg`;
+  };
+
   return (
     <div className="min-h-screen bg-[color:var(--color-background)] text-[color:var(--color-primary-text)] flex flex-col">
       {/* Notification */}
@@ -315,6 +347,8 @@ const CampaignBuilderPage = () => {
           <SidebarInspector
             config={customPageSettings}
             onConfigChange={handleConfigChange}
+            onImageMetadata={handleImageMetadata}
+            getImageKey={getImageKey}
           />
         </div>
       </div>

@@ -1,27 +1,27 @@
-import { useState, useEffect } from 'react';
-import FormField from '../../../components/FormField';
-import { profileInfoSchema } from '../services/userValidation';
+import { useState, useEffect } from "react";
+import FormField from "../../../components/FormField";
+import { profileInfoSchema } from "../services/userValidation";
 
 function ProfileInfoEditor({ profile, onSave, loading }) {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    country: '',
-    city: '',
-    address: '',
+    firstName: "",
+    lastName: "",
+    country: "",
+    city: "",
+    address: "",
   });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (profile) {
-        console.log(profile);
-        
+      console.log(profile);
+
       setFormData({
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
-        country: profile.country || '',
-        city: profile.city || '',
-        address: profile.address || '',
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        country: profile.country || "",
+        city: profile.city || "",
+        address: profile.address || "",
       });
     }
   }, [profile]);
@@ -32,7 +32,9 @@ function ProfileInfoEditor({ profile, onSave, loading }) {
   };
 
   const handleSave = () => {
-    const { error } = profileInfoSchema.validate(formData, { abortEarly: false });
+    const { error } = profileInfoSchema.validate(formData, {
+      abortEarly: false,
+    });
     if (error) {
       const newErrors = {};
       error.details.forEach((detail) => {
@@ -89,9 +91,8 @@ function ProfileInfoEditor({ profile, onSave, loading }) {
           disabled={loading}
           type="button"
         >
-          {loading ? 'Uploading...' : 'Save'}
+          {loading ? "Uploading..." : "Save"}
         </button>
-       
       </div>
     </div>
   );

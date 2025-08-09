@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { FiArrowLeft, FiPlus, FiX, FiUpload } from "react-icons/fi";
+import { FiArrowLeft, FiPlus, FiX } from "react-icons/fi";
 import FormField from "../../../../components/FormField";
 import SearchableDropdown from "../../../../components/SearchableDropdown";
 import Notification from "../../../../components/Notification";
 import { getCategories } from "../../services/categoriesApi";
 import { submitCampaignForApproval } from "../../services/campaignApi";
-import { compressImage } from "../../../../utils/imageCompression";
 import { validateCampaignSubmission } from "../../services/campaignValidation";
 import { v4 as uuidv4 } from "uuid";
 
-const MAX_IMAGE_SIZE_MB = 10;
-const WARN_IMAGE_SIZE_MB = 2;
-const MAX_IMAGE_DIMENSION = 1024;
 const MAX_CATEGORIES = 3;
 
 function CampaignSubmissionForm({
@@ -48,18 +44,6 @@ function CampaignSubmissionForm({
     type: "success",
     message: "",
   });
-
-  // Pre-fill images if editing (if you have URLs)
-  const [mainImage, setMainImage] = useState(
-    campaignData?.mainMediaUrl || null
-  ); // You may need to adjust the property name
-  const [logoImage, setLogoImage] = useState(
-    campaignData?.logoMediaUrl || null
-  ); // You may need to adjust the property name
-  const [mainFile, setMainFile] = useState(null);
-  const [logoFile, setLogoFile] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [warnMsg, setWarnMsg] = useState(null);
 
   // Pre-fill categories if editing
   const initialSelectedCategories = (campaignData?.categories || []).map(
@@ -132,49 +116,6 @@ function CampaignSubmissionForm({
       setCategories(categoriesData.data);
     }
   }, [categoriesData]);
-
-  // Image compression handler
-  const handleImageChange = async (e, type) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setErrorMsg(null);
-    setWarnMsg(null);
-
-    const {
-      file: compressed,
-      warning,
-      error,
-    } = await compressImage(file, {
-      maxSizeMB: MAX_IMAGE_SIZE_MB,
-      warnSizeMB: WARN_IMAGE_SIZE_MB,
-      maxDimension: MAX_IMAGE_DIMENSION,
-    });
-
-    if (error) {
-      setErrorMsg(error);
-      return;
-    }
-    if (warning) setWarnMsg(warning);
-
-    const url = URL.createObjectURL(compressed);
-    if (type === "main") {
-      setMainFile(compressed);
-      setMainImage(url);
-    } else {
-      setLogoFile(compressed);
-      setLogoImage(url);
-    }
-  };
-
-  const handleRemoveImage = (type) => {
-    if (type === "main") {
-      setMainImage(null);
-      setMainFile(null);
-    } else {
-      setLogoImage(null);
-      setLogoFile(null);
-    }
-  };
 
   // Category handlers
   const addCategory = () => {
@@ -276,6 +217,25 @@ function CampaignSubmissionForm({
   const handleNotificationClose = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
+
+  // Extract image URLs from customPageSettings
+  const getImageUrl = (fieldName) => {
+    if (!customPageSettings?.sections) return null;
+
+    for (const section of customPageSettings.sections) {
+      if (section.content && section.content[fieldName]) {
+        const imageData = section.content[fieldName];
+        // Handle image data - could be a string URL or an object with metadata
+        return typeof imageData === "object" && imageData?.url
+          ? imageData.url
+          : imageData;
+      }
+    }
+    return null;
+  };
+
+  const mainImageUrl = getImageUrl("mainImage") || getImageUrl("heroImage");
+  const logoImageUrl = getImageUrl("logoImage") || getImageUrl("campaignLogo");
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-8 bg-[color:var(--color-background)] min-h-screen transition-colors">
@@ -420,122 +380,7 @@ function CampaignSubmissionForm({
             </div>
           </div>
 
-          {/* Main Campaign Image */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-1">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[color:var(--color-primary-text)]">
-                Main Campaign Image
-              </label>
-              <div className="w-full h-32 rounded-lg overflow-hidden border border-[color:var(--color-muted)]">
-                {mainImage ? (
-                  <img
-                    src={mainImage}
-                    alt="Main campaign"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-[color:var(--color-surface)] flex items-center justify-center">
-                    <span className="text-[color:var(--color-secondary-text)]">
-                      No image selected
-                    </span>
-                  </div>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                id="main-image"
-                onChange={(e) => handleImageChange(e, "main")}
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => document.getElementById("main-image").click()}
-                  className="flex items-center gap-2 px-3 py-1 text-sm bg-[color:var(--color-primary)] text-white rounded-md hover:bg-[color:var(--color-accent)] transition-colors"
-                >
-                  <FiUpload className="w-4 h-4" />
-                  Upload Image
-                </button>
-                {mainImage && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage("main")}
-                    className="px-3 py-1 text-sm bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors"
-                  >
-                    <FiX className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
 
-          {/* Campaign Logo */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[color:var(--color-primary-text)]">
-                Campaign Logo
-              </label>
-              <div className="w-full h-32 rounded-lg overflow-hidden border border-[color:var(--color-muted)]">
-                {logoImage ? (
-                  <img
-                    src={logoImage}
-                    alt="Campaign logo"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-[color:var(--color-surface)] flex items-center justify-center">
-                    <span className="text-[color:var(--color-secondary-text)]">
-                      No logo selected
-                    </span>
-                  </div>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                id="logo-image"
-                onChange={(e) => handleImageChange(e, "logo")}
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => document.getElementById("logo-image").click()}
-                  className="flex items-center gap-2 px-3 py-1 text-sm bg-[color:var(--color-primary)] text-white rounded-md hover:bg-[color:var(--color-accent)] transition-colors"
-                >
-                  <FiUpload className="w-4 h-4" />
-                  Upload Logo
-                </button>
-                {logoImage && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage("logo")}
-                    className="px-3 py-1 text-sm bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors"
-                  >
-                    <FiX className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Image UX messages */}
-          {(errorMsg || warnMsg) && (
-            <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-              {warnMsg && (
-                <div className="text-yellow-600 text-xs mb-1">{warnMsg}</div>
-              )}
-              {errorMsg && (
-                <div className="text-red-500 text-xs mb-1">{errorMsg}</div>
-              )}
-              <div className="text-xs text-[color:var(--color-secondary-text)]">
-                Max file size: {MAX_IMAGE_SIZE_MB}MB. Images will be
-                automatically resized to {MAX_IMAGE_DIMENSION}px and compressed
-                after upload.
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Form Actions */}

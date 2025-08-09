@@ -6,10 +6,13 @@ const HeaderSection = ({ config }) => {
   const headerSection = config.sections?.find((s) => s.key === "header");
 
   const orgName = headerSection?.content?.orgName;
-    const logo = headerSection?.content?.image || weLogo;
+  const imageData = headerSection?.content?.image || weLogo;
   const bgColor = config.theme.backgroundColor;
   const textColor = config.theme.textColor;
 
+  // Handle image data - could be a string URL or an object with metadata
+  const logoUrl =
+    typeof imageData === "object" && imageData?.url ? imageData.url : imageData;
 
   return (
     <header
@@ -17,7 +20,7 @@ const HeaderSection = ({ config }) => {
       style={{ background: bgColor, color: textColor }}
     >
       <img
-        src={logo}
+        src={logoUrl}
         alt="Org Logo"
         className="w-10 h-10 sm:w-12 sm:h-12 rounded object-contain bg-transparent flex-shrink-0"
       />

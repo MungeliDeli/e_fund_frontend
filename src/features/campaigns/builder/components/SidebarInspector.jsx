@@ -1,10 +1,20 @@
-import React, { useState, useCallback } from 'react';
-import { FiSettings, FiLayout, FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import ThemeEditor from './ThemeEditor';
-import SectionEditor from './SectionEditor';
+import React, { useState, useCallback } from "react";
+import {
+  FiSettings,
+  FiLayout,
+  FiChevronDown,
+  FiChevronUp,
+} from "react-icons/fi";
+import ThemeEditor from "./ThemeEditor";
+import SectionEditor from "./SectionEditor";
 
-const SidebarInspector = ({ config, onConfigChange }) => {
-  const [activeTab, setActiveTab] = useState('content');
+const SidebarInspector = ({
+  config,
+  onConfigChange,
+  onImageMetadata,
+  getImageKey,
+}) => {
+  const [activeTab, setActiveTab] = useState("content");
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -17,23 +27,28 @@ const SidebarInspector = ({ config, onConfigChange }) => {
           <TabButton
             icon={<FiLayout />}
             label="Content"
-            isActive={activeTab === 'content'}
-            onClick={() => handleTabChange('content')}
+            isActive={activeTab === "content"}
+            onClick={() => handleTabChange("content")}
           />
           <TabButton
             icon={<FiSettings />}
             label="Theme"
-            isActive={activeTab === 'theme'}
-            onClick={() => handleTabChange('theme')}
+            isActive={activeTab === "theme"}
+            onClick={() => handleTabChange("theme")}
           />
         </div>
       </div>
-      
+
       <div className="flex-grow p-4 overflow-y-auto">
-        {activeTab === 'content' && (
-          <SectionEditor sections={config.sections} onConfigChange={onConfigChange} />
+        {activeTab === "content" && (
+          <SectionEditor
+            sections={config.sections}
+            onConfigChange={onConfigChange}
+            onImageMetadata={onImageMetadata}
+            getImageKey={getImageKey}
+          />
         )}
-        {activeTab === 'theme' && (
+        {activeTab === "theme" && (
           <ThemeEditor theme={config.theme} onConfigChange={onConfigChange} />
         )}
       </div>
@@ -46,8 +61,8 @@ const TabButton = ({ icon, label, isActive, onClick }) => (
     onClick={onClick}
     className={`flex-1 flex items-center justify-center gap-2 p-4 text-sm font-semibold transition-colors ${
       isActive
-        ? 'text-[color:var(--color-primary)] border-b-2 border-[color:var(--color-primary)]'
-        : 'text-[color:var(--color-secondary-text)] hover:bg-[color:var(--color-background)]'
+        ? "text-[color:var(--color-primary)] border-b-2 border-[color:var(--color-primary)]"
+        : "text-[color:var(--color-secondary-text)] hover:bg-[color:var(--color-background)]"
     }`}
   >
     {icon}

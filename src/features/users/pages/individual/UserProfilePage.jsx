@@ -1,10 +1,10 @@
 /**
  * UserProfilePage Component
- * 
+ *
  * The main profile page component that handles both public and private profile views.
  * This component manages profile data fetching, tab navigation, image display,
  * and provides a unified interface for viewing and editing user profiles.
- * 
+ *
  * Key Features:
  * - Dual view modes: Public (anyone) and Private (owner only)
  * - Tab-based navigation with URL synchronization
@@ -12,27 +12,30 @@
  * - Responsive design with mobile optimization
  * - Deep linking support for direct tab access
  * - Optimized rendering to prevent flicker on tab switches
- * 
+ *
  * Route Behavior:
  * - /profile-view - Shows current user's private profile
  * - /users/:userId - Shows public profile of specified user
  * - Automatic redirect if user views their own public profile
- * 
+ *
  * @author FundFlow Team
  * @version 1.0.0
  */
 
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../../contexts/AuthContext";
-import React, { useMemo , useEffect, useState} from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useMemo, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import OverviewTab from "./tabs/OverviewTab";
 import DonationsTab from "./tabs/DonationsTab";
 import CampaignsTab from "./tabs/CampaignsTab";
 import MessagesTab from "./tabs/MessagesTab";
 import AccountSettingsTab from "./tabs/AccountSettingsTab";
 import { FiCamera } from "react-icons/fi";
-import { fetchPublicProfile, fetchPrivateProfile } from "../../services/usersApi";
+import {
+  fetchPublicProfile,
+  fetchPrivateProfile,
+} from "../../services/usersApi";
 import ProfileImage from "../../components/ProfileImage";
 import CoverImage from "../../components/CoverImage";
 
@@ -48,7 +51,7 @@ function UserProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  
+
   // Determine if the current viewer is the profile owner
   const isOwner = !userId || userId === loggedInUser?.userId;
 
@@ -64,7 +67,8 @@ function UserProfilePage() {
   // Extract tab from URL query parameters for deep linking
   const params = new URLSearchParams(location.search);
   const tabParam = params.get("tab");
-  const initialTab = tabParam && tabMap[tabParam] !== undefined ? tabMap[tabParam] : 0;
+  const initialTab =
+    tabParam && tabMap[tabParam] !== undefined ? tabMap[tabParam] : 0;
   const [activeTab, setActiveTab] = useState(initialTab);
 
   /**
@@ -72,7 +76,11 @@ function UserProfilePage() {
    * This ensures the active tab stays in sync when URL is manually changed
    */
   useEffect(() => {
-    if (tabParam && tabMap[tabParam] !== undefined && tabMap[tabParam] !== activeTab) {
+    if (
+      tabParam &&
+      tabMap[tabParam] !== undefined &&
+      tabMap[tabParam] !== activeTab
+    ) {
       setActiveTab(tabMap[tabParam]);
     }
     // eslint-disable-next-line
@@ -85,15 +93,16 @@ function UserProfilePage() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['userProfile', userId, isOwner],
+    queryKey: ["userProfile", userId, isOwner],
     queryFn: async () => {
-      const res = isOwner ? await fetchPrivateProfile() : await fetchPublicProfile(userId);
+      const res = isOwner
+        ? await fetchPrivateProfile()
+        : await fetchPublicProfile(userId);
       return res.data || res; // Handle responses that might be wrapped in a data object
     },
     // The query will automatically refetch if userId or isOwner changes
   });
 
-  
   /**
    * Redirect logic: If user tries to view their own public profile,
    * redirect them to their private profile view
@@ -102,33 +111,34 @@ function UserProfilePage() {
     if (userId && userId === loggedInUser?.userId) {
       navigate("/profile-view", { replace: true });
     }
-    
   }, [userId, loggedInUser, navigate]);
 
   /**
    * Memoized tab configuration to prevent unnecessary re-renders
    * Only recreates when profile, isOwner, or setProfile changes
    */
-  const tabConfigs = useMemo(() => (
-    isOwner
-      ? [
-          { label: "Overview", key: "overview" },
-          { label: "Donations", key: "donations" },
-          { label: "Campaigns", key: "campaigns" },
-          { label: "Messages", key: "messages" },
-          { label: "Account Settings", key: "account-settings" },
-        ]
-      : [
-          { label: "Overview", key: "overview" },
-          { label: "Donations", key: "donations" },
-          { label: "Campaigns", key: "campaigns" },
-        ]
-  ), [isOwner]);
+  const tabConfigs = useMemo(
+    () =>
+      isOwner
+        ? [
+            { label: "Overview", key: "overview" },
+            { label: "Donations", key: "donations" },
+            { label: "Campaigns", key: "campaigns" },
+            { label: "Messages", key: "messages" },
+            { label: "Account Settings", key: "account-settings" },
+          ]
+        : [
+            { label: "Overview", key: "overview" },
+            { label: "Donations", key: "donations" },
+            { label: "Campaigns", key: "campaigns" },
+          ],
+    [isOwner]
+  );
 
   // Add goToAccountSettings function
   const goToAccountSettings = () => {
     setActiveTab(tabConfigs.length - 1);
-    window.history.replaceState(null, '', '/profile-view?tab=account-settings');
+    window.history.replaceState(null, "", "/profile-view?tab=account-settings");
   };
 
   /**
@@ -137,10 +147,16 @@ function UserProfilePage() {
    */
   const renderTabContent = () => {
     if (!profile) return null;
-  
+
     switch (activeTab) {
       case 0: // Overview
-        return <OverviewTab profile={profile} isOwner={isOwner} goToAccountSettings={goToAccountSettings} />;
+        return (
+          <OverviewTab
+            profile={profile}
+            isOwner={isOwner}
+            goToAccountSettings={goToAccountSettings}
+          />
+        );
       case 1: // Donations
         return <DonationsTab />;
       case 2: // Campaigns
@@ -148,9 +164,24 @@ function UserProfilePage() {
       case 3: // Messages
         return isOwner ? <MessagesTab /> : null;
       case 4: // Account Settings
-        return isOwner ? <AccountSettingsTab profile={profile} onProfileUpdate={() => queryClient.invalidateQueries({ queryKey: ['userProfile', userId, isOwner] })} /> : null;
+        return isOwner ? (
+          <AccountSettingsTab
+            profile={profile}
+            onProfileUpdate={() =>
+              queryClient.invalidateQueries({
+                queryKey: ["userProfile", userId, isOwner],
+              })
+            }
+          />
+        ) : null;
       default:
-        return <OverviewTab profile={profile} isOwner={isOwner} goToAccountSettings={goToAccountSettings} />;
+        return (
+          <OverviewTab
+            profile={profile}
+            isOwner={isOwner}
+            goToAccountSettings={goToAccountSettings}
+          />
+        );
     }
   };
 
@@ -166,9 +197,9 @@ function UserProfilePage() {
     if (tabName) {
       // Use window.history to update URL without triggering navigation
       const newUrl = `/profile-view?tab=${tabName}`;
-      window.history.replaceState(null, '', newUrl);
+      window.history.replaceState(null, "", newUrl);
     } else {
-      window.history.replaceState(null, '', '/profile-view');
+      window.history.replaceState(null, "", "/profile-view");
     }
   };
 
@@ -185,9 +216,13 @@ function UserProfilePage() {
   if (isError) {
     return (
       <div className="w-full flex flex-col items-center justify-center bg-[color:var(--color-background)] min-h-[80vh] text-center p-4">
-        <h2 className="text-2xl font-semibold text-red-500 mb-4">Failed to Load Profile</h2>
+        <h2 className="text-2xl font-semibold text-red-500 mb-4">
+          Failed to Load Profile
+        </h2>
         <p className="text-[color:var(--color-text-muted)] mb-6 max-w-md">
-          {error.response?.data?.message || error.message || 'An unexpected error occurred. The profile could not be loaded. Please check your connection and try again.'}
+          {error.response?.data?.message ||
+            error.message ||
+            "An unexpected error occurred. The profile could not be loaded. Please check your connection and try again."}
         </p>
         <button
           onClick={() => refetch()}
@@ -204,7 +239,7 @@ function UserProfilePage() {
     <div className="w-full flex flex-col items-center bg-[color:var(--color-background)] min-h-[80vh]">
       {/* Cover Photo Section */}
       <div className="w-full max-w-4xl relative rounded-b-lg overflow-hidden">
-        <CoverImage 
+        <CoverImage
           mediaId={profile?.coverPictureMediaId}
           height="h-36 sm:h-44 md:h-52 lg:h-60"
           alt="Cover"
@@ -224,7 +259,7 @@ function UserProfilePage() {
       {/* Profile Photo Section */}
       <div className="relative -mt-14 sm:-mt-16 mb-2">
         <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-1 border-[color:var(--color-background)] shadow-lg">
-          <ProfileImage 
+          <ProfileImage
             mediaId={profile?.profilePictureMediaId}
             size="2xl"
             alt="Profile"
@@ -273,4 +308,4 @@ function UserProfilePage() {
   );
 }
 
-export default UserProfilePage; 
+export default UserProfilePage;
