@@ -9,6 +9,7 @@ import {
   FiInfo,
   FiAlertTriangle,
   FiXCircle,
+  FiFlag,
 } from "react-icons/fi";
 
 function Badge({ visible }) {
@@ -21,7 +22,7 @@ function Badge({ visible }) {
   );
 }
 
-function NotificationItem({ notification, onMarkRead }) {
+function NotificationItem({ notification }) {
   const { id, title, message, createdAt, readAt, category, priority, type } =
     notification;
 
@@ -61,14 +62,6 @@ function NotificationItem({ notification, onMarkRead }) {
         <p className="text-sm text-[color:var(--color-secondary-text)] mt-1 break-words">
           {message}
         </p>
-        {!readAt && (
-          <button
-            onClick={() => onMarkRead(id)}
-            className="mt-2 inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-[color:var(--color-primary)]/10 text-[color:var(--color-primary)] hover:bg-[color:var(--color-primary)]/20"
-          >
-            <FiCheckCircle /> Mark as read
-          </button>
-        )}
       </div>
     </div>
   );
@@ -78,7 +71,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState("all"); // all | unread
+  const [hasMarkedOnView, setHasMarkedOnView] = useState(false);
 
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.readAt).length,
@@ -89,9 +82,29 @@ export default function NotificationsPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await getMyNotifications({ unreadOnly: filter === "unread" });
+      const res = await getMyNotifications({ unreadOnly: false });
+      console.log(res.data);
       const payload = res?.data || res; // support both wrapped/unwrapped
-      setNotifications(Array.isArray(payload) ? payload : payload?.data || []);
+      const list = Array.isArray(payload) ? payload : payload?.data || [];
+      const normalized = list.map((n) => ({
+        id:
+          n.id ||
+          n.notification_id ||
+          n.notificationId ||
+          `${n.title}-${n.created_at || n.createdAt}`,
+        title: n.title,
+        message: n.message,
+        category: n.category,
+        priority: n.priority,
+        createdAt: n.createdAt || n.created_at,
+        readAt: n.readAt || n.read_at,
+      }));
+      setNotifications(normalized);
+      const unread = normalized.filter((x) => !x.readAt).length;
+      try {
+        localStorage.setItem("unreadNotifications", String(unread));
+        window.dispatchEvent(new Event("notifications:update"));
+      } catch {}
     } catch (e) {
       setError("Failed to load notifications");
     } finally {
@@ -102,7 +115,41 @@ export default function NotificationsPage() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, []);
+
+  // Automatically mark all notifications as read when viewing the page (once)
+  useEffect(() => {
+    if (loading) return;
+    if (hasMarkedOnView) return;
+    const unread = notifications.filter((n) => !n.readAt);
+    if (unread.length === 0) {
+      try {
+        localStorage.setItem("unreadNotifications", "0");
+        window.dispatchEvent(new Event("notifications:update"));
+      } catch {}
+      setHasMarkedOnView(true);
+      return;
+    }
+    (async () => {
+      try {
+        await Promise.all(
+          unread.map((n) => markNotificationAsRead(n.id).catch(() => null))
+        );
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.readAt ? n : { ...n, readAt: new Date().toISOString() }
+          )
+        );
+        try {
+          localStorage.setItem("unreadNotifications", "0");
+          window.dispatchEvent(new Event("notifications:update"));
+        } catch {}
+      } finally {
+        setHasMarkedOnView(true);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, notifications]);
 
   const onMarkRead = async (id) => {
     try {
@@ -131,28 +178,7 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-3">
-        <button
-          className={`px-3 py-1 rounded border text-sm ${
-            filter === "all"
-              ? "bg-[color:var(--color-primary)] text-white border-[color:var(--color-primary)]"
-              : "bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] border-[color:var(--color-muted)] hover:border-[color:var(--color-primary)]/50"
-          }`}
-          onClick={() => setFilter("all")}
-        >
-          All
-        </button>
-        <button
-          className={`px-3 py-1 rounded border text-sm ${
-            filter === "unread"
-              ? "bg-[color:var(--color-primary)] text-white border-[color:var(--color-primary)]"
-              : "bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] border-[color:var(--color-muted)] hover:border-[color:var(--color-primary)]/50"
-          }`}
-          onClick={() => setFilter("unread")}
-        >
-          Unread
-        </button>
-      </div>
+      {/* Filter controls removed for simplicity */}
 
       <div className="space-y-3">
         {loading ? (

@@ -52,6 +52,15 @@ function Header({
   const isLogin = location.pathname === "/login";
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef();
+  const [unreadCount, setUnreadCount] = useState(() => {
+    try {
+      return (
+        parseInt(localStorage.getItem("unreadNotifications") || "0", 10) || 0
+      );
+    } catch {
+      return 0;
+    }
+  });
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -67,6 +76,26 @@ function Header({
     }
     return () => document.removeEventListener("mousedown", handleClick);
   }, [profileOpen]);
+
+  // Sync unread notifications badge from localStorage and custom event
+  useEffect(() => {
+    const syncUnread = () => {
+      try {
+        const val =
+          parseInt(localStorage.getItem("unreadNotifications") || "0", 10) || 0;
+        setUnreadCount(val);
+      } catch {
+        setUnreadCount(0);
+      }
+    };
+    syncUnread();
+    window.addEventListener("notifications:update", syncUnread);
+    window.addEventListener("storage", syncUnread);
+    return () => {
+      window.removeEventListener("notifications:update", syncUnread);
+      window.removeEventListener("storage", syncUnread);
+    };
+  }, []);
 
   // Organizer quick action
   const renderOrganizerActions = () => {
@@ -153,7 +182,9 @@ function Header({
             >
               <FiBell className="text-xl text-[color:var(--color-primary-text)]" />
               {/* Badge dot for unread notifications */}
-              <span className="absolute top-1 right-1 inline-flex h-2.5 w-2.5 rounded-full bg-[color:var(--color-accent)] ring-2 ring-[color:var(--color-background)]" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 inline-flex h-2.5 w-2.5 rounded-full bg-[color:var(--color-accent)] ring-2 ring-[color:var(--color-background)]" />
+              )}
             </button>
             {/* Profile avatar */}
             <div className="relative" ref={profileRef}>
