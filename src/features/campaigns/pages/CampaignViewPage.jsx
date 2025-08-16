@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   getCampaignById,
   updateCampaign,
-  activatePendingStartCampaign,
+  publishPendingStartCampaign,
 } from "../../campaigns/services/campaignApi";
 import { useAuth } from "../../../contexts/AuthContext";
 import { PrimaryButton, SecondaryButton } from "../../../components/Buttons";
@@ -78,7 +78,7 @@ export default function CampaignViewPage() {
 
   const status = campaign?.status;
   const canApproveReject = isAdmin && status === "pendingApproval";
-  const canActivate = status === "pendingStart"; // organizer can activate their own pendingStart campaigns
+  const canPublish = status === "pendingStart"; // organizer can publish their own pendingStart campaigns
   const canCancel = status !== "pendingApproval" && status !== "cancelled"; // admin or organizer; organizer shares this page
 
   const handleApprove = async () => {
@@ -139,18 +139,18 @@ export default function CampaignViewPage() {
     }
   };
 
-  const handleActivate = async () => {
+  const handlePublish = async () => {
     setActionError("");
     setActionLoading(true);
     try {
-      await activatePendingStartCampaign(campaignId);
+      await publishPendingStartCampaign(campaignId);
       const refreshed = await getCampaignById(campaignId);
       setCampaign(refreshed.data || refreshed);
-      setToastMessage("Campaign activated successfully");
+      setToastMessage("Campaign published successfully");
       setToastVisible(true);
     } catch (e) {
       const msg =
-        e?.response?.data?.message || e?.message || "Activation failed";
+        e?.response?.data?.message || e?.message || "Publishing failed";
       setActionError(msg);
     } finally {
       setActionLoading(false);
@@ -240,10 +240,10 @@ export default function CampaignViewPage() {
             </div>
           )}
 
-          {/* Activate (organizers only when pendingStart) */}
-          {canActivate && (
-            <PrimaryButton onClick={handleActivate} disabled={actionLoading}>
-              Activate Campaign
+          {/* Publish (organizers only when pendingStart) */}
+          {canPublish && (
+            <PrimaryButton onClick={handlePublish} disabled={actionLoading}>
+              Publish Campaign
             </PrimaryButton>
           )}
 

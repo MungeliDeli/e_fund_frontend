@@ -235,16 +235,16 @@ export const deleteCampaignDraft = async (campaignId) => {
 };
 
 /**
- * Manually activate a pendingStart campaign
+ * Manually publish a pendingStart campaign
  * @param {string} campaignId - Campaign ID
  * @returns {Promise<Object>} Updated campaign
  */
-export const activatePendingStartCampaign = async (campaignId) => {
+export const publishPendingStartCampaign = async (campaignId) => {
   try {
-    const response = await apiClient.post(`/campaigns/${campaignId}/activate`);
+    const response = await apiClient.post(`/campaigns/${campaignId}/publish`);
     return response.data;
   } catch (error) {
-    console.error("Failed to activate campaign:", error);
+    console.error("Failed to publish campaign:", error);
     throw error;
   }
 };
