@@ -3,6 +3,7 @@ import TextInput from "./controls/TextInput";
 import ImagePicker from "./controls/ImagePicker";
 import VisibilityToggle from "./controls/VisibilityToggle";
 import TextArea from "./controls/TextArea";
+import DonationAmountsInput from "./controls/DonationAmountsInput";
 
 const SectionControls = ({
   section,
@@ -75,6 +76,15 @@ const SectionControls = ({
               label={label}
               value={value}
               onChange={(e) => handleContentChange(key, e.target.value)}
+            />
+          );
+        } else if (key === "presetAmounts") {
+          return (
+            <DonationAmountsInput
+              key={key}
+              label={label}
+              value={value}
+              onChange={(amounts) => handleContentChange(key, amounts)}
             />
           );
         } else if (typeof value === "string") {

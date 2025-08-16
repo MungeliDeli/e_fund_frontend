@@ -25,59 +25,59 @@ export const profileInfoSchema = Joi.object({
 });
 
 export const organizationSchema = Joi.object({
-  organization_name: Joi.string().trim().max(255).required().messages({
+  organizationName: Joi.string().trim().max(255).required().messages({
     'string.empty': 'Organization name is required.',
     'string.max': 'Organization name cannot be more than 255 characters.',
     'any.required': 'Organization name is required.',
   }),
-  organization_short_name: Joi.string().trim().max(50).allow('').messages({
+  organizationShortName: Joi.string().trim().max(50).allow('').messages({
     'string.max': 'Short name cannot be more than 50 characters.',
   }),
-  organization_type: Joi.string().trim().max(50).required().messages({
+  organizationType: Joi.string().trim().max(50).required().messages({
     'string.empty': 'Organization type is required.',
     'string.max': 'Organization type cannot be more than 50 characters.',
     'any.required': 'Organization type is required.',
   }),
-  official_email: Joi.string().trim().email({ tlds: false }).max(255).required().messages({
+  officialEmail: Joi.string().trim().email({ tlds: false }).max(255).required().messages({
     'string.empty': 'Official email is required.',
     'string.email': 'Enter a valid email address.',
     'string.max': 'Email cannot be more than 255 characters.',
     'any.required': 'Official email is required.',
   }),
-  official_website_url: Joi.string().trim().uri({ allowRelative: false }).max(255).allow('').messages({
+  officialWebsiteUrl: Joi.string().trim().uri({ allowRelative: false }).max(255).allow('').messages({
     'string.uri': 'Enter a valid website URL.',
     'string.max': 'Website URL cannot be more than 255 characters.',
   }),
   address: Joi.string().trim().max(255).allow('').messages({
     'string.max': 'Address cannot be more than 255 characters.',
   }),
-  mission_description: Joi.string().trim().max(2000).allow('').messages({
+  missionDescription: Joi.string().trim().max(2000).allow('').messages({
     'string.max': 'Mission description cannot be more than 2000 characters.',
   }),
-  establishment_date: Joi.date().iso().allow('').messages({
+  establishmentDate: Joi.date().iso().allow('').messages({
     'date.format': 'Enter a valid date (YYYY-MM-DD).',
   }),
-  campus_affiliation_scope: Joi.string().trim().max(50).allow('').messages({
+  campusAffiliationScope: Joi.string().trim().max(50).allow('').messages({
     'string.max': 'Campus affiliation scope cannot be more than 50 characters.',
   }),
-  affiliated_schools_names: Joi.string().trim().max(2000).allow('').messages({
+  affiliatedSchoolsNames: Joi.string().trim().max(2000).allow('').messages({
     'string.max': 'Affiliated schools cannot be more than 2000 characters.',
   }),
-  affiliated_department_names: Joi.string().trim().max(2000).allow('').messages({
+  affiliatedDepartmentNames: Joi.string().trim().max(2000).allow('').messages({
     'string.max': 'Affiliated departments cannot be more than 2000 characters.',
   }),
-  primary_contact_person_name: Joi.string().trim().max(255).required().messages({
+  primaryContactPersonName: Joi.string().trim().max(255).required().messages({
     'string.empty': 'Primary contact name is required.',
     'string.max': 'Primary contact name cannot be more than 255 characters.',
     'any.required': 'Primary contact name is required.',
   }),
-  primary_contact_person_email: Joi.string().trim().email({ tlds: false }).max(255).required().messages({
+  primaryContactPersonEmail: Joi.string().trim().email({ tlds: false }).max(255).required().messages({
     'string.empty': 'Primary contact email is required.',
     'string.email': 'Enter a valid email address.',
     'string.max': 'Contact email cannot be more than 255 characters.',
     'any.required': 'Primary contact email is required.',
   }),
-  primary_contact_person_phone: Joi.string().trim().max(20).required().messages({
+  primaryContactPersonPhone: Joi.string().trim().max(20).required().messages({
     'string.empty': 'Primary contact phone is required.',
     'string.max': 'Contact phone cannot be more than 20 characters.',
     'any.required': 'Primary contact phone is required.',

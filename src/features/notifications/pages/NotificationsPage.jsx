@@ -5,7 +5,6 @@ import {
 } from "../services/notificationsApi";
 import {
   FiBell,
-  FiCheckCircle,
   FiInfo,
   FiAlertTriangle,
   FiXCircle,
@@ -22,8 +21,23 @@ function Badge({ visible }) {
   );
 }
 
+function DemarcationLine({ label }) {
+  return (
+    <div className="relative my-4">
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full border-t border-[color:var(--color-muted)]" />
+      </div>
+      <div className="relative flex justify-center">
+        <span className="bg-[color:var(--color-background)] px-3 text-sm font-medium text-[color:var(--color-secondary-text)]">
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function NotificationItem({ notification }) {
-  const { id, title, message, createdAt, readAt, category, priority, type } =
+  const { notificationId, title, message, createdAt, readAt, category } =
     notification;
 
   const icon = useMemo(() => {
@@ -78,29 +92,22 @@ export default function NotificationsPage() {
     [notifications]
   );
 
+  const { unreadNotifications, readNotifications } = useMemo(() => {
+    const unread = notifications.filter((n) => !n.readAt);
+    const read = notifications.filter((n) => n.readAt);
+    return { unreadNotifications: unread, readNotifications: read };
+  }, [notifications]);
+
   const load = async () => {
     try {
       setLoading(true);
       setError(null);
       const res = await getMyNotifications({ unreadOnly: false });
-      console.log(res.data);
+      console.log("res", res.data);
       const payload = res?.data || res; // support both wrapped/unwrapped
       const list = Array.isArray(payload) ? payload : payload?.data || [];
-      const normalized = list.map((n) => ({
-        id:
-          n.id ||
-          n.notification_id ||
-          n.notificationId ||
-          `${n.title}-${n.created_at || n.createdAt}`,
-        title: n.title,
-        message: n.message,
-        category: n.category,
-        priority: n.priority,
-        createdAt: n.createdAt || n.created_at,
-        readAt: n.readAt || n.read_at,
-      }));
-      setNotifications(normalized);
-      const unread = normalized.filter((x) => !x.readAt).length;
+      setNotifications(list);
+      const unread = list.filter((x) => !x.readAt).length;
       try {
         localStorage.setItem("unreadNotifications", String(unread));
         window.dispatchEvent(new Event("notifications:update"));
@@ -130,10 +137,14 @@ export default function NotificationsPage() {
       setHasMarkedOnView(true);
       return;
     }
-    (async () => {
+
+    // Add a delay so users can see the demarcation line before notifications are marked as read
+    const timer = setTimeout(async () => {
       try {
         await Promise.all(
-          unread.map((n) => markNotificationAsRead(n.id).catch(() => null))
+          unread.map((n) =>
+            markNotificationAsRead(n.notificationId).catch(() => null)
+          )
         );
         setNotifications((prev) =>
           prev.map((n) =>
@@ -147,7 +158,9 @@ export default function NotificationsPage() {
       } finally {
         setHasMarkedOnView(true);
       }
-    })();
+    }, 60 * 1000); // 1 minute delay
+
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, notifications]);
 
@@ -192,13 +205,22 @@ export default function NotificationsPage() {
             No notifications
           </div>
         ) : (
-          notifications.map((n) => (
-            <NotificationItem
-              key={n.id}
-              notification={n}
-              onMarkRead={onMarkRead}
-            />
-          ))
+          <>
+            {/* Unread notifications */}
+            {unreadNotifications.map((n) => (
+              <NotificationItem key={n.notificationId} notification={n} />
+            ))}
+
+            {/* Demarcation line between unread and read */}
+            {unreadNotifications.length > 0 && readNotifications.length > 0 && (
+              <DemarcationLine label="Earlier notifications" />
+            )}
+
+            {/* Read notifications */}
+            {readNotifications.map((n) => (
+              <NotificationItem key={n.notificationId} notification={n} />
+            ))}
+          </>
         )}
       </div>
     </div>

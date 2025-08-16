@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 
 const DonationFormSection = ({ config }) => {
+  const [donationAmount, setDonationAmount] = useState("");
+  const [message, setMessage] = useState("");
   const section = config.sections?.find((s) => s.key === "donationForm");
 
   const bgColor = config.theme.backgroundColor;
@@ -10,6 +12,15 @@ const DonationFormSection = ({ config }) => {
   const presetAmounts = section?.content?.presetAmounts || [
     500, 200, 100, 50, 20, 5,
   ];
+
+  const handlePresetClick = (amount) => {
+    setDonationAmount(amount.toString());
+  };
+
+  const handleDonate = () => {
+    // TODO: Implement donation logic
+    console.log("Donation:", { amount: donationAmount, message });
+  };
 
   return (
     <section
@@ -21,8 +32,14 @@ const DonationFormSection = ({ config }) => {
         {presetAmounts.map((amt, idx) => (
           <button
             key={amt + idx}
-            className="px-3 py-1  rounded"
-            style={{ border: `1px solid ${textColor}` }}
+            className="px-3 py-1 rounded cursor-pointer hover:opacity-80 transition-opacity"
+            style={{
+              border: `1px solid ${textColor}`,
+              background:
+                donationAmount === amt.toString() ? accentColor : "transparent",
+              color: donationAmount === amt.toString() ? "#ffffff" : textColor,
+            }}
+            onClick={() => handlePresetClick(amt)}
           >
             K{amt}.00
           </button>
@@ -30,6 +47,8 @@ const DonationFormSection = ({ config }) => {
       </div>
       <input
         type="number"
+        value={donationAmount}
+        onChange={(e) => setDonationAmount(e.target.value)}
         className="w-full mb-2 p-2 outline-none rounded"
         placeholder="k 50.00"
         style={{ color: textColor, border: `1px solid ${textColor}` }}
@@ -38,12 +57,16 @@ const DonationFormSection = ({ config }) => {
         Leave a message
       </div>
       <textarea
-        className="w-full mb-2 p-2 outline-none  rounded"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        className="w-full mb-2 p-2 outline-none rounded"
         placeholder="Leave a Message"
         style={{ color: textColor, border: `1px solid ${textColor}` }}
       />
       <button
-        className="w-full py-2  text-white rounded font-bold"
+        onClick={handleDonate}
+        disabled={!donationAmount || parseFloat(donationAmount) <= 0}
+        className="w-full py-2 text-white rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
         style={{ background: accentColor }}
       >
         Donate

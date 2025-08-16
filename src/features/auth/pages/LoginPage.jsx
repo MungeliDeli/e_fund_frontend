@@ -57,9 +57,9 @@ function LoginPage() {
       const data = res.data?.data;
       if (data?.token && data?.user) {
         login(data.user, data.token, data.refreshToken);
-        if (data.user.userType === 'individual_user') {
+        if (data.user.userType === 'individualUser') {
           navigate('/dashboard', { replace: true });
-        } else if (data.user.userType === 'organization_user') {
+        } else if (data.user.userType === 'organizationUser') {
           navigate('/organizer/dashboard', { replace: true });
         } else if (data.user.userType === 'admin') {
           navigate('/admin/dashboard', { replace: true });

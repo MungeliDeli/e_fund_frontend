@@ -30,8 +30,8 @@ function SegmentsSidebar({
         ) : (
           <div className="space-y-1">
             {segments.map((segment) => {
-              const id = segment.segmentId || segment.segment_id;
-              const count = segment.contactCount || segment.contact_count || 0;
+              const id = segment.segmentId;
+              const count = segment.contactCount || 0;
               const isSelected = selectedSegmentId === id;
               return (
                 <button

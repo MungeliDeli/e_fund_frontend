@@ -35,10 +35,10 @@ function formatDate(value) {
 }
 
 const ADMIN_ROLES = [
-  "super_admin",
-  "support_admin",
-  "event_moderator",
-  "financial_admin",
+  "superAdmin",
+  "supportAdmin",
+  "eventModerator",
+  "financialAdmin",
 ];
 
 export default function CampaignViewPage() {

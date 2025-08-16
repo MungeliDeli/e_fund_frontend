@@ -56,6 +56,7 @@ function ContactsPage() {
       setLoading(true);
       setError(null);
       const response = await outreachApi.getSegments();
+      console.log("response", response.data);
       const list = response?.data?.data || response?.data || [];
       setSegments(list);
 

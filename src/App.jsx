@@ -122,12 +122,12 @@ function AppRoutes() {
               <ProtectedRoute
                 element={<NotificationsPage />}
                 requiredRole={[
-                  "individual_user",
-                  "organization_user",
-                  "super_admin",
-                  "support_admin",
-                  "event_moderator",
-                  "financial_admin",
+                  "individualUser",
+                  "organizationUser",
+                  "superAdmin",
+                  "supportAdmin",
+                  "eventModerator",
+                  "financialAdmin",
                 ]}
               />
             }
@@ -145,7 +145,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<UserDashboardPage />}
-                requiredRole="individual_user"
+                requiredRole="individualUser"
               />
             }
           />
@@ -155,7 +155,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<UserProfilePage />}
-                requiredRole="individual_user"
+                requiredRole="individualUser"
               />
             }
           />
@@ -166,7 +166,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<OrganizerProfilePage />}
-                requiredRole="organization_user"
+                requiredRole="organizationUser"
               />
             }
           />
@@ -176,7 +176,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<OrganizerDashboardPage />}
-                requiredRole="organization_user"
+                requiredRole="organizationUser"
               />
             }
           />
@@ -185,7 +185,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<OrganizerContactsPage />}
-                requiredRole="organization_user"
+                requiredRole="organizationUser"
               />
             }
           />
@@ -194,7 +194,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<MyListsPage />}
-                requiredRole="organization_user"
+                requiredRole="organizationUser"
               />
             }
           />
@@ -203,7 +203,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<AddContactsPage />}
-                requiredRole="organization_user"
+                requiredRole="organizationUser"
               />
             }
           />
@@ -213,7 +213,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<TemplateSelector />}
-                requiredRole="organization_user"
+                requiredRole="organizationUser"
               />
             }
           />
@@ -222,7 +222,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<CampaignBuilderPage />}
-                requiredRole="organization_user"
+                  requiredRole="organizationUser"
               />
             }
           />
@@ -232,11 +232,11 @@ function AppRoutes() {
               <ProtectedRoute
                 element={<CampaignViewPage />}
                 requiredRole={[
-                  "organization_user",
-                  "super_admin",
-                  "support_admin",
-                  "event_moderator",
-                  "financial_admin",
+                  "organizationUser",
+                  "superAdmin",
+                  "supportAdmin",
+                  "eventModerator",
+                  "financialAdmin",
                 ]}
               />
             }
@@ -246,7 +246,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<MyCampaignsPage />}
-                requiredRole="organization_user"
+                requiredRole="organizationUser"
               />
             }
           />
@@ -256,10 +256,10 @@ function AppRoutes() {
               <ProtectedRoute
                 element={<AdminDashboardPage />}
                 requiredRole={[
-                  "super_admin",
-                  "support_admin",
-                  "event_moderator",
-                  "financial_admin",
+                  "superAdmin",
+                  "supportAdmin",
+                  "eventModerator",
+                  "financialAdmin",
                 ]}
               />
             }
@@ -269,7 +269,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<OrganizerPanel />}
-                requiredRole={["super_admin", "support_admin"]}
+                requiredRole={["superAdmin", "supportAdmin"]}
               />
             }
           />
@@ -278,7 +278,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<AddOrganizationPage />}
-                requiredRole={["super_admin", "support_admin"]}
+                requiredRole={["superAdmin", "supportAdmin"]}
               />
             }
           />
@@ -287,7 +287,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<CampaignPanel />}
-                requiredRole={["super_admin", "event_moderator"]}
+                requiredRole={["superAdmin", "eventModerator"]}
               />
             }
           />
@@ -296,7 +296,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<CampaignCategories />}
-                requiredRole={["super_admin", "event_moderator"]}
+                  requiredRole={["superAdmin", "eventModerator"]}
               />
             }
           />

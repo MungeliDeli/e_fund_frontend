@@ -37,7 +37,7 @@ function ContactViewModal({ isOpen, onClose, contact, onEdit, onDelete }) {
       </div>
       <div>
         <span className="font-medium">Emails Opened: </span>
-        <span>{contact.emails_opened ?? 0}</span>
+        <span>{contact.emailsOpened ?? 0}</span>
       </div>
     </EntityViewModal>
   );

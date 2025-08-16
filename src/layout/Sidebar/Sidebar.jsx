@@ -42,40 +42,40 @@ const adminNavItems = [
     icon: FiBriefcase,
     key: "admin-organizers",
     path: "/admin/organizers",
-    allowedRoles: ["super_admin", "support_admin"],
+    allowedRoles: ["superAdmin", "supportAdmin"],
   },
   {
     label: "User Management",
     icon: FiUsers,
     key: "admin-users",
     path: "/admin/users",
-    allowedRoles: ["super_admin", "support_admin"],
+    allowedRoles: ["superAdmin", "supportAdmin"],
   },
   {
     label: "Campaign",
     icon: FiFlag,
     key: "admin-campaigns",
     path: "/admin/campaigns",
-    allowedRoles: ["super_admin", "event_moderator"],
+    allowedRoles: ["superAdmin", "eventModerator"],
   },
   {
     label: "Financial Reports",
     icon: FiBarChart2,
     key: "admin-financial",
     path: "/admin/financial-reports",
-    allowedRoles: ["super_admin", "financial_admin"],
+    allowedRoles: ["superAdmin", "financialAdmin"],
   },
   {
     label: "Settings",
     icon: FiSettings,
     key: "admin-settings",
     path: "/admin/settings",
-    allowedRoles: ["super_admin"],
+    allowedRoles: ["superAdmin"],
   },
 ];
 
 const navConfig = {
-  individual_user: [
+  individualUser: [
     {
       label: "Add Post",
       icon: FiPlusCircle,
@@ -89,7 +89,7 @@ const navConfig = {
       path: "/profile-view",
     },
   ],
-  organization_user: [
+  organizationUser: [
     {
       label: "Dashboard",
       icon: FiHome,
@@ -125,10 +125,10 @@ const navConfig = {
 };
 
 const adminRoles = [
-  "super_admin",
-  "support_admin",
-  "event_moderator",
-  "financial_admin",
+  "superAdmin",
+  "supportAdmin",
+  "eventModerator",
+  "financialAdmin",
 ];
 
 function Sidebar({ open, onClose, className }) {
@@ -143,7 +143,7 @@ function Sidebar({ open, onClose, className }) {
         (item) =>
           !item.allowedRoles ||
           item.allowedRoles.includes(userType) ||
-          userType === "super_admin"
+            userType === "superAdmin"
       );
     } else {
       roleNavItems = navConfig[userType] || [];

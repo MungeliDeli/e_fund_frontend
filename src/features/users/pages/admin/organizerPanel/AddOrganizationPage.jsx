@@ -15,20 +15,20 @@ const MAX_IMAGE_DIMENSION = 1024;
 function AddOrganizationPage() {
   // Form state
   const [form, setForm] = useState({
-    organization_name: "",
-    organization_short_name: "",
-    organization_type: "",
-    official_email: "",
-    official_website_url: "",
+    organizationName: "",
+    organizationShortName: "",
+    organizationType: "",
+    officialEmail: "",
+    officialWebsiteUrl: "",
     address: "",
-    mission_description: "",
-    establishment_date: "",
-    campus_affiliation_scope: "",
-    affiliated_schools_names: "",
-    affiliated_department_names: "",
-    primary_contact_person_name: "",
-    primary_contact_person_email: "",
-    primary_contact_person_phone: "",
+    missionDescription: "",
+    establishmentDate: "",
+    campusAffiliationScope: "",
+    affiliatedSchoolsNames: "",
+    affiliatedDepartmentNames: "",
+    primaryContactPersonName: "",
+    primaryContactPersonEmail: "",
+    primaryContactPersonPhone: "",
   });
   const [errors, setErrors] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -59,20 +59,20 @@ function AddOrganizationPage() {
     onSuccess: (data) => {
       setApiSuccess("Organization created and invitation sent!");
       setForm({
-        organization_name: "",
-        organization_short_name: "",
-        organization_type: "",
-        official_email: "",
-        official_website_url: "",
+        organizationName: "",
+        organizationShortName: "",
+        organizationType: "",
+        officialEmail: "",
+        officialWebsiteUrl: "",
         address: "",
-        mission_description: "",
-        establishment_date: "",
-        campus_affiliation_scope: "",
-        affiliated_schools_names: "",
-        affiliated_department_names: "",
-        primary_contact_person_name: "",
-        primary_contact_person_email: "",
-        primary_contact_person_phone: "",
+        missionDescription: "",
+        establishmentDate: "",
+          campusAffiliationScope: "",
+        affiliatedSchoolsNames: "",
+        affiliatedDepartmentNames: "",
+        primaryContactPersonName: "",
+        primaryContactPersonEmail: "",
+        primaryContactPersonPhone: "",
       });
       setProfileImage(null);
       setCoverImage(null);
@@ -165,36 +165,36 @@ function AddOrganizationPage() {
       // Build FormData
       const formData = new FormData();
       // Backend expects camelCase keys (see backend code)
-      formData.append("organizationName", form.organization_name);
-      formData.append("organizationShortName", form.organization_short_name);
-      formData.append("organizationType", form.organization_type);
-      formData.append("officialEmail", form.official_email);
-      formData.append("officialWebsiteUrl", form.official_website_url);
+      formData.append("organizationName", form.organizationName);
+      formData.append("organizationShortName", form.organizationShortName);
+      formData.append("organizationType", form.organizationType);
+      formData.append("officialEmail", form.officialEmail);
+      formData.append("officialWebsiteUrl", form.officialWebsiteUrl);
       formData.append("address", form.address);
-      formData.append("missionDescription", form.mission_description);
-      formData.append("establishmentDate", form.establishment_date);
-      formData.append("campusAffiliationScope", form.campus_affiliation_scope);
-      formData.append("affiliatedSchoolsNames", form.affiliated_schools_names);
+      formData.append("missionDescription", form.missionDescription);
+      formData.append("establishmentDate", form.establishmentDate);
+      formData.append("campusAffiliationScope", form.campusAffiliationScope);
+      formData.append("affiliatedSchoolsNames", form.affiliatedSchoolsNames);
       formData.append(
         "affiliatedDepartmentNames",
-        form.affiliated_department_names
+        form.affiliatedDepartmentNames
       );
       formData.append(
         "primaryContactPersonName",
-        form.primary_contact_person_name
+        form.primaryContactPersonName
       );
       formData.append(
         "primaryContactPersonEmail",
-        form.primary_contact_person_email
+        form.primaryContactPersonEmail
       );
       formData.append(
         "primaryContactPersonPhone",
-        form.primary_contact_person_phone
+        form.primaryContactPersonPhone
       );
       if (profileFile) formData.append("profilePicture", profileFile);
       if (coverFile) formData.append("coverPicture", coverFile);
       // Email is required for user creation (see backend)
-      formData.append("email", form.official_email);
+      formData.append("email", form.officialEmail);
       mutation.mutate(formData);
     } catch (err) {
       if (err.isJoi && err.details) {
@@ -223,47 +223,47 @@ function AddOrganizationPage() {
           {/* Organization Name */}
           <FormField
             label="Organization Name"
-            name="organization_name"
-            value={form.organization_name}
+            name="organizationName"
+            value={form.organizationName}
             onChange={handleChange}
             required
-            error={submitAttempted ? errors.organization_name : undefined}
+            error={submitAttempted ? errors.organizationName : undefined}
           />
           {/* Short Name */}
           <FormField
             label="Short Name"
-            name="organization_short_name"
-            value={form.organization_short_name}
+              name="organizationShortName"
+            value={form.organizationShortName}
             onChange={handleChange}
-            error={submitAttempted ? errors.organization_short_name : undefined}
+            error={submitAttempted ? errors.organizationShortName : undefined}
           />
           {/* Organization Type */}
           <FormField
             label="Organization Type"
-            name="organization_type"
-            value={form.organization_type}
+            name="organizationType"
+            value={form.organizationType}
             onChange={handleChange}
             required
-            error={submitAttempted ? errors.organization_type : undefined}
+            error={submitAttempted ? errors.organizationType : undefined}
           />
           {/* Official Email */}
           <FormField
             label="Official Email"
-            name="official_email"
+            name="officialEmail"
             type="email"
-            value={form.official_email}
+            value={form.officialEmail}
             onChange={handleChange}
             required
-            error={submitAttempted ? errors.official_email : undefined}
+            error={submitAttempted ? errors.officialEmail : undefined}
           />
           {/* Official Website */}
           <FormField
             label="Official Website URL"
-            name="official_website_url"
+            name="officialWebsiteUrl"
             type="url"
-            value={form.official_website_url}
+            value={form.officialWebsiteUrl}
             onChange={handleChange}
-            error={submitAttempted ? errors.official_website_url : undefined}
+            error={submitAttempted ? errors.officialWebsiteUrl : undefined}
           />
           {/* Address */}
           <FormField
@@ -276,30 +276,30 @@ function AddOrganizationPage() {
           {/* Mission Description */}
           <FormField
             label="Mission Description"
-            name="mission_description"
-            value={form.mission_description}
+            name="missionDescription"
+            value={form.missionDescription}
             onChange={handleChange}
             type="textarea"
-            error={submitAttempted ? errors.mission_description : undefined}
+            error={submitAttempted ? errors.missionDescription : undefined}
           />
           {/* Establishment Date */}
           <FormField
             label="Establishment Date"
-            name="establishment_date"
+            name="establishmentDate"
             type="date"
-            value={form.establishment_date}
+            value={form.establishmentDate}
             onChange={handleChange}
-            error={submitAttempted ? errors.establishment_date : undefined}
+            error={submitAttempted ? errors.establishmentDate : undefined}
           />
           {/* Campus Affiliation Scope */}
           <FormField
             label="Campus Affiliation Scope"
-            name="campus_affiliation_scope"
-            value={form.campus_affiliation_scope}
+              name="campusAffiliationScope"
+            value={form.campusAffiliationScope}
             onChange={handleChange}
             placeholder="e.g. Main, East, West"
             error={
-              submitAttempted ? errors.campus_affiliation_scope : undefined
+              submitAttempted ? errors.campusAffiliationScope : undefined
             }
           />
           <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-xs text-[color:var(--color-secondary-text)] mt-4">
@@ -309,57 +309,57 @@ function AddOrganizationPage() {
           {/* Affiliated Schools */}
           <FormField
             label="Affiliated Schools Names"
-            name="affiliated_schools_names"
-            value={form.affiliated_schools_names}
+            name="affiliatedSchoolsNames"
+            value={form.affiliatedSchoolsNames}
             onChange={handleChange}
             placeholder="e.g. School of Science, School of Engineering"
             error={
-              submitAttempted ? errors.affiliated_schools_names : undefined
+              submitAttempted ? errors.affiliatedSchoolsNames : undefined
             }
           />
           {/* Affiliated Departments */}
           <FormField
             label="Affiliated Department Names"
-            name="affiliated_department_names"
-            value={form.affiliated_department_names}
+            name="affiliatedDepartmentNames"
+            value={form.affiliatedDepartmentNames}
             onChange={handleChange}
             placeholder="e.g. Dept. of Physics, Dept. of Chemistry"
             error={
-              submitAttempted ? errors.affiliated_department_names : undefined
+              submitAttempted ? errors.affiliatedDepartmentNames : undefined
             }
           />
           {/* Primary Contact Name */}
           <FormField
             label="Primary Contact Name"
-            name="primary_contact_person_name"
-            value={form.primary_contact_person_name}
+            name="primaryContactPersonName"
+            value={form.primaryContactPersonName}
             onChange={handleChange}
             required
             error={
-              submitAttempted ? errors.primary_contact_person_name : undefined
+              submitAttempted ? errors.primaryContactPersonName : undefined
             }
           />
           {/* Primary Contact Email */}
           <FormField
             label="Primary Contact Email"
-            name="primary_contact_person_email"
+            name="primaryContactPersonEmail"
             type="email"
-            value={form.primary_contact_person_email}
+            value={form.primaryContactPersonEmail}
             onChange={handleChange}
             required
             error={
-              submitAttempted ? errors.primary_contact_person_email : undefined
+              submitAttempted ? errors.primaryContactPersonEmail : undefined
             }
           />
           {/* Primary Contact Phone */}
           <FormField
             label="Primary Contact Phone"
-            name="primary_contact_person_phone"
-            value={form.primary_contact_person_phone}
+            name="primaryContactPersonPhone"
+            value={form.primaryContactPersonPhone}
             onChange={handleChange}
             required
             error={
-              submitAttempted ? errors.primary_contact_person_phone : undefined
+                submitAttempted ? errors.primaryContactPersonPhone : undefined
             }
           />
         </div>

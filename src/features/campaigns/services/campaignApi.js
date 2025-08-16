@@ -155,25 +155,19 @@ export const saveCampaignDraft = async (
 export const submitCampaignForApproval = async (campaignId, campaignData) => {
   try {
     if (campaignId) {
-      // Update existing draft and submit for approval (status allowed in update schema)
+      // Update existing draft and submit for approval
       const updateResponse = await apiClient.put(`/campaigns/${campaignId}`, {
         ...campaignData,
         status: "pending",
       });
       return updateResponse.data;
     } else {
-      // Create new campaign first (status is stripped by backend create validation), then set to pending
+      // Create new campaign with pending status in a single request
       const createResponse = await apiClient.post("/campaigns", {
         ...campaignData,
-      });
-      const createdPayload = createResponse.data;
-      const created = createdPayload?.data || createdPayload; // unwrap
-      const newId = created?.campaignId || created?.data?.campaignId;
-      if (!newId) return createdPayload;
-      const updateResponse = await apiClient.put(`/campaigns/${newId}`, {
         status: "pending",
       });
-      return updateResponse.data;
+      return createResponse.data;
     }
   } catch (error) {
     console.error("Failed to submit campaign for approval:", error);

@@ -99,7 +99,7 @@ function Header({
 
   // Organizer quick action
   const renderOrganizerActions = () => {
-    if (user?.userType === "organization_user") {
+    if (user?.userType === "organizationUser") {
       return (
         <button
           className="px-2 py-1 rounded bg-[color:var(--color-primary)] text-white font-medium text-xs sm:text-sm hover:bg-[color:var(--color-accent)] transition-colors mr-1"

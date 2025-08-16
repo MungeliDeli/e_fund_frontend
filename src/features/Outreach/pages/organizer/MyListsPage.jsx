@@ -13,6 +13,7 @@ import EntityFormModal from "../../../../components/EntityFormModal";
 import EntityViewModal from "../../../../components/EntityViewModal";
 import ConfirmationModal from "../../../../components/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
+import Notification from "../../../../components/Notification";
 
 function MyListsPage() {
   const navigate = useNavigate();
@@ -23,6 +24,11 @@ function MyListsPage() {
   const [showStats, setShowStats] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState({
+    type: "success",
+    message: "",
+    isVisible: false,
+  });
 
   // View/Edit/Delete modals
   const [viewOpen, setViewOpen] = useState(false);
@@ -30,6 +36,10 @@ function MyListsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteBlockedOpen, setDeleteBlockedOpen] = useState(false);
   const [activeSegment, setActiveSegment] = useState(null);
+
+  const showToast = (type, message) =>
+    setToast({ type, message, isVisible: true });
+  const hideToast = () => setToast((t) => ({ ...t, isVisible: false }));
 
   useEffect(() => {
     fetchSegmentsWithMetrics();
@@ -45,7 +55,7 @@ function MyListsPage() {
       // Fetch contacts per segment to compute total emails opened
       const withMetrics = await Promise.all(
         baseSegments.map(async (s) => {
-          const id = s.segmentId || s.segment_id;
+          const id = s.segmentId;
           try {
             const cRes = await outreachApi.getContactsBySegment(id);
             const contacts = cRes?.data?.data || cRes?.data || [];
@@ -56,15 +66,14 @@ function MyListsPage() {
             return {
               ...s,
               segmentId: id,
-              contactCount:
-                s.contactCount || s.contact_count || contacts.length,
+              contactCount: s.contactCount || contacts.length,
               emailsOpenedTotal: totalOpens,
             };
           } catch (_) {
             return {
               ...s,
               segmentId: id,
-              contactCount: s.contactCount || s.contact_count || 0,
+              contactCount: s.contactCount || 0,
               emailsOpenedTotal: 0,
             };
           }
@@ -117,8 +126,11 @@ function MyListsPage() {
       });
       handleCloseAdd();
       await fetchSegmentsWithMetrics();
+      showToast("success", "List created successfully");
     } catch (err) {
       // Bubble up to modal via throw for friendly display
+      const message = err?.response?.data?.message || "Failed to create list.";
+      showToast("error", message);
       throw err;
     } finally {
       setSaving(false);
@@ -134,14 +146,17 @@ function MyListsPage() {
     if (!activeSegment) return;
     try {
       setSaving(true);
-      const id = activeSegment.segmentId || activeSegment.segment_id;
+      const id = activeSegment.segmentId;
       await outreachApi.updateSegment(id, {
         name: form.name,
         description: form.description || "",
       });
       setEditOpen(false);
       await fetchSegmentsWithMetrics();
+      showToast("success", "List updated successfully");
     } catch (err) {
+      const message = err?.response?.data?.message || "Failed to update list.";
+      showToast("error", message);
       throw err;
     } finally {
       setSaving(false);
@@ -162,17 +177,21 @@ function MyListsPage() {
     if (!activeSegment) return;
     try {
       setSaving(true);
-      const id = activeSegment.segmentId || activeSegment.segment_id;
+      const id = activeSegment.segmentId;
       await outreachApi.deleteSegment(id);
       setDeleteConfirmOpen(false);
       setViewOpen(false);
       await fetchSegmentsWithMetrics();
+      showToast("success", "List deleted successfully");
     } catch (err) {
       // If backend blocks due to contacts, show blocked message instead
       const message = err?.response?.data?.message || "Failed to delete list.";
       if (message.toLowerCase().includes("contact")) {
         setDeleteConfirmOpen(false);
         setDeleteBlockedOpen(true);
+        showToast("error", "Cannot delete list with contacts");
+      } else {
+        showToast("error", message);
       }
     } finally {
       setSaving(false);
@@ -181,6 +200,13 @@ function MyListsPage() {
 
   return (
     <div className="p-2 sm:p-2 bg-[color:var(--color-background)] min-h-screen transition-colors">
+      <Notification
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+        duration={4000}
+      />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 w-full">
         <h1 className="text-2xl font-bold text-[color:var(--color-primary-text)]">

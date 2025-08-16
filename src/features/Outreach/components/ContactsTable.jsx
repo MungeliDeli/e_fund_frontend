@@ -64,7 +64,7 @@ function ContactsTable({ contacts, onViewContact, loading, error }) {
     { key: "name", label: "Name", sortable: true },
     { key: "email", label: "Email", sortable: true },
     { key: "description", label: "Description" },
-    { key: "emails_opened", label: "Emails Open", sortable: true },
+    { key: "emailsOpened", label: "Emails Open", sortable: true },
     {
       key: "actions",
       label: "Actions",
