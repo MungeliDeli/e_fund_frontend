@@ -63,7 +63,12 @@ function MyCampaignsPage() {
   // Calculate stats from myCampaigns
   const total = myCampaigns.length;
   const draft = myCampaigns.filter((c) => c.status === "draft").length;
-  const pending = myCampaigns.filter((c) => c.status === "pending").length;
+  const pendingApproval = myCampaigns.filter(
+    (c) => c.status === "pendingApproval"
+  ).length;
+  const pendingStart = myCampaigns.filter(
+    (c) => c.status === "pendingStart"
+  ).length;
   const active = myCampaigns.filter((c) => c.status === "active").length;
   const successful = myCampaigns.filter(
     (c) => c.status === "successful"
@@ -96,11 +101,9 @@ function MyCampaignsPage() {
       label: "Status",
       options: [
         { value: "draft", label: "Draft" },
-        { value: "pending", label: "Pending" },
+        { value: "pendingApproval", label: "Pending Approval" },
+        { value: "pendingStart", label: "Pending Start" },
         { value: "active", label: "Active" },
-        { value: "successful", label: "Successful" },
-        { value: "closed", label: "Closed" },
-        { value: "cancelled", label: "Cancelled" },
         { value: "rejected", label: "Rejected" },
       ],
     },

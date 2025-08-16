@@ -11,7 +11,18 @@ import {
 // Shared campaign status configuration
 export const campaignStatuses = [
   { key: "draft", label: "Draft", icon: FiEdit2, color: "#60a5fa" },
-  { key: "pending", label: "Pending", icon: FiClock, color: "#facc15" },
+  {
+    key: "pendingApproval",
+    label: "Pending Approval",
+    icon: FiClock,
+    color: "#facc15",
+  },
+  {
+    key: "pendingStart",
+    label: "Pending Start",
+    icon: FiClock,
+    color: "#f59e0b",
+  },
   { key: "active", label: "Active", icon: FiPlayCircle, color: "#3b82f6" },
   {
     key: "successful",

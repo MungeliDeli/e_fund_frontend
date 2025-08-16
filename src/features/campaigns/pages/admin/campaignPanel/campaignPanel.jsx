@@ -65,7 +65,12 @@ function CampaignPanel() {
   // Calculate stats from allCampaigns
   const total = allCampaigns.length;
   const draft = allCampaigns.filter((c) => c.status === "draft").length;
-  const pending = allCampaigns.filter((c) => c.status === "pending").length;
+  const pendingApproval = allCampaigns.filter(
+    (c) => c.status === "pendingApproval"
+  ).length;
+  const pendingStart = allCampaigns.filter(
+    (c) => c.status === "pendingStart"
+  ).length;
   const active = allCampaigns.filter((c) => c.status === "active").length;
   const successful = allCampaigns.filter(
     (c) => c.status === "successful"
@@ -93,7 +98,8 @@ function CampaignPanel() {
       label: "Status",
       options: [
         { value: "draft", label: "Draft" },
-        { value: "pending", label: "Pending" },
+        { value: "pendingApproval", label: "Pending Approval" },
+        { value: "pendingStart", label: "Pending Start" },
         { value: "active", label: "Active" },
         { value: "successful", label: "Successful" },
         { value: "closed", label: "Closed" },

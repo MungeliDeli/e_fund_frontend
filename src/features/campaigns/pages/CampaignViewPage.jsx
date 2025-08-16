@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   getCampaignById,
   updateCampaign,
+  activatePendingStartCampaign,
 } from "../../campaigns/services/campaignApi";
 import { useAuth } from "../../../contexts/AuthContext";
 import { PrimaryButton, SecondaryButton } from "../../../components/Buttons";
@@ -76,17 +77,27 @@ export default function CampaignViewPage() {
   }, [campaignId]);
 
   const status = campaign?.status;
-  const canApproveReject = isAdmin && status === "pending";
-  const canCancel = status !== "pending" && status !== "cancelled"; // admin or organizer; organizer shares this page
+  const canApproveReject = isAdmin && status === "pendingApproval";
+  const canActivate = status === "pendingStart"; // organizer can activate their own pendingStart campaigns
+  const canCancel = status !== "pendingApproval" && status !== "cancelled"; // admin or organizer; organizer shares this page
 
   const handleApprove = async () => {
     setActionError("");
     setActionLoading(true);
     try {
-      await updateCampaign(campaignId, { status: "active" });
+      // Check if campaign should be active or pendingStart based on start date
+      const now = new Date();
+      const startDate = new Date(campaign.startDate);
+      const newStatus = startDate <= now ? "active" : "pendingStart";
+
+      await updateCampaign(campaignId, { status: newStatus });
       const refreshed = await getCampaignById(campaignId);
       setCampaign(refreshed.data || refreshed);
-      setToastMessage("Campaign approved successfully");
+      setToastMessage(
+        newStatus === "active"
+          ? "Campaign approved and activated"
+          : "Campaign approved and scheduled for start"
+      );
       setToastVisible(true);
     } catch (e) {
       const msg = e?.response?.data?.message || e?.message || "Approval failed";
@@ -125,6 +136,24 @@ export default function CampaignViewPage() {
     } finally {
       setActionLoading(false);
       setShowReason(false);
+    }
+  };
+
+  const handleActivate = async () => {
+    setActionError("");
+    setActionLoading(true);
+    try {
+      await activatePendingStartCampaign(campaignId);
+      const refreshed = await getCampaignById(campaignId);
+      setCampaign(refreshed.data || refreshed);
+      setToastMessage("Campaign activated successfully");
+      setToastVisible(true);
+    } catch (e) {
+      const msg =
+        e?.response?.data?.message || e?.message || "Activation failed";
+      setActionError(msg);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -199,7 +228,7 @@ export default function CampaignViewPage() {
             />
           )}
 
-          {/* Approve/Reject (admins only when pending) */}
+          {/* Approve/Reject (admins only when pendingApproval) */}
           {canApproveReject && (
             <div className="flex items-center gap-2">
               <PrimaryButton onClick={handleApprove} disabled={actionLoading}>
@@ -209,6 +238,13 @@ export default function CampaignViewPage() {
                 Reject
               </SecondaryButton>
             </div>
+          )}
+
+          {/* Activate (organizers only when pendingStart) */}
+          {canActivate && (
+            <PrimaryButton onClick={handleActivate} disabled={actionLoading}>
+              Activate Campaign
+            </PrimaryButton>
           )}
 
           {/* Cancel (both admin and organizer) */}

@@ -158,14 +158,14 @@ export const submitCampaignForApproval = async (campaignId, campaignData) => {
       // Update existing draft and submit for approval
       const updateResponse = await apiClient.put(`/campaigns/${campaignId}`, {
         ...campaignData,
-        status: "pending",
+        status: "pendingApproval",
       });
       return updateResponse.data;
     } else {
       // Create new campaign with pending status in a single request
       const createResponse = await apiClient.post("/campaigns", {
         ...campaignData,
-        status: "pending",
+        status: "pendingApproval",
       });
       return createResponse.data;
     }
@@ -230,6 +230,21 @@ export const deleteCampaignDraft = async (campaignId) => {
     await apiClient.delete(`/campaigns/${campaignId}`);
   } catch (error) {
     console.error("Failed to delete campaign draft:", error);
+    throw error;
+  }
+};
+
+/**
+ * Manually activate a pendingStart campaign
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<Object>} Updated campaign
+ */
+export const activatePendingStartCampaign = async (campaignId) => {
+  try {
+    const response = await apiClient.post(`/campaigns/${campaignId}/activate`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to activate campaign:", error);
     throw error;
   }
 };
