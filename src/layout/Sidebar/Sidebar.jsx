@@ -100,7 +100,7 @@ const navConfig = {
       label: "My Campaigns",
       icon: FiFlag,
       key: "my-campaigns",
-      path: "/organizer/my-campaigns",
+      path: "/organizer/campaigns",
     },
     {
       label: "My Contacts",
@@ -112,7 +112,7 @@ const navConfig = {
       label: "Create Campaign",
       icon: FiPlusCircle,
       key: "create-campaign",
-      path: "/organizer/create-campaign",
+      path: "/organizer/campaigns/create",
     },
     {
       label: "Metrics",

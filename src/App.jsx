@@ -49,6 +49,9 @@ const CampaignCategories = lazy(() =>
 const MyCampaignsPage = lazy(() =>
   import("./features/campaigns/pages/organizer/MyCampaignsPage")
 );
+const CreateCampaignPage = lazy(() =>
+  import("./features/campaigns/pages/organizer/CreateCampaignPage")
+);
 const CampaignViewPage = lazy(() =>
   import("./features/campaigns/pages/CampaignViewPage")
 );
@@ -213,10 +216,19 @@ function AppRoutes() {
             }
           />
           <Route
-            path="/organizer/my-campaigns"
+            path="/organizer/campaigns"
             element={
               <ProtectedRoute
                 element={<MyCampaignsPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/campaigns/create"
+            element={
+              <ProtectedRoute
+                element={<CreateCampaignPage />}
                 requiredRole="organizationUser"
               />
             }

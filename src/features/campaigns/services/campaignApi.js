@@ -16,7 +16,24 @@
 
 import apiClient from "../../../services/apiClient";
 
-// Campaign creation functionality removed during demolition
+/**
+ * Create a new campaign
+ * @param {FormData} formData - Campaign form data including files
+ * @returns {Promise<Object>} Created campaign
+ */
+export const createCampaign = async (formData) => {
+  try {
+    const response = await apiClient.post("/campaigns", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to create campaign:", error);
+    throw error;
+  }
+};
 
 /**
  * Update an existing campaign

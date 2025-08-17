@@ -82,8 +82,7 @@ function MyCampaignsPage() {
     setSearchTerm(e.target.value);
   };
   const handleCreateCampaign = () => {
-    // Campaign creation removed during demolition
-    console.log("Campaign creation functionality removed");
+    navigate("/organizer/campaigns/create");
   };
 
   const handleView = (campaignId) => {
