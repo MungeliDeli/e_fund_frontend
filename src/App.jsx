@@ -17,9 +17,7 @@ import { Suspense, lazy } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UserProfilePage from "./features/users/pages/individual/UserProfilePage";
 import OrganizerProfilePage from "./features/users/pages/individual/OrganizerProfilePage";
-// Import the template and config
-import ClassicHeroTemplate from "./features/campaigns/templates/ClassicHero/ClassicHeroTemplate";
-import classicHeroConfig from "./features/campaigns/templates/ClassicHero/config";
+// Template imports removed during demolition
 
 // Lazy load role-specific dashboards, AccessDeniedPage, and NotFoundPage
 const UserDashboardPage = lazy(() =>
@@ -47,12 +45,7 @@ const CampaignPanel = lazy(() =>
 const CampaignCategories = lazy(() =>
   import("./features/campaigns/pages/admin/campaignPanel/campaignCategories")
 );
-const TemplateSelector = lazy(() =>
-  import("./features/campaigns/builder/TemplateSelector")
-);
-const CampaignBuilderPage = lazy(() =>
-  import("./features/campaigns/builder/CampaignBuilderPage")
-);
+// Builder components removed during demolition
 const MyCampaignsPage = lazy(() =>
   import("./features/campaigns/pages/organizer/MyCampaignsPage")
 );
@@ -83,7 +76,6 @@ function AppRoutes() {
     "/forgot-password",
     "/reset-password",
     "/template-preview",
-    "/campaign-builder",
   ];
   const shouldHideMainLayout = authRoutes.includes(location.pathname);
 
@@ -106,10 +98,7 @@ function AppRoutes() {
         <Routes>
           {/* Public Routes: pleaser note that for all public routes you have to include it in the publicRoutes array in authContext.jsx or else it will be redirected to login wheneve you try to go to the route */}
           <Route path="/" element={<HomePage />} />
-          <Route
-            path="/template-preview"
-            element={<ClassicHeroTemplate config={classicHeroConfig} />}
-          />
+          {/* Template preview route removed during demolition */}
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -207,25 +196,7 @@ function AppRoutes() {
               />
             }
           />
-          {/* Campaign Builder Routes */}
-          <Route
-            path="/campaign-templates"
-            element={
-              <ProtectedRoute
-                element={<TemplateSelector />}
-                requiredRole="organizationUser"
-              />
-            }
-          />
-          <Route
-            path="/campaign-builder"
-            element={
-              <ProtectedRoute
-                element={<CampaignBuilderPage />}
-                  requiredRole="organizationUser"
-              />
-            }
-          />
+          {/* Campaign Builder Routes removed during demolition */}
           <Route
             path="/campaigns/:campaignId"
             element={

@@ -9,7 +9,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { PrimaryButton, SecondaryButton } from "../../../components/Buttons";
 import MetaCard from "../components/MetaCard";
 import ReasonModal from "../components/ReasonModal";
-import PreviewCollapse from "../components/PreviewCollapse";
+// PreviewCollapse import removed during demolition
 import { FaBullseye, FaRegCalendarCheck } from "react-icons/fa";
 import { FiCalendar, FiFlag } from "react-icons/fi";
 import Notification from "../../../components/Notification";
@@ -178,7 +178,7 @@ export default function CampaignViewPage() {
       {/* Header actions */}
       <div className="flex items-center justify-between mb-4">
         <SecondaryButton onClick={() => navigate(-1)}>Go Back</SecondaryButton>
-        <div className="flex gap-2">{campaign.templateId && <></>}</div>
+        <div className="flex gap-2"></div>
       </div>
 
       {/* Title and description */}
@@ -220,13 +220,7 @@ export default function CampaignViewPage() {
       {/* Actions row */}
       <div className="mb-2">
         <div className="flex flex-wrap items-center gap-2">
-          {/* Preview toggle */}
-          {campaign.templateId && (
-            <PreviewCollapse
-              templateId={campaign.templateId}
-              customPageSettings={campaign.customPageSettings}
-            />
-          )}
+          {/* Preview functionality removed during demolition */}
 
           {/* Approve/Reject (admins only when pendingApproval) */}
           {canApproveReject && (

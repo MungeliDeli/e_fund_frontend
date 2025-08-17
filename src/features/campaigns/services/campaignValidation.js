@@ -39,8 +39,7 @@ export const campaignSubmissionSchema = Joi.object({
       "array.min": "At least one category is required.",
       "any.required": "Categories are required.",
     }),
-  customPageSettings: Joi.object().optional(),
-  templateId: Joi.string().optional(),
+  // Template-related fields removed during demolition
 });
 
 export const validateCampaignSubmission = (data) => {

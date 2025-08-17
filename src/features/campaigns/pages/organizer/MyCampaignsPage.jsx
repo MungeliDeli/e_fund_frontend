@@ -82,7 +82,8 @@ function MyCampaignsPage() {
     setSearchTerm(e.target.value);
   };
   const handleCreateCampaign = () => {
-    navigate("/campaign-templates");
+    // Campaign creation removed during demolition
+    console.log("Campaign creation functionality removed");
   };
 
   const handleView = (campaignId) => {
@@ -90,8 +91,8 @@ function MyCampaignsPage() {
   };
 
   const handleEdit = (campaignId) => {
-    // TODO: navigate to campaign builder with existing campaign data
-    navigate(`/campaign-builder?campaignId=${campaignId}`);
+    // Campaign editing removed during demolition
+    console.log("Campaign editing functionality removed for campaign:", campaignId);
   };
 
   // Filter options
