@@ -40,6 +40,20 @@ function NotificationItem({ notification }) {
   const { notificationId, title, message, createdAt, readAt, category } =
     notification;
 
+  // Parse data payload (can be object or JSON string)
+  let data = null;
+  if (notification && notification.data) {
+    if (typeof notification.data === "string") {
+      try {
+        data = JSON.parse(notification.data);
+      } catch {
+        data = null;
+      }
+    } else if (typeof notification.data === "object") {
+      data = notification.data;
+    }
+  }
+
   const icon = useMemo(() => {
     switch (category) {
       case "campaign":
@@ -75,6 +89,21 @@ function NotificationItem({ notification }) {
         </div>
         <p className="text-sm text-[color:var(--color-secondary-text)] mt-1 break-words">
           {message}
+          {data?.route && (
+            <>
+              {" "}
+              <a
+                href={
+                  data.route.startsWith("http")
+                    ? data.route
+                    : `${window.location.origin}${data.route}`
+                }
+                className="text-[color:var(--color-primary)] underline hover:underline font-medium"
+              >
+                See it here
+              </a>
+            </>
+          )}
         </p>
       </div>
     </div>
@@ -183,12 +212,6 @@ export default function NotificationsPage() {
         <h1 className="text-xl sm:text-2xl font-bold text-[color:var(--color-primary-text)]">
           Notifications
         </h1>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <FiBell className="text-xl text-[color:var(--color-primary-text)]" />
-            <Badge visible={unreadCount > 0} />
-          </div>
-        </div>
       </div>
 
       {/* Filter controls removed for simplicity */}

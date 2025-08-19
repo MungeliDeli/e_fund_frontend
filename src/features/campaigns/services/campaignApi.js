@@ -110,9 +110,70 @@ export const getAllCampaigns = async (filters = {}) => {
   }
 };
 
-// Draft functionality removed during demolition
+/**
+ * Save campaign as draft (create or update)
+ * @param {Object} campaignData - Campaign data including customPageSettings and templateId
+ * @param {string} [campaignId] - Existing campaign ID for updates
+ * @param {Array<string>} categoryIds - Array of category IDs (optional)
+ * @returns {Promise<Object>} Saved campaign
+ */
+export const saveCampaignDraft = async (
+  campaignData,
+  campaignId = null,
+  categoryIds = []
+) => {
+  try {
+    const payload = {
+      ...campaignData,
+      categoryIds,
+    };
 
-// Campaign submission functionality removed during demolition
+    let response;
+    if (campaignId) {
+      // Update existing draft
+
+      response = await apiClient.put(`/campaigns/draft/${campaignId}`, payload);
+    } else {
+      // Create new draft
+
+      response = await apiClient.post("/campaigns/draft", payload);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Failed to save campaign draft:", error);
+    throw error;
+  }
+};
+
+/**
+ * Submit campaign for approval
+ * @param {string|null} campaignId - Campaign ID (null for new campaigns)
+ * @param {Object} campaignData - Campaign data for submission
+ * @returns {Promise<Object>} Created or updated campaign
+ */
+export const submitCampaignForApproval = async (campaignId, campaignData) => {
+  try {
+    if (campaignId) {
+      // Update existing draft and submit for approval
+      const updateResponse = await apiClient.put(`/campaigns/${campaignId}`, {
+        ...campaignData,
+        status: "pendingApproval",
+      });
+      return updateResponse.data;
+    } else {
+      // Create new campaign with pending status in a single request
+      const createResponse = await apiClient.post("/campaigns", {
+        ...campaignData,
+        status: "pendingApproval",
+      });
+      return createResponse.data;
+    }
+  } catch (error) {
+    console.error("Failed to submit campaign for approval:", error);
+    throw error;
+  }
+};
 
 /**
  * Check if user can edit campaign
@@ -147,7 +208,7 @@ export const getCampaignByShareLink = async (shareLink) => {
 /**
  * Load campaign draft from backend
  * @param {string} campaignId - Campaign ID
- * @returns {Promise<Object>} Campaign data
+ * @returns {Promise<Object>} Campaign data with customPageSettings
  */
 export const loadCampaignDraft = async (campaignId) => {
   try {
@@ -180,7 +241,8 @@ export const deleteCampaignDraft = async (campaignId) => {
  */
 export const publishPendingStartCampaign = async (campaignId) => {
   try {
-    const response = await apiClient.post(`/campaigns/${campaignId}/publish`);
+    // Backend route expects '/activate'
+    const response = await apiClient.post(`/campaigns/${campaignId}/activate`);
     return response.data;
   } catch (error) {
     console.error("Failed to publish campaign:", error);

@@ -7,6 +7,7 @@ function ReasonModal({
   placeholder = "Type your reason...",
   initialValue = "",
   confirmText = "Submit",
+  confirmLoading = false,
   onConfirm,
   onClose,
 }) {
@@ -35,8 +36,16 @@ function ReasonModal({
           onChange={(e) => setValue(e.target.value)}
         />
         <div className="mt-6 flex justify-end gap-3">
-          <SecondaryButton onClick={onClose}>Cancel</SecondaryButton>
-          <PrimaryButton onClick={handleSubmit}>{confirmText}</PrimaryButton>
+          <SecondaryButton onClick={onClose} disabled={confirmLoading}>
+            Cancel
+          </SecondaryButton>
+          <PrimaryButton
+            onClick={handleSubmit}
+            loading={confirmLoading}
+            disabled={confirmLoading || !value.trim()}
+          >
+            {confirmText}
+          </PrimaryButton>
         </div>
       </div>
     </div>

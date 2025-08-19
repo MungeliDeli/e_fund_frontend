@@ -35,25 +35,25 @@ const baseColumns = [
       return row.logoImageUrl && !imgError ? (
         <img
           src={row.logoImageUrl}
-          alt={row.title + " logo"}
+          alt={row.name + " logo"}
           className="w-10 h-10 object-contain rounded bg-white border border-[color:var(--color-muted)]"
           onError={() => setImgError(true)}
         />
       ) : (
         <div className="w-10 h-10 rounded bg-[color:var(--color-muted)] flex items-center justify-center text-lg text-[color:var(--color-secondary-text)] font-bold">
-          {row.title ? getInitials(row.title) : <FiImage />}
+          {row.name ? getInitials(row.name) : <FiImage />}
         </div>
       );
     },
     sortable: false,
   },
   {
-    key: "title",
-    label: "Title",
+    key: "name",
+    label: "Name",
     sortable: true,
     render: (row) => (
       <span className="font-semibold text-[color:var(--color-primary-text)] leading-tight">
-        {row.title}
+        {row.name}
       </span>
     ),
   },
@@ -120,7 +120,7 @@ const baseColumns = [
 
 // Organizer-specific columns (includes end date, excludes organizer name)
 const organizerColumns = [
-  ...baseColumns.slice(0, 2), // Logo and Title
+  ...baseColumns.slice(0, 2), // Logo and Name
   {
     key: "endDate",
     label: "End Date",
@@ -139,7 +139,7 @@ const organizerColumns = [
 
 // Admin-specific columns (includes organizer name, excludes end date)
 const adminColumns = [
-  ...baseColumns.slice(0, 2), // Logo and Title
+  ...baseColumns.slice(0, 2), // Logo and Name
   {
     key: "organizerName",
     label: "Organizer",
