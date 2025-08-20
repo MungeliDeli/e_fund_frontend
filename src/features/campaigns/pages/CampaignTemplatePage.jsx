@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiCalendar, FiUsers, FiClock, FiShare2, FiHeart } from "react-icons/fi";
+import {
+  FiCalendar,
+  FiUsers,
+  FiClock,
+  FiShare2,
+  FiHeart,
+} from "react-icons/fi";
 import Header from "../../../layout/Header/Header";
 import MediaGallery from "../components/MediaGallery";
 import DonationSection from "../components/DonationSection";
@@ -8,11 +14,32 @@ import RecentDonations from "../components/RecentDonations";
 import SuccessStories from "../components/SuccessStories";
 import WordsOfSupport from "../components/WordsOfSupport";
 import QuickDonation from "../components/QuickDonation";
-import { getCampaignById } from "../services/campaignApi";
+import {
+  getCampaignById,
+  getCampaignByShareLink,
+} from "../services/campaignApi";
 import Notification from "../../../components/Notification";
+import FundraiseLogo from "./../../../assets/fundraise logo.svg";
+import PaymentModal from "../components/PaymentModal";
 
-function CampaignTemplatePage() {
-  const { campaignId } = useParams();
+function Logo() {
+  return (
+    <span className="flex items-center">
+      <img src={FundraiseLogo} alt="FundFlow Logo" className="w-10 h-10" />
+      <span className="ml-2 font-bold text-2xl text-[color:var(--color-primary)] hidden sm:inline">
+        FundFlow
+      </span>
+    </span>
+  );
+}
+
+function CampaignTemplatePage({
+  campaignId: propCampaignId,
+  isPreview = false,
+}) {
+  const { campaignId: paramCampaignId, shareSlug } = useParams();
+  const campaignId = propCampaignId || paramCampaignId || null;
+  const shareParam = shareSlug || null;
   const navigate = useNavigate();
   const donationSectionRef = useRef(null);
 
@@ -23,38 +50,54 @@ function CampaignTemplatePage() {
   const [notification, setNotification] = useState({
     isVisible: false,
     type: "success",
-    message: ""
+    message: "",
   });
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedDonationAmount, setSelectedDonationAmount] = useState("50");
 
   // Theme color from campaign settings
   const themeColor = campaign?.customPageSettings?.themeColor || "#10B981";
 
   useEffect(() => {
     fetchCampaign();
-  }, [campaignId]);
+  }, [campaignId, shareParam]);
 
   // Set CSS custom property for theme color
   useEffect(() => {
     if (themeColor) {
-      document.documentElement.style.setProperty('--campaign-theme-color', themeColor);
+      document.documentElement.style.setProperty(
+        "--campaign-theme-color",
+        themeColor
+      );
     }
     return () => {
-      document.documentElement.style.removeProperty('--campaign-theme-color');
+      document.documentElement.style.removeProperty("--campaign-theme-color");
     };
   }, [themeColor]);
 
   const fetchCampaign = async () => {
     try {
       setLoading(true);
-      const response = await getCampaignById(campaignId);
-      setCampaign(response.data);
+      let response;
+      if (isPreview || campaignId) {
+        response = await getCampaignById(campaignId);
+      } else if (shareParam) {
+        // shareSlug may include "FR-CO-XXXX-title-slug"; backend expects just the shareLink portion
+        const shareLinkOnly = shareParam.split("-").slice(0, 3).join("-");
+        response = await getCampaignByShareLink(shareLinkOnly);
+      } else {
+        throw new Error("No campaign identifier provided");
+      }
+
+      const data = response?.data?.data || response?.data || response;
+      setCampaign(data);
     } catch (error) {
       console.error("Failed to fetch campaign:", error);
       setError("Failed to load campaign");
       setNotification({
         isVisible: true,
         type: "error",
-        message: "Failed to load campaign"
+        message: "Failed to load campaign",
       });
     } finally {
       setLoading(false);
@@ -64,16 +107,32 @@ function CampaignTemplatePage() {
   const scrollToDonation = () => {
     if (donationSectionRef.current) {
       donationSectionRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
+        behavior: "smooth",
+        block: "start",
       });
 
       // Highlight the donation section briefly
-      donationSectionRef.current.classList.add('highlight-donation');
+      donationSectionRef.current.classList.add("highlight-donation");
       setTimeout(() => {
-        donationSectionRef.current?.classList.remove('highlight-donation');
+        donationSectionRef.current?.classList.remove("highlight-donation");
       }, 2000);
     }
+  };
+
+  const handleDonateClick = (amount = "50") => {
+    setSelectedDonationAmount(amount);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSubmit = (paymentData) => {
+    // TODO: Implement donation processing
+    console.log("Payment data:", paymentData);
+    setNotification({
+      isVisible: true,
+      type: "success",
+      message: `Donation of ${formatAmount(paymentData.amount)} initiated!`,
+    });
+    setShowPaymentModal(false);
   };
 
   const handleShare = async () => {
@@ -90,7 +149,7 @@ function CampaignTemplatePage() {
         setNotification({
           isVisible: true,
           type: "success",
-          message: "Campaign link copied to clipboard!"
+          message: "Campaign link copied to clipboard!",
         });
       }
     } catch (error) {
@@ -98,7 +157,7 @@ function CampaignTemplatePage() {
       setNotification({
         isVisible: true,
         type: "error",
-        message: "Failed to share campaign"
+        message: "Failed to share campaign",
       });
     }
   };
@@ -113,14 +172,16 @@ function CampaignTemplatePage() {
   };
 
   const calculateProgress = () => {
-    if (!campaign?.goalAmount || !campaign?.currentRaisedAmount) return 0;
-    return Math.min((campaign.currentRaisedAmount / campaign.goalAmount) * 100, 100);
+    console.log(campaign);
+    if (!campaign?.goalAmount) return 0;
+    const currentAmount = campaign?.currentRaisedAmount || 0;
+    return Math.min((currentAmount / campaign.goalAmount) * 100, 100);
   };
 
   const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: 'KES',
+    return new Intl.NumberFormat("en-ZM", {
+      style: "currency",
+      currency: "ZMW",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount || 0);
@@ -134,11 +195,12 @@ function CampaignTemplatePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[color:var(--color-background)]">
-        <Header />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[color:var(--color-primary)] mx-auto mb-4"></div>
-            <p className="text-[color:var(--color-secondary-text)]">Loading campaign...</p>
+            <p className="text-[color:var(--color-secondary-text)]">
+              Loading campaign...
+            </p>
           </div>
         </div>
       </div>
@@ -148,7 +210,6 @@ function CampaignTemplatePage() {
   if (error || !campaign) {
     return (
       <div className="min-h-screen bg-[color:var(--color-background)]">
-        <Header />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <p className="text-red-500 mb-4">{error || "Campaign not found"}</p>
@@ -167,8 +228,14 @@ function CampaignTemplatePage() {
   const daysRemaining = calculateDaysRemaining();
   const progress = calculateProgress();
   const mainMedia = campaign.customPageSettings?.mainMedia?.url;
-  const secondaryImages = campaign.customPageSettings?.secondaryImages?.map(img => img.url) || [];
-  const predefinedAmounts = campaign.customPageSettings?.predefinedAmounts || ["25", "50", "100", "200"];
+  const secondaryImages =
+    campaign.customPageSettings?.secondaryImages?.map((img) => img.url) || [];
+  const predefinedAmounts = campaign.customPageSettings?.predefinedAmounts || [
+    "25",
+    "50",
+    "100",
+    "200",
+  ];
 
   return (
     <div className="min-h-screen bg-[color:var(--color-background)]">
@@ -176,42 +243,37 @@ function CampaignTemplatePage() {
         type={notification.type}
         message={notification.message}
         isVisible={notification.isVisible}
-        onClose={() => setNotification(prev => ({ ...prev, isVisible: false }))}
+        onClose={() =>
+          setNotification((prev) => ({ ...prev, isVisible: false }))
+        }
         duration={4000}
       />
 
-      {/* Header */}
-      <Header />
-
       {/* Main Content */}
-      <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-6">
+      <div className="px-1 sm:px-4 lg:px-6 max-w-7xl mx-auto py-4">
         {/* Organizer Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[color:var(--color-muted)] rounded-lg flex items-center justify-center">
-              <span className="text-lg font-bold text-[color:var(--color-primary-text)]">
+            <div className="w-10 h-10 bg-[color:var(--color-muted)] rounded-lg flex items-center justify-center">
+              <span className="text-xl font-bold text-[color:var(--color-primary-text)]">
                 {campaign.organizerName?.[0]?.toUpperCase() || "O"}
               </span>
             </div>
             <div>
-              <h2 className="font-semibold text-[color:var(--color-primary-text)]">
+              <h2 className="font-bold text-xl text-[color:var(--color-primary-text)]">
                 {campaign.organizerName || "Organization"}
               </h2>
-              <p className="text-sm text-[color:var(--color-secondary-text)]">
-                Organizer
-              </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="FundFlow" className="w-6 h-6" />
-            <span className="font-bold text-[color:var(--color-primary)]">FundFlow</span>
+          <div className="flex items-center gap-2 ">
+            <Logo />
           </div>
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden lg:grid lg:grid-cols-3 lg:gap-8">
+        <div className="hidden lg:grid lg:grid-cols-3 lg:gap-2">
           {/* Left Section - 2 columns */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             {/* Media Gallery */}
             <MediaGallery
               mainMedia={mainMedia}
@@ -220,15 +282,19 @@ function CampaignTemplatePage() {
             />
 
             {/* Campaign Message */}
-            <div className="bg-[color:var(--color-surface)] rounded-lg p-6">
+            <div className="bg-[color:var(--color-background)] rounded-lg p-4">
               <div className="prose max-w-none">
                 <p className="text-[color:var(--color-primary-text)] leading-relaxed">
                   {showFullMessage
-                    ? (campaign.customPageSettings?.message || campaign.description)
-                    : truncateMessage(campaign.customPageSettings?.message || campaign.description)
-                  }
+                    ? campaign.customPageSettings?.message ||
+                      campaign.description
+                    : truncateMessage(
+                        campaign.customPageSettings?.message ||
+                          campaign.description
+                      )}
                 </p>
-                {(campaign.customPageSettings?.message || campaign.description)?.length > 200 && (
+                {(campaign.customPageSettings?.message || campaign.description)
+                  ?.length > 200 && (
                   <button
                     onClick={() => setShowFullMessage(!showFullMessage)}
                     className="mt-3 text-sm font-medium"
@@ -241,14 +307,14 @@ function CampaignTemplatePage() {
             </div>
 
             {/* Donate and Share Buttons */}
-            <div className="flex gap-4">
+            <div className="flex gap-3 px-4">
               <button
-                onClick={scrollToDonation}
+                onClick={() => handleDonateClick("50")}
                 className="flex-1 py-3 px-6 rounded-lg border-2 font-semibold transition-colors"
                 style={{
-                  borderColor: themeColor,
+                  borderColor: `${themeColor}40`,
                   color: themeColor,
-                  backgroundColor: 'transparent'
+                  backgroundColor: "transparent",
                 }}
               >
                 Donate
@@ -257,9 +323,9 @@ function CampaignTemplatePage() {
                 onClick={handleShare}
                 className="flex-1 py-3 px-6 rounded-lg border-2 font-semibold transition-colors flex items-center justify-center gap-2"
                 style={{
-                  borderColor: themeColor,
+                  borderColor: `${themeColor}40`,
                   color: themeColor,
-                  backgroundColor: 'transparent'
+                  backgroundColor: "transparent",
                 }}
               >
                 <FiShare2 className="w-4 h-4" />
@@ -268,7 +334,7 @@ function CampaignTemplatePage() {
             </div>
 
             {/* Campaign Stats */}
-            <div className="flex items-center justify-between py-4 border-t border-[color:var(--color-muted)]">
+            <div className="flex items-center justify-between py-3 border-t border-[color:var(--color-muted)] px-4">
               <div className="flex items-center gap-2 text-[color:var(--color-secondary-text)]">
                 <FiCalendar className="w-4 h-4" />
                 <span className="text-sm">
@@ -296,7 +362,7 @@ function CampaignTemplatePage() {
           </div>
 
           {/* Right Section - 1 column */}
-          <div className="space-y-6">
+          <div className="space-y-2 pt-13">
             {/* Donation Section */}
             <div ref={donationSectionRef}>
               <DonationSection
@@ -319,13 +385,13 @@ function CampaignTemplatePage() {
             {/* Quick Donation */}
             <QuickDonation
               themeColor={themeColor}
-              onDonateClick={scrollToDonation}
+              onDonateClick={() => handleDonateClick("50")}
             />
           </div>
         </div>
 
         {/* Mobile Layout */}
-        <div className="lg:hidden space-y-6">
+        <div className="lg:hidden space-y-4">
           {/* Media Gallery */}
           <MediaGallery
             mainMedia={mainMedia}
@@ -347,15 +413,18 @@ function CampaignTemplatePage() {
           </div>
 
           {/* Campaign Message */}
-          <div className="bg-[color:var(--color-surface)] rounded-lg p-6">
+          <div className="bg-[color:var(--color-surface)] rounded-lg p-4">
             <div className="prose max-w-none">
               <p className="text-[color:var(--color-primary-text)] leading-relaxed">
                 {showFullMessage
-                  ? (campaign.customPageSettings?.message || campaign.description)
-                  : truncateMessage(campaign.customPageSettings?.message || campaign.description)
-                }
+                  ? campaign.customPageSettings?.message || campaign.description
+                  : truncateMessage(
+                      campaign.customPageSettings?.message ||
+                        campaign.description
+                    )}
               </p>
-              {(campaign.customPageSettings?.message || campaign.description)?.length > 200 && (
+              {(campaign.customPageSettings?.message || campaign.description)
+                ?.length > 200 && (
                 <button
                   onClick={() => setShowFullMessage(!showFullMessage)}
                   className="mt-3 text-sm font-medium"
@@ -368,14 +437,14 @@ function CampaignTemplatePage() {
           </div>
 
           {/* Donate and Share Buttons */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <button
-              onClick={scrollToDonation}
+              onClick={() => handleDonateClick("50")}
               className="w-full py-3 px-6 rounded-lg border-2 font-semibold transition-colors"
               style={{
                 borderColor: themeColor,
                 color: themeColor,
-                backgroundColor: 'transparent'
+                backgroundColor: "transparent",
               }}
             >
               Donate
@@ -386,7 +455,7 @@ function CampaignTemplatePage() {
               style={{
                 borderColor: themeColor,
                 color: themeColor,
-                backgroundColor: 'transparent'
+                backgroundColor: "transparent",
               }}
             >
               <FiShare2 className="w-4 h-4" />
@@ -395,7 +464,7 @@ function CampaignTemplatePage() {
           </div>
 
           {/* Campaign Stats */}
-          <div className="grid grid-cols-3 gap-4 py-4 border-t border-[color:var(--color-muted)]">
+          <div className="grid grid-cols-3 gap-3 py-3 border-t border-[color:var(--color-muted)]">
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 text-[color:var(--color-secondary-text)] mb-1">
                 <FiCalendar className="w-3 h-3" />
@@ -435,21 +504,15 @@ function CampaignTemplatePage() {
         </div>
       </div>
 
-      {/* Custom CSS for highlight animation */}
-      <style jsx>{`
-        .highlight-donation {
-          animation: highlight 2s ease-in-out;
-        }
-        
-        @keyframes highlight {
-          0%, 100% { 
-            box-shadow: none; 
-          }
-          50% { 
-            box-shadow: 0 0 20px var(--campaign-theme-color, #10B981); 
-          }
-        }
-      `}</style>
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        amount={selectedDonationAmount}
+        themeColor={themeColor}
+        formatAmount={formatAmount}
+        onDonate={handlePaymentSubmit}
+      />
     </div>
   );
 }

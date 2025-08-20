@@ -82,8 +82,11 @@ function AppRoutes() {
     "/forgot-password",
     "/reset-password",
     "/template-preview",
+    "/campaign/:shareSlug",
   ];
-  const shouldHideMainLayout = authRoutes.includes(location.pathname);
+  const shouldHideMainLayout =
+    authRoutes.includes(location.pathname) ||
+    location.pathname.startsWith("/campaign/");
 
   const LayoutWrapper = ({ children }) =>
     shouldHideMainLayout ? (
@@ -104,7 +107,10 @@ function AppRoutes() {
         <Routes>
           {/* Public Routes: pleaser note that for all public routes you have to include it in the publicRoutes array in authContext.jsx or else it will be redirected to login wheneve you try to go to the route */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/campaign/:campaignId" element={<CampaignTemplatePage />} />
+          <Route
+            path="/campaign/:shareSlug"
+            element={<CampaignTemplatePage />}
+          />
           {/* Template preview route removed during demolition */}
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -283,7 +289,7 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<CampaignCategories />}
-                  requiredRole={["superAdmin", "eventModerator"]}
+                requiredRole={["superAdmin", "eventModerator"]}
               />
             }
           />

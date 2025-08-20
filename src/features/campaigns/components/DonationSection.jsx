@@ -1,18 +1,20 @@
 import React, { useState } from "react";
 import { FiInfo } from "react-icons/fi";
+import PaymentModal from "./PaymentModal";
 
-function DonationSection({ 
-  raisedAmount, 
-  goalAmount, 
-  progress, 
-  donationCount, 
-  predefinedAmounts, 
+function DonationSection({
+  raisedAmount,
+  goalAmount,
+  progress,
+  donationCount,
+  predefinedAmounts,
   themeColor,
-  formatAmount 
+  formatAmount,
 }) {
   const [selectedAmount, setSelectedAmount] = useState(predefinedAmounts[0]);
   const [customAmount, setCustomAmount] = useState("");
   const [isCustomSelected, setIsCustomSelected] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const handlePredefinedAmountClick = (amount) => {
     setSelectedAmount(amount);
@@ -33,72 +35,93 @@ function DonationSection({
       alert("Please enter a valid donation amount");
       return;
     }
-    
+
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSubmit = (paymentData) => {
     // TODO: Implement donation processing
-    console.log("Donating:", amount);
-    alert(`Donation of ${formatAmount(amount)} initiated!`);
+    console.log("Payment data:", paymentData);
+    alert(`Donation of ${formatAmount(paymentData.amount)} initiated!`);
+    setShowPaymentModal(false);
   };
 
   return (
-    <div className="bg-[color:var(--color-surface)] rounded-lg p-6 space-y-6">
+    <div className="bg-white rounded-lg p-6 space-y-6 shadow-sm border border-gray-100">
       {/* Raised Amount and Goal */}
       <div className="flex items-baseline justify-between">
-        <div>
-          <div className="text-2xl sm:text-3xl font-bold" style={{ color: themeColor }}>
+        <div className="flex items-center gap-2">
+          <div
+            className="text-xl sm:text-2xl font-bold"
+            style={{ color: themeColor }}
+          >
             {formatAmount(raisedAmount)}
           </div>
-          <div className="text-sm text-[color:var(--color-secondary-text)]">raised</div>
+          <div className="text-sm" style={{ color: themeColor }}>
+            Raised
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-lg font-semibold text-[color:var(--color-primary-text)]">
+        <div className="flex items-center gap-2">
+          <div className="text-lg font-semibold text-black">
             {formatAmount(goalAmount)}
           </div>
-          <div className="text-sm text-[color:var(--color-secondary-text)]">goal</div>
+          <div className="text-sm text-gray-600">Goal</div>
         </div>
       </div>
 
       {/* Progress Bar */}
       <div className="space-y-2">
-        <div className="w-full bg-[color:var(--color-muted)] rounded-full h-3 overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500 ease-out"
-            style={{ 
-              width: `${Math.min(progress, 100)}%`,
-              backgroundColor: themeColor 
-            }}
-          />
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-[color:var(--color-secondary-text)]">
-            {donationCount} donations
-          </span>
-          <span className="text-sm font-medium" style={{ color: themeColor }}>
+        <div className="relative">
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: `${Math.min(progress, 100)}%`,
+                backgroundColor: themeColor,
+              }}
+            />
+          </div>
+          <span className="absolute right-0 top-0 text-sm font-medium text-black">
             {Math.round(progress)}%
+          </span>
+        </div>
+        <div className="flex justify-start">
+          <span className="text-sm text-gray-500">
+            {donationCount} donations
           </span>
         </div>
       </div>
 
       {/* Donation Form */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold" style={{ color: themeColor }}>
-          Choose Amount
+        <h3 className="text-base font-semibold" style={{ color: themeColor }}>
+          Choose Amount:
         </h3>
 
         {/* Predefined Amounts */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {predefinedAmounts.map((amount) => (
             <button
               key={amount}
               onClick={() => handlePredefinedAmountClick(amount)}
-              className={`py-3 px-4 rounded-lg border-2 font-semibold transition-all ${
+              className={`py-2 px-4 rounded-lg border font-semibold transition-all ${
                 selectedAmount === amount && !isCustomSelected
-                  ? 'text-white'
-                  : 'bg-transparent'
+                  ? "text-white"
+                  : "bg-white text-green-600 border-green-300"
               }`}
               style={{
-                borderColor: themeColor,
-                backgroundColor: selectedAmount === amount && !isCustomSelected ? themeColor : 'transparent',
-                color: selectedAmount === amount && !isCustomSelected ? 'white' : themeColor
+                borderColor:
+                  selectedAmount === amount && !isCustomSelected
+                    ? themeColor
+                    : `${themeColor}40`,
+                backgroundColor:
+                  selectedAmount === amount && !isCustomSelected
+                    ? themeColor
+                    : "white",
+                color:
+                  selectedAmount === amount && !isCustomSelected
+                    ? "white"
+                    : themeColor,
               }}
             >
               {formatAmount(amount)}
@@ -108,34 +131,31 @@ function DonationSection({
 
         {/* Custom Amount Input */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-[color:var(--color-primary-text)]">
-            Other Amount
-          </label>
           <input
             type="number"
             value={customAmount}
             onChange={handleCustomAmountChange}
             onFocus={() => setIsCustomSelected(true)}
-            placeholder="Enter amount"
+            placeholder="other amount"
             min="1"
             step="1"
-            className={`w-full px-4 py-3 border-2 rounded-lg bg-[color:var(--color-background)] text-[color:var(--color-primary-text)] focus:outline-none transition-colors ${
+            className={`w-full px-4 py-3 border rounded-lg bg-white text-black focus:outline-none transition-colors ${
               isCustomSelected
-                ? 'border-[color:var(--campaign-theme-color)]'
-                : 'border-[color:var(--color-muted)] focus:border-[color:var(--campaign-theme-color)]'
+                ? "border-green-600"
+                : "border-green-300 focus:border-green-600"
             }`}
             style={{
-              borderColor: isCustomSelected ? themeColor : undefined
+              borderColor: isCustomSelected ? themeColor : `${themeColor}40`,
             }}
           />
         </div>
 
         {/* Receipt Notice */}
-        <div 
+        <div
           className="p-3 rounded-lg flex items-start gap-2"
-          style={{ 
+          style={{
             backgroundColor: `${themeColor}15`,
-            color: themeColor 
+            color: themeColor,
           }}
         >
           <FiInfo className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -148,14 +168,23 @@ function DonationSection({
         <button
           onClick={handleDonate}
           className="w-full py-4 px-6 rounded-lg font-semibold text-white transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2"
-          style={{ 
+          style={{
             backgroundColor: themeColor,
-            focusRingColor: themeColor
           }}
         >
           Donate
         </button>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        amount={isCustomSelected ? customAmount : selectedAmount}
+        themeColor={themeColor}
+        formatAmount={formatAmount}
+        onDonate={handlePaymentSubmit}
+      />
     </div>
   );
 }

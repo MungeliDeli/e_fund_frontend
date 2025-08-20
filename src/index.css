@@ -7,25 +7,25 @@
 /* Theme layer for custom properties */
 @layer theme {
   :root {
-    --color-primary: #007a35;         /* #007A20 */
-    --color-background: hsl(0, 0%, 98%);          /* Light mode bg */
-    --color-surface: #EFEFEF;                     /* Light surface (search, active, etc.) */
+    --color-primary: #007a35; /* #007A20 */
+    --color-background: hsl(0, 0%, 98%); /* Light mode bg */
+    --color-surface: #efefef; /* Light surface (search, active, etc.) */
     --color-accent: #00b34d;
     --color-muted: hsl(0, 0%, 83%);
-    --color-text: #363636;                        /* Primary text color (light) */
-    --color-primary-text: #363636;                /* Primary text color (light) */
-    --color-secondary-text: #595959;              /* Secondary text color (light) */
+    --color-text: #363636; /* Primary text color (light) */
+    --color-primary-text: #363636; /* Primary text color (light) */
+    --color-secondary-text: #595959; /* Secondary text color (light) */
     --color-shadow: rgba(0, 0, 0, 0.08);
-    --campaign-theme-color: #10B981;              /* Default campaign theme color */
+    --campaign-theme-color: #10b981; /* Default campaign theme color */
   }
   .dark {
-    --color-background: #121212;           /* #121212 */
-    --color-surface: hsl(0, 0%, 11%);                     /* Dark surface (search, active, etc.) */
+    --color-background: #121212; /* #121212 */
+    --color-surface: hsl(0, 0%, 11%); /* Dark surface (search, active, etc.) */
     --color-muted: hsl(0, 0%, 20%);
-    --color-text: #E0E0E0;                        /* Primary text color (dark) */
-    --color-primary-text: #E0E0E0;                /* Primary text color (dark) */
-    --color-secondary-text: #B0B0B0;   
-    --color-shadow: hsla(0, 0%, 0%, 0.4);           /* Secondary text color (dark) */
+    --color-text: #e0e0e0; /* Primary text color (dark) */
+    --color-primary-text: #e0e0e0; /* Primary text color (dark) */
+    --color-secondary-text: #b0b0b0;
+    --color-shadow: hsla(0, 0%, 0%, 0.4); /* Secondary text color (dark) */
   }
 }
 
@@ -41,9 +41,8 @@
 /* Hide horizontal scrollbar but allow scrolling */
 .hide-scrollbar {
   scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE 10+ */
+  -ms-overflow-style: none; /* IE 10+ */
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome/Safari/Webkit */
 }
-

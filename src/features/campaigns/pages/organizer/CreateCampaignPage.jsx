@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import FormField from "../../../../components/FormField";
 import SearchableDropdown from "../../../../components/SearchableDropdown";
 import { PrimaryButton, SecondaryButton } from "../../../../components/Buttons";
@@ -28,6 +28,8 @@ const THEME_COLORS = [
 
 function CreateCampaignPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const preloadCampaign = location.state?.preloadCampaign || null;
 
   // Form state
   const [form, setForm] = useState({
@@ -75,6 +77,58 @@ function CreateCampaignPage() {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Preload data if provided (edit-like experience)
+  useEffect(() => {
+    if (!preloadCampaign) return;
+
+    try {
+      const cps = preloadCampaign.customPageSettings || {};
+
+      // Form fields
+      setForm((prev) => ({
+        ...prev,
+        title: cps.title || "",
+        message: cps.message || "",
+        themeColor: cps.themeColor || prev.themeColor,
+        name: preloadCampaign.name || "",
+        description: preloadCampaign.description || "",
+        startDate: preloadCampaign.startDate
+          ? preloadCampaign.startDate.substring(0, 10)
+          : "",
+        endDate: preloadCampaign.endDate
+          ? preloadCampaign.endDate.substring(0, 10)
+          : "",
+        goalAmount: preloadCampaign.goalAmount ?? "",
+        categoryIds: Array.isArray(preloadCampaign.categories)
+          ? preloadCampaign.categories.map((c) => c.categoryId)
+          : [],
+        predefinedAmounts:
+          Array.isArray(cps.predefinedAmounts) &&
+          cps.predefinedAmounts.length === 4
+            ? cps.predefinedAmounts.map((a) => String(a))
+            : prev.predefinedAmounts,
+      }));
+
+      // Main media preview (URL only; no file object)
+      if (cps.mainMedia && cps.mainMedia.url) {
+        setMainMedia(cps.mainMedia.url);
+        setMainMediaType(cps.mainMedia.type === "video" ? "video" : "image");
+        setMainMediaFile(null);
+      }
+
+      // Secondary images (URLs only)
+      const secondary = Array.isArray(cps.secondaryImages)
+        ? cps.secondaryImages.map((img) => img?.url || null)
+        : [];
+      if (secondary.length > 0) {
+        setSecondaryImages(secondary);
+        setSecondaryImageFiles(new Array(secondary.length).fill(null));
+      }
+    } catch (e) {
+      console.error("Failed to preload campaign into form:", e);
+    }
+  }, [preloadCampaign]);
 
   const fetchCategories = async () => {
     try {
@@ -346,7 +400,10 @@ function CreateCampaignPage() {
         }
       });
 
-      await createCampaign(formData);
+      const res = await createCampaign(formData);
+      // API returns wrapper: { success, status, message, data: <campaign> }
+      const created = res?.data || res;
+      const newCampaignId = created?.campaignId;
 
       setNotification({
         isVisible: true,
@@ -354,10 +411,17 @@ function CreateCampaignPage() {
         message: "Campaign created successfully!",
       });
 
-      // Navigate back after success
-      setTimeout(() => {
-        navigate("/organizer/campaigns");
-      }, 2000);
+      // Redirect to campaign view page so organizer can review details
+      if (newCampaignId) {
+        setTimeout(() => {
+          navigate(`/campaigns/${newCampaignId}`);
+        }, 600);
+      } else {
+        // Fallback: go to my campaigns if ID missing
+        setTimeout(() => {
+          navigate("/organizer/campaigns");
+        }, 1200);
+      }
     } catch (error) {
       console.error("Failed to create campaign:", error);
       setNotification({

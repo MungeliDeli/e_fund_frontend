@@ -19,10 +19,16 @@
  * @version 1.0.0
  */
 
-import React, { createContext, useState, useContext, useEffect, useRef } from 'react'; // MODIFIED: Import useRef
-import { useNavigate, useLocation } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import { refreshToken as refreshTokenApi } from '../features/auth/services/authApi';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useRef,
+} from "react"; // MODIFIED: Import useRef
+import { useNavigate, useLocation } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { refreshToken as refreshTokenApi } from "../features/auth/services/authApi";
 
 const AuthContext = createContext(null);
 
@@ -56,18 +62,31 @@ export const AuthProvider = ({ children }) => {
     hasInitialized.current = true; // Mark as initialized
 
     const initializeAuth = async () => {
-      const storedToken = localStorage.getItem('token');
-      const storedRefreshToken = localStorage.getItem('refreshToken');
+      const storedToken = localStorage.getItem("token");
+      const storedRefreshToken = localStorage.getItem("refreshToken");
 
       if (!storedToken || !storedRefreshToken) {
         // If on a public route (like /email-verified), don't force logout
-        const publicRoutes = ['/','/email-verified','/template-preview', '/verify-email', '/signup', '/login', '/forgot-password', '/reset-password'];
-        const isPublicRoute = publicRoutes.includes(location.pathname) || location.pathname.startsWith('/campaign/');
+        const publicRoutes = [
+          "/",
+          "/email-verified",
+          "/template-preview",
+          "/verify-email",
+          "/signup",
+          "/login",
+          "/forgot-password",
+          "/reset-password",
+        ];
+        const isPublicRoute =
+          publicRoutes.includes(location.pathname) ||
+          location.pathname.startsWith("/campaign/");
         if (isPublicRoute) {
           setLoading(false);
           return;
         }
-        console.log('No tokens found, ensuring user is logged out and stop loading.');
+        console.log(
+          "No tokens found, ensuring user is logged out and stop loading."
+        );
         logout();
         setLoading(false);
         return;
@@ -79,18 +98,18 @@ export const AuthProvider = ({ children }) => {
 
         if (!isExpired) {
           // Token is valid, restore session from localStorage
-          const storedUser = JSON.parse(localStorage.getItem('user'));
+          const storedUser = JSON.parse(localStorage.getItem("user"));
           setToken(storedToken);
           setRefreshToken(storedRefreshToken);
           setUser(storedUser);
           setIsAuthenticated(true);
         } else {
           // Token is expired, attempt to refresh it
-         
+
           const res = await refreshTokenApi(storedRefreshToken);
-         
-          
-          const { token: newAccessToken, refreshToken: newRefreshToken } = res.data?.data || res.data || {};
+
+          const { token: newAccessToken, refreshToken: newRefreshToken } =
+            res.data?.data || res.data || {};
 
           if (newAccessToken && newRefreshToken) {
             const newDecodedUser = jwtDecode(newAccessToken);
@@ -102,11 +121,11 @@ export const AuthProvider = ({ children }) => {
             login(userData, newAccessToken, newRefreshToken);
           } else {
             // Refresh failed, logout user
-            throw new Error('Token refresh failed on load.');
+            throw new Error("Token refresh failed on load.");
           }
         }
       } catch (error) {
-        console.error('Auth initialization failed:', error.message);
+        console.error("Auth initialization failed:", error.message);
         logout();
       } finally {
         setLoading(false);
@@ -114,7 +133,6 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
-
   }, []); // Dependencies remain empty, meaning it runs on mount
 
   /**
@@ -129,26 +147,24 @@ export const AuthProvider = ({ children }) => {
     setRefreshToken(refresh);
     setIsAuthenticated(true);
     setLoading(false);
-    localStorage.setItem('token', accessToken);
-    localStorage.setItem('refreshToken', refresh);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem("token", accessToken);
+    localStorage.setItem("refreshToken", refresh);
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
   /**
    * Log out the user and clear all session data
    */
   const logout = () => {
-    
     setUser(null);
     setToken(null);
     setRefreshToken(null);
- 
-    setIsAuthenticated(false);
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    navigate('/login');
 
+    setIsAuthenticated(false);
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   /**
@@ -159,19 +175,21 @@ export const AuthProvider = ({ children }) => {
    */
   const refreshAccessToken = async () => {
     try {
-      const storedRefreshToken = refreshToken || localStorage.getItem('refreshToken');
-      if (!storedRefreshToken) throw new Error('No refresh token');
+      const storedRefreshToken =
+        refreshToken || localStorage.getItem("refreshToken");
+      if (!storedRefreshToken) throw new Error("No refresh token");
       const res = await refreshTokenApi(storedRefreshToken);
-      const { token: newAccessToken, refreshToken: newRefreshToken } = res.data?.data || res.data || {};
+      const { token: newAccessToken, refreshToken: newRefreshToken } =
+        res.data?.data || res.data || {};
       if (newAccessToken && newRefreshToken) {
         setToken(newAccessToken);
         setRefreshToken(newRefreshToken);
-        localStorage.setItem('token', newAccessToken);
-        localStorage.setItem('refreshToken', newRefreshToken);
+        localStorage.setItem("token", newAccessToken);
+        localStorage.setItem("refreshToken", newRefreshToken);
         setIsAuthenticated(true);
         return newAccessToken;
       } else {
-        throw new Error('No new token returned');
+        throw new Error("No new token returned");
       }
     } catch (err) {
       logout();
@@ -205,7 +223,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

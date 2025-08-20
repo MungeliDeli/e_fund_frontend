@@ -13,6 +13,7 @@ import ReasonModal from "../components/ReasonModal";
 import { FaBullseye, FaRegCalendarCheck } from "react-icons/fa";
 import { FiCalendar, FiFlag } from "react-icons/fi";
 import Notification from "../../../components/Notification";
+import CampaignTemplatePage from "./CampaignTemplatePage";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -60,6 +61,7 @@ export default function CampaignViewPage() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -88,11 +90,25 @@ export default function CampaignViewPage() {
     campaign?.organizerId &&
     user.userId === campaign.organizerId;
   const canPublish = isOwner && status === "pendingStart";
+  const isPubliclyLive =
+    status === "active" || status === "successful" || status === "closed";
   // Only admins can cancel campaigns
   const canCancel =
     status !== "pendingApproval" &&
     status !== "cancelled" &&
     status !== "rejected";
+
+  const handleTogglePreview = () => {
+    setPreviewOpen((prev) => !prev);
+  };
+
+  const handleEdit = () => {
+    // Organizer-only navigation to creation page with preloaded data
+    if (!campaign) return;
+    navigate("/organizer/campaigns/create", {
+      state: { preloadCampaign: campaign },
+    });
+  };
 
   const handleApprove = async () => {
     setActionError("");
@@ -248,7 +264,32 @@ export default function CampaignViewPage() {
       {/* Actions row */}
       <div className="mb-2">
         <div className="flex flex-wrap items-center gap-2">
-          {/* Preview functionality removed during demolition */}
+          {/* Preview toggle (for both admin and organizer) or View Live when active */}
+          {isPubliclyLive ? (
+            <PrimaryButton
+              onClick={() =>
+                navigate(
+                  `/campaign/${campaign.shareLink}-${(campaign.name || "")
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, "-")
+                    .replace(/[^a-z0-9-]/g, "")
+                    .slice(0, 80)}`
+                )
+              }
+            >
+              View Live
+            </PrimaryButton>
+          ) : (
+            <SecondaryButton onClick={handleTogglePreview}>
+              {previewOpen ? "Hide Preview" : "Preview"}
+            </SecondaryButton>
+          )}
+
+          {/* Edit (organizer only) */}
+          {isOwner && (
+            <SecondaryButton onClick={handleEdit}>Edit</SecondaryButton>
+          )}
 
           {/* Approve/Reject (admins only when pendingApproval) */}
           {canApproveReject && (
@@ -318,6 +359,27 @@ export default function CampaignViewPage() {
       <div className="mt-8 p-6 rounded-xl border border-[color:var(--color-muted)] bg-[color:var(--color-surface)] text-[color:var(--color-secondary-text)]">
         Additional analytics and details will appear here after approval.
       </div>
+
+      {/* Inline campaign template preview */}
+      {previewOpen && (
+        <div className="mt-6 border border-[color:var(--color-muted)] rounded-xl overflow-hidden bg-[color:var(--color-background)]">
+          <div className="px-4 py-3 border-b border-[color:var(--color-muted)] flex items-center justify-between">
+            <h3 className="text-lg font-bold text-[color:var(--color-primary-text)]">
+              Campaign Preview
+            </h3>
+            <SecondaryButton onClick={handleTogglePreview}>
+              Close
+            </SecondaryButton>
+          </div>
+          <div className="w-full" style={{ height: "80vh", overflow: "auto" }}>
+            {/* Direct component rendering instead of iframe */}
+            <CampaignTemplatePage
+              campaignId={campaign.campaignId}
+              isPreview={true}
+            />
+          </div>
+        </div>
+      )}
 
       {campaign.statusReason && (
         <div className="mt-6 p-6 rounded-xl border border-[color:var(--color-muted)] bg-[color:var(--color-surface)] text-[color:var(--color-secondary-text)]">
