@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiInfo } from "react-icons/fi";
+import { FiInfo, FiAlertTriangle } from "react-icons/fi";
 import PaymentModal from "./PaymentModal";
 import ThankYouModal from "./ThankYouModal";
 
@@ -11,6 +11,7 @@ function DonationSection({
   predefinedAmounts,
   themeColor,
   formatAmount,
+  campaign = null,
 }) {
   const [selectedAmount, setSelectedAmount] = useState(predefinedAmounts[0]);
   const [customAmount, setCustomAmount] = useState("");
@@ -18,6 +19,7 @@ function DonationSection({
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showThankYouModal, setShowThankYouModal] = useState(false);
   const [donationDetails, setDonationDetails] = useState(null);
+  const [amountError, setAmountError] = useState("");
 
   const handlePredefinedAmountClick = (amount) => {
     setSelectedAmount(amount);
@@ -25,20 +27,67 @@ function DonationSection({
     setCustomAmount("");
   };
 
+  const validateAmount = (amount) => {
+    const numAmount = parseFloat(amount);
+    if (!amount || amount === "" || isNaN(numAmount)) {
+      return "Please enter a valid amount";
+    }
+    if (numAmount <= 0) {
+      return "Amount must be greater than 0";
+    }
+    if (numAmount < 0.01) {
+      return "Amount must be at least K0.01";
+    }
+    if (numAmount > 999999.99) {
+      return "Amount cannot exceed K999,999.99";
+    }
+    return "";
+  };
+
   const handleCustomAmountChange = (e) => {
     const value = e.target.value;
     setCustomAmount(value);
     setIsCustomSelected(true);
     setSelectedAmount(null);
+
+    // Validate amount and show error immediately
+    const error = validateAmount(value);
+    setAmountError(error);
   };
 
   const handleDonate = () => {
     const amount = isCustomSelected ? customAmount : selectedAmount;
-    if (!amount || parseFloat(amount) <= 0) {
-      alert("Please enter a valid donation amount");
+
+    // Validate amount
+    const error = validateAmount(amount);
+    if (error) {
+      setAmountError(error);
       return;
     }
 
+    // Check campaign state
+    if (campaign) {
+      if (campaign.status !== "active") {
+        setAmountError(
+          `Campaign is not accepting donations. Status: ${campaign.status}`
+        );
+        return;
+      }
+
+      if (campaign.endDate && new Date(campaign.endDate) < new Date()) {
+        setAmountError(
+          "Campaign has ended and is no longer accepting donations"
+        );
+        return;
+      }
+
+      if (campaign.startDate && new Date(campaign.startDate) > new Date()) {
+        setAmountError("Campaign has not started yet");
+        return;
+      }
+    }
+
+    setAmountError("");
     setShowPaymentModal(true);
   };
 
@@ -146,19 +195,36 @@ function DonationSection({
             type="number"
             value={customAmount}
             onChange={handleCustomAmountChange}
-            onFocus={() => setIsCustomSelected(true)}
+            onFocus={() => {
+              setIsCustomSelected(true);
+              setAmountError("");
+            }}
             placeholder="other amount"
-            min="1"
-            step="1"
+            min="0.01"
+            max="999999.99"
+            step="0.01"
             className={`w-full px-4 py-3 border rounded-lg bg-[color:var(--color-background)] text-[color:var(--color-text)] focus:outline-none transition-colors ${
-              isCustomSelected
+              amountError && isCustomSelected
+                ? "border-red-500 focus:border-red-500"
+                : isCustomSelected
                 ? `border-[color:var(--color-primary)]`
                 : `border-[color:var(--color-primary)] focus:border-[color:var(--color-primary)]`
             }`}
             style={{
-              borderColor: isCustomSelected ? themeColor : `${themeColor}40`,
+              borderColor:
+                amountError && isCustomSelected
+                  ? "#ef4444"
+                  : isCustomSelected
+                  ? themeColor
+                  : `${themeColor}40`,
             }}
           />
+          {amountError && isCustomSelected && (
+            <p className="text-sm text-red-500 flex items-center gap-1">
+              <FiAlertTriangle className="w-3 h-3" />
+              {amountError}
+            </p>
+          )}
         </div>
 
         {/* Receipt Notice */}
@@ -178,7 +244,10 @@ function DonationSection({
         {/* Donate Button */}
         <button
           onClick={handleDonate}
-          className="w-full py-4 px-6 rounded-lg font-semibold text-white transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2"
+          disabled={!!amountError}
+          className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            amountError ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
+          }`}
           style={{
             backgroundColor: themeColor,
           }}
@@ -195,6 +264,9 @@ function DonationSection({
         themeColor={themeColor}
         formatAmount={formatAmount}
         onDonate={handlePaymentSubmit}
+        campaignStatus={campaign?.status}
+        campaignEndDate={campaign?.endDate}
+        campaignStartDate={campaign?.startDate}
       />
 
       {/* Thank You Modal */}

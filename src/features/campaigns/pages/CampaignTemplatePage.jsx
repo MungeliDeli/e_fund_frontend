@@ -18,6 +18,7 @@ import {
   getCampaignById,
   getCampaignByShareLink,
 } from "../services/campaignApi";
+import { createDonation } from "../services/donationApi";
 import Notification from "../../../components/Notification";
 import FundraiseLogo from "./../../../assets/fundraise logo.svg";
 import PaymentModal from "../components/PaymentModal";
@@ -124,15 +125,42 @@ function CampaignTemplatePage({
     setShowPaymentModal(true);
   };
 
-  const handlePaymentSubmit = (paymentData) => {
-    // TODO: Implement donation processing
-    console.log("Payment data:", paymentData);
-    setNotification({
-      isVisible: true,
-      type: "success",
-      message: `Donation of ${formatAmount(paymentData.amount)} initiated!`,
-    });
-    setShowPaymentModal(false);
+  const handlePaymentSubmit = async (paymentData) => {
+    try {
+      console.log("Processing donation:", paymentData);
+
+      // Add campaign ID to payment data
+      const donationData = {
+        ...paymentData,
+        campaignId: campaign.campaignId,
+      };
+
+      // Call the actual donation API
+      const response = await createDonation(donationData);
+
+      console.log("Donation successful:", response);
+
+      setNotification({
+        isVisible: true,
+        type: "success",
+        message: `Donation of ${formatAmount(
+          paymentData.amount
+        )} submitted successfully!`,
+      });
+      setShowPaymentModal(false);
+
+      // Refresh campaign data to show updated amounts
+      await fetchCampaign();
+    } catch (error) {
+      console.error("Donation failed:", error);
+      setNotification({
+        isVisible: true,
+        type: "error",
+        message:
+          error.message || "Failed to process donation. Please try again.",
+      });
+      throw error; // Re-throw to let PaymentModal handle it
+    }
   };
 
   const handleShare = async () => {
@@ -373,6 +401,7 @@ function CampaignTemplatePage({
                 predefinedAmounts={predefinedAmounts}
                 themeColor={themeColor}
                 formatAmount={formatAmount}
+                campaign={campaign}
               />
             </div>
 
@@ -409,6 +438,7 @@ function CampaignTemplatePage({
               predefinedAmounts={predefinedAmounts}
               themeColor={themeColor}
               formatAmount={formatAmount}
+              campaign={campaign}
             />
           </div>
 

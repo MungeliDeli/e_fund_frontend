@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiX } from "react-icons/fi";
+import { FiX, FiAlertTriangle } from "react-icons/fi";
 import airtelLogo from "../../../assets/airtel_logo.png";
 import mtnLogo from "../../../assets/mtn_logo.png";
 
@@ -10,29 +10,145 @@ function PaymentModal({
   themeColor,
   formatAmount,
   onDonate,
+  campaignStatus = "active",
+  campaignEndDate = null,
+  campaignStartDate = null,
 }) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("airtel");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [message, setMessage] = useState("");
   const [donateAnonymously, setDonateAnonymously] = useState(false);
   const [subscribeToCampaign, setSubscribeToCampaign] = useState(true);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleDonate = () => {
-    if (!phoneNumber.trim()) {
-      alert("Please enter a valid phone number");
+  // Validation functions
+  const validateAmount = (amount) => {
+    const numAmount = parseFloat(amount);
+    if (!amount || isNaN(numAmount)) {
+      return "Amount must be a valid number";
+    }
+    if (numAmount <= 0) {
+      return "Amount must be greater than 0";
+    }
+    if (numAmount < 0.01) {
+      return "Amount must be at least K0.01";
+    }
+    if (numAmount > 999999.99) {
+      return "Amount cannot exceed K999,999.99";
+    }
+    return null;
+  };
+
+  const validatePhoneNumber = (phone) => {
+    if (!phone || !phone.trim()) {
+      return "Phone number is required";
+    }
+
+    const cleanPhone = phone.trim();
+    // International format validation: +260 followed by 9 digits, or just 9 digits starting with 7/9
+    const phoneRegex = /^(\+260[79]\d{8}|[79]\d{8})$/;
+
+    if (!phoneRegex.test(cleanPhone)) {
+      return "Phone number must be in valid Zambian format (e.g., +2607XXXXXXXX or 7XXXXXXXX)";
+    }
+    return null;
+  };
+
+  const validateMessage = (messageText) => {
+    if (messageText && messageText.length > 1000) {
+      return "Message cannot exceed 1000 characters";
+    }
+
+    // Check for potentially harmful content
+    const harmfulPatterns = [
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      /javascript:/gi,
+      /on\w+\s*=/gi,
+      /data:text\/html/gi,
+    ];
+
+    for (const pattern of harmfulPatterns) {
+      if (pattern.test(messageText)) {
+        return "Message contains potentially harmful content";
+      }
+    }
+    return null;
+  };
+
+  const validateCampaignState = () => {
+    if (campaignStatus !== "active") {
+      return `Campaign is not accepting donations. Current status: ${campaignStatus}`;
+    }
+
+    if (campaignEndDate && new Date(campaignEndDate) < new Date()) {
+      return "Campaign has ended and is no longer accepting donations";
+    }
+
+    if (campaignStartDate && new Date(campaignStartDate) > new Date()) {
+      return "Campaign has not started yet and is not accepting donations";
+    }
+
+    return null;
+  };
+
+  const handleDonate = async () => {
+    setIsSubmitting(true);
+    const newErrors = {};
+
+    // Validate all fields
+    const amountError = validateAmount(amount);
+    const phoneError = validatePhoneNumber(phoneNumber);
+    const messageError = validateMessage(message);
+    const campaignError = validateCampaignState();
+
+    if (amountError) newErrors.amount = amountError;
+    if (phoneError) newErrors.phoneNumber = phoneError;
+    if (messageError) newErrors.message = messageError;
+    if (campaignError) newErrors.campaign = campaignError;
+
+    setErrors(newErrors);
+
+    // If there are errors, don't proceed
+    if (Object.keys(newErrors).length > 0) {
+      setIsSubmitting(false);
       return;
     }
 
-    onDonate({
-      amount,
-      paymentMethod: selectedPaymentMethod,
-      phoneNumber,
-      message: message.trim(),
-      donateAnonymously,
-      subscribeToCampaign,
-    });
+    try {
+      // Format phone number for backend
+      let formattedPhone = phoneNumber.trim();
+      if (!formattedPhone.startsWith("+260")) {
+        formattedPhone = "+260" + formattedPhone;
+      }
+
+      await onDonate({
+        amount: parseFloat(amount),
+        paymentMethod: selectedPaymentMethod,
+        phoneNumber: formattedPhone,
+        messageText: message.trim() || undefined,
+        isAnonymous: donateAnonymously,
+        subscribeToCampaign,
+        currency: "ZMW",
+        gatewayUsed:
+          selectedPaymentMethod === "airtel"
+            ? "airtel_money"
+            : "mtn_mobile_money",
+        gatewayTransactionId: `FRONTEND_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
+      });
+    } catch (error) {
+      console.error("Donation failed:", error);
+      setErrors({
+        general:
+          error.message || "Failed to process donation. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -63,6 +179,21 @@ function PaymentModal({
 
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto flex-1 hide-scrollbar">
+          {/* Campaign State Error */}
+          {errors.campaign && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <FiAlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-red-600">{errors.campaign}</p>
+            </div>
+          )}
+
+          {/* General Error */}
+          {errors.general && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <FiAlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-red-600">{errors.general}</p>
+            </div>
+          )}
           {/* Payment Options */}
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-[color:var(--color-primary-text)]">
@@ -120,12 +251,19 @@ function PaymentModal({
               <span className="text-sm text-[color:var(--color-primary-text)]">
                 You are donating:
               </span>
-              <span
-                className="text-lg font-semibold"
-                style={{ color: themeColor }}
-              >
-                {formatAmount(amount)}
-              </span>
+              <div className="flex flex-col items-end">
+                <span
+                  className="text-lg font-semibold"
+                  style={{ color: themeColor }}
+                >
+                  {formatAmount(amount)}
+                </span>
+                {errors.amount && (
+                  <span className="text-xs text-red-500 mt-1">
+                    {errors.amount}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-[color:var(--color-primary-text)]">
@@ -148,7 +286,7 @@ function PaymentModal({
           {/* Phone Number Input */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-[color:var(--color-primary-text)]">
-              Phone Number:
+              Phone Number: <span className="text-red-500">*</span>
             </label>
             <div className="flex">
               <select className="px-3 py-3 border border-[color:var(--color-muted)] border-r-0 rounded-l-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none">
@@ -157,11 +295,29 @@ function PaymentModal({
               <input
                 type="tel"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="flex-1 px-3 py-3 border border-[color:var(--color-muted)] rounded-r-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none focus:border-[color:var(--color-primary)]"
-                placeholder="Enter phone number"
+                onChange={(e) => {
+                  setPhoneNumber(e.target.value);
+                  if (errors.phoneNumber) {
+                    setErrors((prev) => ({ ...prev, phoneNumber: null }));
+                  }
+                }}
+                className={`flex-1 px-3 py-3 border rounded-r-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none ${
+                  errors.phoneNumber
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-[color:var(--color-muted)] focus:border-[color:var(--color-primary)]"
+                }`}
+                placeholder="7XXXXXXXX or 9XXXXXXXX"
               />
             </div>
+            {errors.phoneNumber && (
+              <p className="text-sm text-red-500 flex items-center gap-1">
+                <FiAlertTriangle className="w-3 h-3" />
+                {errors.phoneNumber}
+              </p>
+            )}
+            <p className="text-xs text-[color:var(--color-secondary-text)]">
+              Enter your mobile money number (Airtel or MTN)
+            </p>
           </div>
 
           {/* Message Input */}
@@ -172,10 +328,19 @@ function PaymentModal({
             <div className="relative">
               <textarea
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  if (errors.message) {
+                    setErrors((prev) => ({ ...prev, message: null }));
+                  }
+                }}
                 maxLength={1000}
                 rows={3}
-                className="w-full px-3 py-3 border border-[color:var(--color-muted)] rounded-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none focus:border-[color:var(--color-primary)] resize-none"
+                className={`w-full px-3 py-3 border rounded-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none resize-none ${
+                  errors.message
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-[color:var(--color-muted)] focus:border-[color:var(--color-primary)]"
+                }`}
                 placeholder="Leave a message for the campaign organizer (max 1000 characters)"
               />
               <div className="flex justify-between items-center mt-1">
@@ -192,6 +357,12 @@ function PaymentModal({
                   {message.length}/1000
                 </span>
               </div>
+              {errors.message && (
+                <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                  <FiAlertTriangle className="w-3 h-3" />
+                  {errors.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -239,10 +410,15 @@ function PaymentModal({
           {/* Donate Button */}
           <button
             onClick={handleDonate}
-            className="w-full py-4 px-6 rounded-lg font-semibold text-white transition-colors"
+            disabled={isSubmitting || errors.campaign}
+            className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-colors ${
+              isSubmitting || errors.campaign
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:opacity-90"
+            }`}
             style={{ backgroundColor: themeColor }}
           >
-            Donate
+            {isSubmitting ? "Processing..." : "Donate"}
           </button>
 
           {/* Legal Disclaimer */}
