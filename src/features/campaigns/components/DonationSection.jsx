@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FiInfo } from "react-icons/fi";
 import PaymentModal from "./PaymentModal";
+import ThankYouModal from "./ThankYouModal";
 
 function DonationSection({
   raisedAmount,
@@ -15,6 +16,8 @@ function DonationSection({
   const [customAmount, setCustomAmount] = useState("");
   const [isCustomSelected, setIsCustomSelected] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showThankYouModal, setShowThankYouModal] = useState(false);
+  const [donationDetails, setDonationDetails] = useState(null);
 
   const handlePredefinedAmountClick = (amount) => {
     setSelectedAmount(amount);
@@ -42,8 +45,20 @@ function DonationSection({
   const handlePaymentSubmit = (paymentData) => {
     // TODO: Implement donation processing
     console.log("Payment data:", paymentData);
-    alert(`Donation of ${formatAmount(paymentData.amount)} initiated!`);
+
+    // Set donation details for ThankYouModal
+    setDonationDetails({
+      amount: paymentData.amount,
+      paymentMethod: paymentData.paymentMethod,
+      message: paymentData.message,
+      phoneNumber: paymentData.phoneNumber,
+      donateAnonymously: paymentData.donateAnonymously,
+      subscribeToCampaign: paymentData.subscribeToCampaign,
+    });
+
+    // Close payment modal and show thank you modal
     setShowPaymentModal(false);
+    setShowThankYouModal(true);
   };
 
   return (
@@ -180,6 +195,15 @@ function DonationSection({
         themeColor={themeColor}
         formatAmount={formatAmount}
         onDonate={handlePaymentSubmit}
+      />
+
+      {/* Thank You Modal */}
+      <ThankYouModal
+        isOpen={showThankYouModal}
+        onClose={() => setShowThankYouModal(false)}
+        donationDetails={donationDetails}
+        themeColor={themeColor}
+        formatAmount={formatAmount}
       />
     </div>
   );
