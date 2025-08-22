@@ -50,7 +50,7 @@ function RecentDonations({ themeColor }) {
     : mockDonations.slice(0, 4);
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+    <div className="bg-[color:var(--color-background)] rounded-lg p-6 shadow-[0_2px_16px_0_var(--color-shadow)] ">
       {/* Header */}
       <div className="mb-4">
         <h3
@@ -81,7 +81,7 @@ function RecentDonations({ themeColor }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
-                  <span className="text-sm text-black">
+                  <span className="text-sm text-[color:var(--color-text)]">
                     {donation.name} donated{" "}
                     <span className="font-bold">
                       {formatAmount(donation.amount)}
@@ -113,7 +113,7 @@ function RecentDonations({ themeColor }) {
           style={{
             borderColor: `${themeColor}40`,
             color: themeColor,
-            backgroundColor: "white",
+            backgroundColor: "bg-[color:var(--color-background)]",
           }}
         >
           See all Donations

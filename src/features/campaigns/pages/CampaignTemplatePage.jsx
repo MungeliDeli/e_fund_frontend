@@ -413,7 +413,7 @@ function CampaignTemplatePage({
           </div>
 
           {/* Campaign Message */}
-          <div className="bg-[color:var(--color-surface)] rounded-lg p-4">
+          <div className="bg-[color:var(--color-background)] rounded-lg p-4">
             <div className="prose max-w-none">
               <p className="text-[color:var(--color-primary-text)] leading-relaxed">
                 {showFullMessage

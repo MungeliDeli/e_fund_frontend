@@ -47,7 +47,7 @@ function DonationSection({
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 space-y-6 shadow-sm border border-gray-100">
+    <div className="bg-[color:var(--color-background)]  rounded-lg p-6 space-y-6 shadow-[0_2px_16px_0_var(--color-shadow)]">
       {/* Raised Amount and Goal */}
       <div className="flex items-baseline justify-between">
         <div className="flex items-center gap-2">
@@ -62,17 +62,17 @@ function DonationSection({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="text-lg font-semibold text-black">
+          <div className="text-lg text-[color:var(--color-text)]  font-semibold ">
             {formatAmount(goalAmount)}
           </div>
-          <div className="text-sm text-gray-600">Goal</div>
+          <div className="text-sm text-[color:var(--color-text)] ">Goal</div>
         </div>
       </div>
 
       {/* Progress Bar */}
       <div className="space-y-2">
         <div className="relative">
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div className="w-[90%] bg-[color:var(--color-surface)] rounded-full h-3 overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500 ease-out"
               style={{
@@ -81,12 +81,12 @@ function DonationSection({
               }}
             />
           </div>
-          <span className="absolute right-0 top-0 text-sm font-medium text-black">
+          <span className="absolute right-0 top-[-5px] text-sm font-medium text-[color:var(--color-text)]">
             {Math.round(progress)}%
           </span>
         </div>
         <div className="flex justify-start">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-[color:var(--color-text)]">
             {donationCount} donations
           </span>
         </div>
@@ -104,11 +104,7 @@ function DonationSection({
             <button
               key={amount}
               onClick={() => handlePredefinedAmountClick(amount)}
-              className={`py-2 px-4 rounded-lg border font-semibold transition-all ${
-                selectedAmount === amount && !isCustomSelected
-                  ? "text-white"
-                  : "bg-white text-green-600 border-green-300"
-              }`}
+              className={`py-2 px-4 rounded-lg border font-semibold transition-all `}
               style={{
                 borderColor:
                   selectedAmount === amount && !isCustomSelected
@@ -117,7 +113,7 @@ function DonationSection({
                 backgroundColor:
                   selectedAmount === amount && !isCustomSelected
                     ? themeColor
-                    : "white",
+                    : "bg-[color:var(--color-background)]",
                 color:
                   selectedAmount === amount && !isCustomSelected
                     ? "white"
@@ -139,10 +135,10 @@ function DonationSection({
             placeholder="other amount"
             min="1"
             step="1"
-            className={`w-full px-4 py-3 border rounded-lg bg-white text-black focus:outline-none transition-colors ${
+            className={`w-full px-4 py-3 border rounded-lg bg-[color:var(--color-background)] text-[color:var(--color-text)] focus:outline-none transition-colors ${
               isCustomSelected
-                ? "border-green-600"
-                : "border-green-300 focus:border-green-600"
+                ? `border-[color:var(--color-primary)]`
+                : `border-[color:var(--color-primary)] focus:border-[color:var(--color-primary)]`
             }`}
             style={{
               borderColor: isCustomSelected ? themeColor : `${themeColor}40`,

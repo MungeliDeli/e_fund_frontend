@@ -65,7 +65,7 @@ function WordsOfSupport({ themeColor }) {
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+    <div className="bg-[color:var(--color-background)] rounded-lg p-6 shadow-[0_2px_16px_0_var(--color-shadow)] ">
       {/* Header */}
       <div className="mb-4">
         <h3
@@ -85,12 +85,12 @@ function WordsOfSupport({ themeColor }) {
         {displayedSupports.map((support) => (
           <div
             key={support.id}
-            className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+            className="bg-[color:var(--color-surface)] p-4 rounded-lg border border-[color:var(--color-muted)]"
           >
             <div className="flex items-start justify-between gap-3">
               {/* Message and Author */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-700 leading-relaxed mb-2">
+                <p className="text-sm text-[color:var(--color-text)] font-normal leading-relaxed mb-2">
                   "{support.message}"
                 </p>
                 <p
@@ -124,7 +124,7 @@ function WordsOfSupport({ themeColor }) {
           style={{
             borderColor: `${themeColor}40`,
             color: themeColor,
-            backgroundColor: "white",
+            backgroundColor: "bg-[color:var(--color-background)]",
           }}
         >
           See More

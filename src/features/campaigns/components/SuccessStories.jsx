@@ -46,7 +46,7 @@ function SuccessStories({ themeColor }) {
   const displayedStories = showAll ? mockStories : mockStories.slice(0, 4);
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+    <div className="bg-[color:var(--color-background)] rounded-lg p-6 shadow-[0_2px_16px_0_var(--color-shadow)]">
       {/* Header */}
       <div className="mb-4">
         <h3
@@ -66,24 +66,24 @@ function SuccessStories({ themeColor }) {
         {displayedStories.map((story) => (
           <div key={story.id} className="flex gap-3">
             {/* Story Image */}
-            <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+            <div className="w-16 h-16 bg-[color:var(--color-surface)] rounded-lg flex-shrink-0 overflow-hidden">
               <img
                 src={story.image}
                 alt={`Story by ${story.author}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover "
                 onError={(e) => {
                   e.target.style.display = "none";
                   e.target.nextSibling.style.display = "flex";
                 }}
               />
-              <div className="w-full h-full bg-gray-200 items-center justify-center text-xs text-gray-500 hidden">
+              <div className="w-full h-full bg-[color:var(--color-surface)] items-center justify-center text-lg text-[color:var(--color-text)] hidden">
                 {story.author[0]?.toUpperCase()}
               </div>
             </div>
 
             {/* Story Content */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-700 leading-relaxed mb-1">
+              <p className="text-sm text-[color:var(--color-text)] leading-relaxed mb-1">
                 {story.text}
               </p>
               <button
@@ -105,7 +105,7 @@ function SuccessStories({ themeColor }) {
           style={{
             borderColor: `${themeColor}40`,
             color: themeColor,
-            backgroundColor: "white",
+            backgroundColor: "bg-[color:var(--color-background)]",
           }}
         >
           See More

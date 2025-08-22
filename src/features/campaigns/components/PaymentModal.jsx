@@ -12,7 +12,8 @@ function PaymentModal({
   onDonate,
 }) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("airtel");
-  const [phoneNumber, setPhoneNumber] = useState("978882033");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [message, setMessage] = useState("");
   const [donateAnonymously, setDonateAnonymously] = useState(false);
   const [subscribeToCampaign, setSubscribeToCampaign] = useState(true);
 
@@ -28,6 +29,7 @@ function PaymentModal({
       amount,
       paymentMethod: selectedPaymentMethod,
       phoneNumber,
+      message: message.trim(),
       donateAnonymously,
       subscribeToCampaign,
     });
@@ -42,7 +44,7 @@ function PaymentModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-xl w-full max-w-lg shadow-2xl max-h-[95vh] flex flex-col">
+      <div className="relative bg-[color:var(--color-background)] rounded-xl w-full max-w-lg shadow-[0_2px_16px_0_var(--color-shadow)] max-h-[95vh] flex flex-col">
         {/* Header */}
         <div
           className="flex items-center justify-between p-4 border-b mx-2"
@@ -74,7 +76,7 @@ function PaymentModal({
                 className={`p-4 rounded-lg transition-all ${
                   selectedPaymentMethod === "airtel"
                     ? "border-1 border-[color:var(--color-primary)] shadow-md"
-                    : "border border-transparent shadow-sm hover:shadow-md"
+                    : "border border-[color:var(--color-muted)] bg-[color:var(--color-background)] shadow-[0_2px_16px_0_var(--color-shadow)] hover:shadow-md"
                 }`}
               >
                 <div className="flex flex-col items-center space-y-2">
@@ -95,7 +97,7 @@ function PaymentModal({
                 className={`p-4 rounded-lg transition-all ${
                   selectedPaymentMethod === "mtn"
                     ? "border-1 border-[color:var(--color-primary)] shadow-md"
-                    : "border border-transparent shadow-sm hover:shadow-md"
+                    : "border border-[color:var(--color-muted)] shadow-[0_2px_16px_0_var(--color-shadow)] hover:shadow-md"
                 }`}
               >
                 <div className="flex flex-col items-center space-y-2">
@@ -149,16 +151,47 @@ function PaymentModal({
               Phone Number:
             </label>
             <div className="flex">
-              <select className="px-3 py-3 border border-[color:var(--color-muted)] border-r-0 rounded-l-lg bg-white text-[color:var(--color-primary-text)] focus:outline-none">
+              <select className="px-3 py-3 border border-[color:var(--color-muted)] border-r-0 rounded-l-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none">
                 <option>+260</option>
               </select>
               <input
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="flex-1 px-3 py-3 border border-[color:var(--color-muted)] rounded-r-lg bg-white text-[color:var(--color-primary-text)] focus:outline-none focus:border-[color:var(--color-primary)]"
+                className="flex-1 px-3 py-3 border border-[color:var(--color-muted)] rounded-r-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none focus:border-[color:var(--color-primary)]"
                 placeholder="Enter phone number"
               />
+            </div>
+          </div>
+
+          {/* Message Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[color:var(--color-primary-text)]">
+              Message (Optional):
+            </label>
+            <div className="relative">
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                maxLength={1000}
+                rows={3}
+                className="w-full px-3 py-3 border border-[color:var(--color-muted)] rounded-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none focus:border-[color:var(--color-primary)] resize-none"
+                placeholder="Leave a message for the campaign organizer (max 1000 characters)"
+              />
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-xs text-[color:var(--color-secondary-text)]">
+                  Share your thoughts or encouragement
+                </span>
+                <span
+                  className={`text-xs ${
+                    message.length > 900
+                      ? "text-red-500"
+                      : "text-[color:var(--color-secondary-text)]"
+                  }`}
+                >
+                  {message.length}/1000
+                </span>
+              </div>
             </div>
           </div>
 
