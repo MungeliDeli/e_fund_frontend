@@ -1,0 +1,161 @@
+.outreach-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-muted);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 32px;
+}
+
+.outreach-header {
+  margin-bottom: 24px;
+}
+
+.outreach-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.outreach-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-primary-text);
+  margin: 0;
+}
+
+.outreach-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.campaign-outreach-analytics {
+  margin-bottom: 24px;
+}
+
+.analytics-loading,
+.analytics-empty {
+  text-align: center;
+  padding: 32px;
+  color: var(--color-secondary-text);
+}
+
+.analytics-content {
+  background: var(--color-background);
+  border: 1px solid var(--color-muted);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.analytics-header h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-primary-text);
+  margin: 0;
+}
+
+.analytics-metrics {
+  margin-bottom: 24px;
+}
+
+.analytics-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.detail-section h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-primary-text);
+  margin: 0 0 8px 0;
+}
+
+.detail-section p {
+  color: var(--color-secondary-text);
+  margin: 4px 0;
+}
+
+.social-sharing-integration {
+  border-top: 1px solid var(--color-muted);
+  padding-top: 24px;
+}
+
+.social-sharing-header {
+  margin-bottom: 20px;
+}
+
+.social-sharing-header h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-primary-text);
+  margin: 0 0 8px 0;
+}
+
+.social-sharing-header p {
+  color: var(--color-secondary-text);
+  margin: 0;
+}
+
+.social-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.social-platform-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.platform-icon {
+  font-size: 1.2rem;
+}
+
+.platform-name {
+  font-weight: 500;
+}
+
+.sharing-status {
+  text-align: center;
+  padding: 16px;
+  color: var(--color-secondary-text);
+}
+
+.sharing-status p {
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .outreach-header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .outreach-actions {
+    justify-content: center;
+  }
+
+  .analytics-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .social-platforms {
+    justify-content: center;
+  }
+}

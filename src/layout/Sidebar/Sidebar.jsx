@@ -59,6 +59,19 @@ const adminNavItems = [
     allowedRoles: ["superAdmin", "eventModerator"],
   },
   {
+    label: "Donations",
+    icon: FiBarChart,
+    key: "admin-donations",
+    path: "/donations",
+    allowedRoles: [
+      "superAdmin",
+      "supportAdmin",
+      "eventModerator",
+      "financialAdmin",
+    ],
+  },
+
+  {
     label: "Financial Reports",
     icon: FiBarChart2,
     key: "admin-financial",
@@ -103,6 +116,12 @@ const navConfig = {
       path: "/organizer/campaigns",
     },
     {
+      label: "My Donations",
+      icon: FiBarChart,
+      key: "my-donations",
+      path: "/donations",
+    },
+    {
       label: "My Contacts",
       icon: FiUsers,
       key: "my-contacts",
@@ -143,7 +162,7 @@ function Sidebar({ open, onClose, className }) {
         (item) =>
           !item.allowedRoles ||
           item.allowedRoles.includes(userType) ||
-            userType === "superAdmin"
+          userType === "superAdmin"
       );
     } else {
       roleNavItems = navConfig[userType] || [];

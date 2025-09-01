@@ -70,7 +70,7 @@ const baseColumns = [
                 key={cat.categoryId || cat.name}
                 className="inline-block  text-[color:var(--color-primary-text)] rounded px-2 py-0.5 text-xs font-medium"
               >
-                {cat.name} 
+                {cat.name}
               </span>
             ))}
           </div>
@@ -87,6 +87,18 @@ const baseColumns = [
     render: (row) => (
       <span className="font-mono text-xs">
         ${row.currentRaisedAmount?.toLocaleString() || "0.00"}
+      </span>
+    ),
+  },
+  {
+    key: "donationCount",
+    label: "Donations",
+    sortable: true,
+    render: (row) => (
+      <span className="font-mono text-xs">
+        {typeof row.donationCount === "number"
+          ? row.donationCount
+          : parseInt(row.donationCount || 0, 10)}
       </span>
     ),
   },
@@ -118,24 +130,8 @@ const baseColumns = [
   },
 ];
 
-// Organizer-specific columns (includes end date, excludes organizer name)
-const organizerColumns = [
-  ...baseColumns.slice(0, 2), // Logo and Name
-  {
-    key: "endDate",
-    label: "End Date",
-    sortable: true,
-    render: (row) => (
-      <div className="flex items-center gap-1">
-        <FiCalendar className="w-3 h-3 text-[color:var(--color-muted-text)]" />
-        <span className="text-xs text-[color:var(--color-primary-text)]">
-          {formatDate(row.endDate)}
-        </span>
-      </div>
-    ),
-  },
-  ...baseColumns.slice(2), // Category, Raised, Status
-];
+// Organizer-specific columns (excludes end date)
+const organizerColumns = [...baseColumns];
 
 // Admin-specific columns (includes organizer name, excludes end date)
 const adminColumns = [
@@ -145,7 +141,7 @@ const adminColumns = [
     label: "Organizer",
     sortable: true,
   },
-  ...baseColumns.slice(2), // Category, Raised, Status
+  ...baseColumns.slice(2), // Category, Raised, Donations, Status
 ];
 
 function CampaignTable({

@@ -1,4 +1,5 @@
 import React from "react";
+import SearchableDropdown from "./SearchableDropdown";
 import { FiX } from "react-icons/fi";
 import { PrimaryButton, SecondaryButton } from "./Buttons";
 
@@ -57,22 +58,36 @@ function FilterModal({
               <label className="block text-sm font-medium text-[color:var(--color-primary-text)] mb-2">
                 {option.label}
               </label>
-              <select
-                value={
-                  filters[option.key] !== undefined
-                    ? filters[option.key].toString()
-                    : "all"
-                }
-                onChange={(e) => handleFilterChange(option.key, e.target.value)}
-                className="w-full px-3 py-2  rounded-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary)] focus:border-transparent"
-              >
-                <option value="all">All</option>
-                {option.options.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              {option.type === "searchable" ? (
+                <SearchableDropdown
+                  options={option.options || []}
+                  value={filters[option.key] || ""}
+                  onChange={(val) =>
+                    handleFilterChange(option.key, val || "all")
+                  }
+                  placeholder={`Search ${option.label.toLowerCase()}...`}
+                  className="w-full"
+                />
+              ) : (
+                <select
+                  value={
+                    filters[option.key] !== undefined
+                      ? filters[option.key].toString()
+                      : "all"
+                  }
+                  onChange={(e) =>
+                    handleFilterChange(option.key, e.target.value)
+                  }
+                  className="w-full px-3 py-2  rounded-lg bg-[color:var(--color-surface)] text-[color:var(--color-primary-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary)] focus:border-transparent"
+                >
+                  <option value="all">All</option>
+                  {option.options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           ))}
         </div>

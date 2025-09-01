@@ -91,7 +91,10 @@ function MyCampaignsPage() {
 
   const handleEdit = (campaignId) => {
     // Campaign editing removed during demolition
-    console.log("Campaign editing functionality removed for campaign:", campaignId);
+    console.log(
+      "Campaign editing functionality removed for campaign:",
+      campaignId
+    );
   };
 
   // Filter options

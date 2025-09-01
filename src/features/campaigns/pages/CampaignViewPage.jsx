@@ -14,6 +14,9 @@ import { FaBullseye, FaRegCalendarCheck } from "react-icons/fa";
 import { FiCalendar, FiFlag } from "react-icons/fi";
 import Notification from "../../../components/Notification";
 import CampaignTemplatePage from "./CampaignTemplatePage";
+import AnalyticsSection from "../../donations/components/AnalyticsSection";
+import MessagesSection from "../../donations/components/MessagesSection";
+import OutreachSection from "../../Outreach/components/OutreachSection";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -355,10 +358,32 @@ export default function CampaignViewPage() {
         onClose={() => setShowReason(false)}
       />
 
-      {/* Placeholder for future analytics/sections */}
-      <div className="mt-8 p-6 rounded-xl border border-[color:var(--color-muted)] bg-[color:var(--color-surface)] text-[color:var(--color-secondary-text)]">
-        Additional analytics and details will appear here after approval.
-      </div>
+      {/* Campaign Analytics Section */}
+      {isPubliclyLive && (
+        <AnalyticsSection
+          campaignId={campaign.campaignId}
+          goalAmount={campaign.goalAmount}
+          className="mt-8"
+        />
+      )}
+
+      {/* Campaign Messages Section */}
+      {isOwner && (
+        <MessagesSection
+          campaignId={campaign.campaignId}
+          className="mt-8"
+          isOrganizer={true}
+        />
+      )}
+
+      {/* Campaign Outreach Section */}
+      {isOwner && isPubliclyLive && (
+        <OutreachSection
+          campaignId={campaign.campaignId}
+          campaignTitle={campaign.title}
+          className="mt-8"
+        />
+      )}
 
       {/* Inline campaign template preview */}
       {previewOpen && (

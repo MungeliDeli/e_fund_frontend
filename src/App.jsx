@@ -49,6 +49,9 @@ const CampaignCategories = lazy(() =>
 const MyCampaignsPage = lazy(() =>
   import("./features/campaigns/pages/organizer/MyCampaignsPage")
 );
+const DonationsPage = lazy(() =>
+  import("./features/donations/pages/DonationsPage")
+);
 const CreateCampaignPage = lazy(() =>
   import("./features/campaigns/pages/organizer/CreateCampaignPage")
 );
@@ -69,6 +72,9 @@ const AddContactsPage = lazy(() =>
 );
 const NotificationsPage = lazy(() =>
   import("./features/notifications/pages/NotificationsPage")
+);
+const MessagesManagementPage = lazy(() =>
+  import("./features/donations/pages/MessagesManagementPage")
 );
 
 function AppRoutes() {
@@ -235,10 +241,34 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/donations"
+            element={
+              <ProtectedRoute
+                element={<DonationsPage />}
+                requiredRole={[
+                  "organizationUser",
+                  "superAdmin",
+                  "supportAdmin",
+                  "eventModerator",
+                  "financialAdmin",
+                ]}
+              />
+            }
+          />
+          <Route
             path="/organizer/campaigns/create"
             element={
               <ProtectedRoute
                 element={<CreateCampaignPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/campaigns/:campaignId/messages"
+            element={
+              <ProtectedRoute
+                element={<MessagesManagementPage />}
                 requiredRole="organizationUser"
               />
             }

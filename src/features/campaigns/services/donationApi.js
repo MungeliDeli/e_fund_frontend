@@ -45,7 +45,6 @@ export const createDonation = async (donationData) => {
       isAnonymous: donationData.isAnonymous || false,
       phoneNumber: donationData.phoneNumber,
       paymentMethod: donationData.gatewayUsed,
-      gatewayUsed: donationData.gatewayUsed,
       gatewayTransactionId: donationData.gatewayTransactionId,
       messageText: donationData.messageText?.trim() || undefined,
       subscribeToCampaign: donationData.subscribeToCampaign || true,

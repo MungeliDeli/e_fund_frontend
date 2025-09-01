@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { FiInfo, FiAlertTriangle } from "react-icons/fi";
-import PaymentModal from "./PaymentModal";
-import ThankYouModal from "./ThankYouModal";
 
 function DonationSection({
   raisedAmount,
@@ -12,13 +10,11 @@ function DonationSection({
   themeColor,
   formatAmount,
   campaign = null,
+  onDonateClick = null,
 }) {
   const [selectedAmount, setSelectedAmount] = useState(predefinedAmounts[0]);
   const [customAmount, setCustomAmount] = useState("");
   const [isCustomSelected, setIsCustomSelected] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showThankYouModal, setShowThankYouModal] = useState(false);
-  const [donationDetails, setDonationDetails] = useState(null);
   const [amountError, setAmountError] = useState("");
 
   const handlePredefinedAmountClick = (amount) => {
@@ -88,26 +84,11 @@ function DonationSection({
     }
 
     setAmountError("");
-    setShowPaymentModal(true);
-  };
 
-  const handlePaymentSubmit = (paymentData) => {
-    // TODO: Implement donation processing
-    console.log("Payment data:", paymentData);
-
-    // Set donation details for ThankYouModal
-    setDonationDetails({
-      amount: paymentData.amount,
-      paymentMethod: paymentData.paymentMethod,
-      message: paymentData.message,
-      phoneNumber: paymentData.phoneNumber,
-      donateAnonymously: paymentData.donateAnonymously,
-      subscribeToCampaign: paymentData.subscribeToCampaign,
-    });
-
-    // Close payment modal and show thank you modal
-    setShowPaymentModal(false);
-    setShowThankYouModal(true);
+    // Call parent's onDonateClick with the selected amount
+    if (onDonateClick) {
+      onDonateClick(amount);
+    }
   };
 
   return (
@@ -255,28 +236,6 @@ function DonationSection({
           Donate
         </button>
       </div>
-
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        amount={isCustomSelected ? customAmount : selectedAmount}
-        themeColor={themeColor}
-        formatAmount={formatAmount}
-        onDonate={handlePaymentSubmit}
-        campaignStatus={campaign?.status}
-        campaignEndDate={campaign?.endDate}
-        campaignStartDate={campaign?.startDate}
-      />
-
-      {/* Thank You Modal */}
-      <ThankYouModal
-        isOpen={showThankYouModal}
-        onClose={() => setShowThankYouModal(false)}
-        donationDetails={donationDetails}
-        themeColor={themeColor}
-        formatAmount={formatAmount}
-      />
     </div>
   );
 }

@@ -22,6 +22,7 @@ import { createDonation } from "../services/donationApi";
 import Notification from "../../../components/Notification";
 import FundraiseLogo from "./../../../assets/fundraise logo.svg";
 import PaymentModal from "../components/PaymentModal";
+import ThankYouModal from "../components/ThankYouModal";
 
 function Logo() {
   return (
@@ -54,7 +55,10 @@ function CampaignTemplatePage({
     message: "",
   });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showThankYouModal, setShowThankYouModal] = useState(false);
   const [selectedDonationAmount, setSelectedDonationAmount] = useState("50");
+  const [donationDetails, setDonationDetails] = useState(null);
+  const [isProcessingDonation, setIsProcessingDonation] = useState(false);
 
   // Theme color from campaign settings
   const themeColor = campaign?.customPageSettings?.themeColor || "#10B981";
@@ -127,6 +131,7 @@ function CampaignTemplatePage({
 
   const handlePaymentSubmit = async (paymentData) => {
     try {
+      setIsProcessingDonation(true);
       console.log("Processing donation:", paymentData);
 
       // Add campaign ID to payment data
@@ -140,6 +145,21 @@ function CampaignTemplatePage({
 
       console.log("Donation successful:", response);
 
+      // Store donation details for ThankYouModal
+      setDonationDetails({
+        amount: paymentData.amount,
+        paymentMethod: paymentData.paymentMethod,
+        message: paymentData.messageText,
+        donationId:
+          response?.data?.donation?.donationId ||
+          response?.donation?.donationId,
+      });
+
+      // Close payment modal and show thank you modal
+      setShowPaymentModal(false);
+      setShowThankYouModal(true);
+
+      // Show success notification
       setNotification({
         isVisible: true,
         type: "success",
@@ -147,7 +167,6 @@ function CampaignTemplatePage({
           paymentData.amount
         )} submitted successfully!`,
       });
-      setShowPaymentModal(false);
 
       // Refresh campaign data to show updated amounts
       await fetchCampaign();
@@ -160,7 +179,14 @@ function CampaignTemplatePage({
           error.message || "Failed to process donation. Please try again.",
       });
       throw error; // Re-throw to let PaymentModal handle it
+    } finally {
+      setIsProcessingDonation(false);
     }
+  };
+
+  const handleThankYouClose = () => {
+    setShowThankYouModal(false);
+    setDonationDetails(null);
   };
 
   const handleShare = async () => {
@@ -402,6 +428,7 @@ function CampaignTemplatePage({
                 themeColor={themeColor}
                 formatAmount={formatAmount}
                 campaign={campaign}
+                onDonateClick={handleDonateClick}
               />
             </div>
 
@@ -439,6 +466,7 @@ function CampaignTemplatePage({
               themeColor={themeColor}
               formatAmount={formatAmount}
               campaign={campaign}
+              onDonateClick={handleDonateClick}
             />
           </div>
 
@@ -542,6 +570,19 @@ function CampaignTemplatePage({
         themeColor={themeColor}
         formatAmount={formatAmount}
         onDonate={handlePaymentSubmit}
+        isProcessing={isProcessingDonation}
+        campaignStatus={campaign?.status}
+        campaignEndDate={campaign?.endDate}
+        campaignStartDate={campaign?.startDate}
+      />
+
+      {/* Thank You Modal */}
+      <ThankYouModal
+        isOpen={showThankYouModal}
+        onClose={handleThankYouClose}
+        donationDetails={donationDetails}
+        themeColor={themeColor}
+        formatAmount={formatAmount}
       />
     </div>
   );
