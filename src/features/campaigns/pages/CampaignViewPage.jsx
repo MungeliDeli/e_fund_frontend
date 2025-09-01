@@ -16,7 +16,7 @@ import Notification from "../../../components/Notification";
 import CampaignTemplatePage from "./CampaignTemplatePage";
 import AnalyticsSection from "../../donations/components/AnalyticsSection";
 import MessagesSection from "../../donations/components/MessagesSection";
-import OutreachSection from "../../Outreach/components/OutreachSection";
+import { OutreachSection } from "../../Outreach/components";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -380,7 +380,7 @@ export default function CampaignViewPage() {
       {isOwner && isPubliclyLive && (
         <OutreachSection
           campaignId={campaign.campaignId}
-          campaignTitle={campaign.title}
+          campaignTitle={campaign.name}
           className="mt-8"
         />
       )}

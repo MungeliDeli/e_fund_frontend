@@ -1,6 +1,5 @@
 import React from "react";
-import StatsCards from "../../../components/StatsCards";
-import Buttons from "../../../components/Buttons";
+import { SecondaryButton } from "../../../components/Buttons";
 
 const CampaignOutreachAnalytics = ({
   campaignId,
@@ -11,7 +10,7 @@ const CampaignOutreachAnalytics = ({
   const renderAnalyticsContent = () => {
     if (loading) {
       return (
-        <div className="analytics-loading">
+        <div className="text-center py-8 text-[color:var(--color-secondary-text)]">
           <p>Loading analytics...</p>
         </div>
       );
@@ -19,77 +18,89 @@ const CampaignOutreachAnalytics = ({
 
     if (!analytics) {
       return (
-        <div className="analytics-empty">
+        <div className="text-center py-8 text-[color:var(--color-secondary-text)]">
           <p>No analytics data available</p>
-          <Buttons onClick={onRefresh} variant="secondary" size="small">
-            Refresh
-          </Buttons>
+          <SecondaryButton onClick={onRefresh}>Refresh</SecondaryButton>
         </div>
       );
     }
 
     return (
-      <div className="analytics-content">
-        <div className="analytics-header">
-          <h4>Campaign Outreach Performance</h4>
-          <Buttons onClick={onRefresh} variant="secondary" size="small">
-            Refresh
-          </Buttons>
+      <div className="bg-[color:var(--color-background)] border border-[color:var(--color-muted)] rounded-lg p-5">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-5">
+          <h4 className="text-xl font-semibold text-[color:var(--color-primary-text)] m-0">
+            Campaign Outreach Performance
+          </h4>
+          <SecondaryButton onClick={onRefresh}>Refresh</SecondaryButton>
         </div>
 
-        <div className="analytics-metrics">
-          <StatsCards
-            stats={[
-              {
-                title: "Emails Sent",
-                value: analytics.emailsSent || 0,
-                change: "+0%",
-                changeType: "positive",
-              },
-              {
-                title: "Opens",
-                value: analytics.opens || 0,
-                change: "+0%",
-                changeType: "positive",
-              },
-              {
-                title: "Clicks",
-                value: analytics.clicks || 0,
-                change: "+0%",
-                changeType: "positive",
-              },
-              {
-                title: "Donations",
-                value: analytics.donations || 0,
-                change: "+0%",
-                changeType: "positive",
-              },
-            ]}
-          />
+        <div className="mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+            <div className="bg-[color:var(--color-background)] border border-[color:var(--color-muted)] rounded-lg p-4 text-center">
+              <h5 className="text-sm font-medium text-[color:var(--color-secondary-text)] mb-2 m-0">
+                Emails Sent
+              </h5>
+              <div className="text-3xl font-bold text-[color:var(--color-primary-text)]">
+                {analytics.emailsSent || 0}
+              </div>
+            </div>
+            <div className="bg-[color:var(--color-background)] border border-[color:var(--color-muted)] rounded-lg p-4 text-center">
+              <h5 className="text-sm font-medium text-[color:var(--color-secondary-text)] mb-2 m-0">
+                Opens
+              </h5>
+              <div className="text-3xl font-bold text-[color:var(--color-primary-text)]">
+                {analytics.opens || 0}
+              </div>
+            </div>
+            <div className="bg-[color:var(--color-background)] border border-[color:var(--color-muted)] rounded-lg p-4 text-center">
+              <h5 className="text-sm font-medium text-[color:var(--color-secondary-text)] mb-2 m-0">
+                Clicks
+              </h5>
+              <div className="text-3xl font-bold text-[color:var(--color-primary-text)]">
+                {analytics.clicks || 0}
+              </div>
+            </div>
+            <div className="bg-[color:var(--color-background)] border border-[color:var(--color-muted)] rounded-lg p-4 text-center">
+              <h5 className="text-sm font-medium text-[color:var(--color-secondary-text)] mb-2 m-0">
+                Donations
+              </h5>
+              <div className="text-3xl font-bold text-[color:var(--color-primary-text)]">
+                {analytics.donations || 0}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="analytics-details">
-          <div className="detail-section">
-            <h5>Contact Engagement</h5>
-            <p>Open Rate: {analytics.openRate || "0%"}</p>
-            <p>Click Rate: {analytics.clickRate || "0%"}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <h5 className="text-base font-semibold text-[color:var(--color-primary-text)] mb-2 m-0">
+              Contact Engagement
+            </h5>
+            <p className="text-[color:var(--color-secondary-text)] my-1">
+              Open Rate: {analytics.openRate || "0%"}
+            </p>
+            <p className="text-[color:var(--color-secondary-text)] my-1">
+              Click Rate: {analytics.clickRate || "0%"}
+            </p>
           </div>
 
-          <div className="detail-section">
-            <h5>Social Media</h5>
-            <p>Shares: {analytics.shares || 0}</p>
-            <p>Click-throughs: {analytics.socialClicks || 0}</p>
+          <div>
+            <h5 className="text-base font-semibold text-[color:var(--color-primary-text)] mb-2 m-0">
+              Social Media
+            </h5>
+            <p className="text-[color:var(--color-secondary-text)] my-1">
+              Shares: {analytics.shares || 0}
+            </p>
+            <p className="text-[color:var(--color-secondary-text)] my-1">
+              Click-throughs: {analytics.socialClicks || 0}
+            </p>
           </div>
         </div>
       </div>
     );
   };
 
-  return (
-    <div className="campaign-outreach-analytics">
-      {renderAnalyticsContent()}
-    </div>
-  );
+  return <div className="mb-6">{renderAnalyticsContent()}</div>;
 };
 
 export default CampaignOutreachAnalytics;

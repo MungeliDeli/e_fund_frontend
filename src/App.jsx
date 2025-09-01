@@ -70,6 +70,9 @@ const MyListsPage = lazy(() =>
 const AddContactsPage = lazy(() =>
   import("./features/Outreach/pages/organizer/AddContactsPage")
 );
+const OutreachCompositionPage = lazy(() =>
+  import("./features/Outreach/pages/OutreachCompositionPage")
+);
 const NotificationsPage = lazy(() =>
   import("./features/notifications/pages/NotificationsPage")
 );
@@ -269,6 +272,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<MessagesManagementPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/campaigns/:campaignId/outreach"
+            element={
+              <ProtectedRoute
+                element={<OutreachCompositionPage />}
                 requiredRole="organizationUser"
               />
             }

@@ -197,3 +197,33 @@ export const deleteContact = async (contactId) => {
     throw error;
   }
 };
+
+/**
+ * Send outreach email to contacts or segments
+ * @param {Object} emailData - Email data including campaignId, segmentId/contactId, type, etc.
+ * @returns {Promise<Object>} Email sending result
+ */
+export const sendOutreachEmail = async (emailData) => {
+  try {
+    const response = await apiClient.post("/outreach/send-email", emailData);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to send outreach email:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get campaign outreach analytics
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<Object>} Campaign analytics data
+ */
+export const getCampaignAnalytics = async (campaignId) => {
+  try {
+    const response = await apiClient.get(`/outreach/analytics/${campaignId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get campaign analytics:", error);
+    throw error;
+  }
+};

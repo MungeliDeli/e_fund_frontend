@@ -5,9 +5,9 @@ import Notification from "../../../components/Notification";
 import OutreachHeader from "./OutreachHeader";
 import CampaignOutreachAnalytics from "./CampaignOutreachAnalytics";
 import SocialSharingIntegration from "./SocialSharingIntegration";
-import "./OutreachSection.css";
+import { getCampaignAnalytics } from "../services/outreachApi";
 
-const OutreachSection = ({ campaignId, campaignTitle }) => {
+const OutreachSection = ({ campaignId, campaignTitle, className = "" }) => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -23,9 +23,8 @@ const OutreachSection = ({ campaignId, campaignTitle }) => {
     setError(null);
 
     try {
-      // TODO: Implement analytics API call
-      // const data = await outreachApi.getCampaignAnalytics(campaignId);
-      // setAnalytics(data);
+      const data = await getCampaignAnalytics(campaignId);
+      setAnalytics(data);
     } catch (err) {
       setError(err.message || "Failed to load analytics");
     } finally {
@@ -44,7 +43,9 @@ const OutreachSection = ({ campaignId, campaignTitle }) => {
   }
 
   return (
-    <div className="outreach-section">
+    <div
+      className={`bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6 mt-8 ${className}`}
+    >
       <OutreachHeader title="Campaign Outreach" onReachOut={handleReachOut} />
 
       <CampaignOutreachAnalytics
@@ -59,7 +60,15 @@ const OutreachSection = ({ campaignId, campaignTitle }) => {
         campaignTitle={campaignTitle}
       />
 
-      {error && <Notification type="error" message={error} duration={5000} />}
+      {error && (
+        <Notification
+          type="error"
+          message={error}
+          isVisible={!!error}
+          onClose={() => setError(null)}
+          duration={5000}
+        />
+      )}
     </div>
   );
 };

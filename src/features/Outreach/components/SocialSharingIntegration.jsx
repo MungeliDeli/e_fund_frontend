@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Buttons from "../../../components/Buttons";
+import { SecondaryButton } from "../../../components/Buttons";
 import Notification from "../../../components/Notification";
 
 const SocialSharingIntegration = ({ campaignId, campaignTitle }) => {
@@ -57,35 +57,37 @@ const SocialSharingIntegration = ({ campaignId, campaignTitle }) => {
   ];
 
   return (
-    <div className="social-sharing-integration">
-      <div className="social-sharing-header">
-        <h4>Share Campaign</h4>
-        <p>Spread the word about your campaign on social media</p>
+    <div className="border-t border-[color:var(--color-muted)] pt-6">
+      <div className="mb-5">
+        <h4 className="text-xl font-semibold text-[color:var(--color-primary-text)] mb-2 m-0">
+          Share Campaign
+        </h4>
+        <p className="text-[color:var(--color-secondary-text)] m-0">
+          Spread the word about your campaign on social media
+        </p>
       </div>
 
-      <div className="social-platforms">
+      <div className="flex flex-wrap justify-center sm:justify-start gap-3 mb-4">
         {socialPlatforms.map((platform) => (
-          <Buttons
+          <SecondaryButton
             key={platform.name}
             onClick={platform.onClick}
             disabled={sharing}
-            variant="secondary"
-            size="medium"
-            className="social-platform-btn"
+            className="flex items-center gap-2 min-w-[120px] justify-center"
             style={{
               borderColor: platform.color,
               color: platform.color,
             }}
           >
-            <span className="platform-icon">{platform.icon}</span>
-            <span className="platform-name">{platform.name}</span>
-          </Buttons>
+            <span className="text-xl">{platform.icon}</span>
+            <span className="font-medium">{platform.name}</span>
+          </SecondaryButton>
         ))}
       </div>
 
       {sharing && (
-        <div className="sharing-status">
-          <p>Generating share links...</p>
+        <div className="text-center py-4 text-[color:var(--color-secondary-text)]">
+          <p className="m-0">Generating share links...</p>
         </div>
       )}
 
@@ -93,12 +95,20 @@ const SocialSharingIntegration = ({ campaignId, campaignTitle }) => {
         <Notification
           type="success"
           message="Share links generated successfully!"
+          isVisible={shareSuccess}
+          onClose={() => setShareSuccess(false)}
           duration={3000}
         />
       )}
 
       {shareError && (
-        <Notification type="error" message={shareError} duration={5000} />
+        <Notification
+          type="error"
+          message={shareError}
+          isVisible={shareError}
+          onClose={() => setShareError(null)}
+          duration={5000}
+        />
       )}
     </div>
   );
