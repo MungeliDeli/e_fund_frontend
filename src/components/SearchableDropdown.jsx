@@ -123,7 +123,9 @@ const SearchableDropdown = ({
         <div className="absolute z-50 w-full mt-1 bg-[color:var(--color-background)] border border-[color:var(--color-muted)] rounded-md shadow-lg max-h-60 overflow-y-auto">
           {filteredOptions.length === 0 ? (
             <div className="px-3 py-2 text-[color:var(--color-secondary-text)] text-sm">
-              No categories found
+              {searchTerm
+                ? `No results found for "${searchTerm}"`
+                : "No options available"}
             </div>
           ) : (
             filteredOptions.map((option) => (

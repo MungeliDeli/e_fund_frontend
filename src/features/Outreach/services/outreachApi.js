@@ -218,12 +218,290 @@ export const sendOutreachEmail = async (emailData) => {
  * @param {string} campaignId - Campaign ID
  * @returns {Promise<Object>} Campaign analytics data
  */
-export const getCampaignAnalytics = async (campaignId) => {
+export const getCampaignAnalytics = async (campaignId, params = {}) => {
   try {
-    const response = await apiClient.get(`/outreach/analytics/${campaignId}`);
+    const response = await apiClient.get(`/outreach/analytics/${campaignId}`, {
+      params,
+    });
     return response.data;
   } catch (error) {
     console.error("Failed to get campaign analytics:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get organizer-level outreach analytics across campaigns
+ * @param {Object} params - Optional filters { dateRange, type }
+ */
+export const getOrganizerAnalytics = async (params = {}) => {
+  try {
+    console.log("Getting organizer analytics with params:", params);
+    const response = await apiClient.get(`/outreach/analytics/organizer`, {
+      params,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get organizer analytics:", error);
+    throw error;
+  }
+};
+
+/**
+ * Generate social media sharing links for a campaign
+ * @param {string} campaignId - Campaign ID
+ * @param {Object} options - Sharing options
+ * @returns {Promise<Object>} Social media links
+ */
+export const generateSocialMediaLinks = async (campaignId, options = {}) => {
+  try {
+    const response = await apiClient.post(
+      `/outreach/social-media/campaigns/${campaignId}/generate-links`,
+      options
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to generate social media links:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get social media statistics for a campaign
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<Object>} Social media statistics
+ */
+export const getSocialMediaStats = async (campaignId) => {
+  try {
+    const response = await apiClient.get(
+      `/outreach/social-media/campaigns/${campaignId}/social-stats`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get social media stats:", error);
+    throw error;
+  }
+};
+
+// ===== OUTREACH CAMPAIGNS API METHODS =====
+
+/**
+ * Create a new outreach campaign for a fundraising campaign
+ * @param {string} campaignId - Fundraising campaign ID
+ * @param {Object} data - Outreach campaign data { name, description }
+ * @returns {Promise<Object>} Created outreach campaign
+ */
+export const createOutreachCampaign = async (campaignId, data) => {
+  try {
+    const response = await apiClient.post(
+      `/outreach/campaigns/${campaignId}/outreach-campaigns`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to create outreach campaign:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get all outreach campaigns for a fundraising campaign
+ * @param {string} campaignId - Fundraising campaign ID
+ * @param {Object} params - Optional query parameters
+ * @returns {Promise<Array>} List of outreach campaigns
+ */
+export const listOutreachCampaigns = async (campaignId, params = {}) => {
+  try {
+    const response = await apiClient.get(
+      `/outreach/campaigns/${campaignId}/outreach-campaigns`,
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to list outreach campaigns:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get a specific outreach campaign with analytics
+ * @param {string} outreachCampaignId - Outreach campaign ID
+ * @returns {Promise<Object>} Outreach campaign with stats and recipients
+ */
+export const getOutreachCampaign = async (outreachCampaignId) => {
+  try {
+    const response = await apiClient.get(
+      `/outreach/outreach-campaigns/${outreachCampaignId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get outreach campaign:", error);
+    throw error;
+  }
+};
+
+/**
+ * Update an outreach campaign
+ * @param {string} outreachCampaignId - Outreach campaign ID
+ * @param {Object} data - Update data { name, description, status }
+ * @returns {Promise<Object>} Updated outreach campaign
+ */
+export const updateOutreachCampaign = async (outreachCampaignId, data) => {
+  try {
+    const response = await apiClient.patch(
+      `/outreach/outreach-campaigns/${outreachCampaignId}`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update outreach campaign:", error);
+    throw error;
+  }
+};
+
+/**
+ * Archive an outreach campaign
+ * @param {string} outreachCampaignId - Outreach campaign ID
+ * @returns {Promise<Object>} Archived outreach campaign
+ */
+export const archiveOutreachCampaign = async (outreachCampaignId) => {
+  try {
+    const response = await apiClient.post(
+      `/outreach/outreach-campaigns/${outreachCampaignId}/archive`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to archive outreach campaign:", error);
+    throw error;
+  }
+};
+
+/**
+ * Send invitation emails for an outreach campaign
+ * @param {string} outreachCampaignId - Outreach campaign ID
+ * @param {Object} payload - Invitation data { campaignId, recipients[], message, prefillAmount, utmParams }
+ * @returns {Promise<Object>} Sending result with success/failure counts
+ */
+export const sendOutreachInvitations = async (outreachCampaignId, payload) => {
+  try {
+    const response = await apiClient.post(
+      `/outreach/outreach-campaigns/${outreachCampaignId}/send-invitations`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to send outreach invitations:", error);
+    throw error;
+  }
+};
+
+/**
+ * Add recipients to an outreach campaign by segments or all contacts
+ * @param {string} outreachCampaignId
+ * @param {{segmentIds?: string[], all?: boolean}} payload
+ */
+export const addOutreachRecipients = async (outreachCampaignId, payload) => {
+  try {
+    const response = await apiClient.post(
+      `/outreach/outreach-campaigns/${outreachCampaignId}/recipients`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to add outreach recipients:", error);
+    throw error;
+  }
+};
+
+/**
+ * Resend failed invitations for an outreach campaign
+ * @param {string} outreachCampaignId
+ */
+export const resendFailedInvitations = async (outreachCampaignId) => {
+  try {
+    const response = await apiClient.post(
+      `/outreach/outreach-campaigns/${outreachCampaignId}/resend-failed`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to resend failed invitations:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get outreach campaign statistics (included in getOutreachCampaign)
+ * @param {string} outreachCampaignId - Outreach campaign ID
+ * @returns {Promise<Object>} Campaign statistics
+ */
+export const getOutreachCampaignStats = async (outreachCampaignId) => {
+  try {
+    const response = await apiClient.get(
+      `/outreach/outreach-campaigns/${outreachCampaignId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get outreach campaign stats:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get email events for an outreach campaign with pagination
+ * @param {string} outreachCampaignId - Outreach campaign ID
+ * @param {Object} params - Query parameters { page, limit, type }
+ * @returns {Promise<Object>} Paginated email events
+ */
+export const getOutreachCampaignEvents = async (
+  outreachCampaignId,
+  params = {}
+) => {
+  try {
+    const response = await apiClient.get(
+      `/outreach/outreach-campaigns/${outreachCampaignId}/events`,
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get outreach campaign events:", error);
+    throw error;
+  }
+};
+
+/**
+ * Send update emails for an outreach campaign
+ * @param {string} outreachCampaignId - Outreach campaign ID
+ * @param {Object} payload - Update data { message, targetAudience, utmParams }
+ * @returns {Promise<Object>} Sending result with success/failure counts
+ */
+export const sendOutreachUpdates = async (outreachCampaignId, payload) => {
+  try {
+    const response = await apiClient.post(
+      `/outreach/outreach-campaigns/${outreachCampaignId}/send-updates`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to send outreach updates:", error);
+    throw error;
+  }
+};
+
+/**
+ * Send thank-you emails for an outreach campaign (to donors only)
+ * @param {string} outreachCampaignId - Outreach campaign ID
+ * @param {Object} payload - Thank-you data { message, utmParams }
+ * @returns {Promise<Object>} Sending result with success/failure counts
+ */
+export const sendOutreachThanks = async (outreachCampaignId, payload) => {
+  try {
+    const response = await apiClient.post(
+      `/outreach/outreach-campaigns/${outreachCampaignId}/send-thanks`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to send outreach thank-yous:", error);
     throw error;
   }
 };

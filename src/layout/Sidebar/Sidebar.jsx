@@ -139,6 +139,12 @@ const navConfig = {
       key: "metrics",
       path: "/organizer/metrics",
     },
+    {
+      label: "Outreach Analytics",
+      icon: FiBarChart2,
+      key: "organizer-outreach-analytics",
+      path: "/organizer/outreach/analytics",
+    },
   ],
   admin: adminNavItems,
 };

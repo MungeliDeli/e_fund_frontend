@@ -70,8 +70,17 @@ const MyListsPage = lazy(() =>
 const AddContactsPage = lazy(() =>
   import("./features/Outreach/pages/organizer/AddContactsPage")
 );
+const OrganizerAnalyticsPage = lazy(() =>
+  import("./features/Outreach/pages/OrganizerAnalyticsPage")
+);
 const OutreachCompositionPage = lazy(() =>
   import("./features/Outreach/pages/OutreachCompositionPage")
+);
+const OutreachCampaignsPage = lazy(() =>
+  import("./features/Outreach/pages/organizer/OutreachCampaignsPage")
+);
+const OutreachCampaignDetailPage = lazy(() =>
+  import("./features/Outreach/pages/organizer/OutreachCampaignDetailPage")
 );
 const NotificationsPage = lazy(() =>
   import("./features/notifications/pages/NotificationsPage")
@@ -277,10 +286,46 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/organizer/outreach/analytics"
+            element={
+              <ProtectedRoute
+                element={<OrganizerAnalyticsPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
             path="/organizer/campaigns/:campaignId/outreach"
             element={
               <ProtectedRoute
                 element={<OutreachCompositionPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/campaigns/:campaignId/outreach/compose"
+            element={
+              <ProtectedRoute
+                element={<OutreachCompositionPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/campaigns/:campaignId/outreach-campaigns"
+            element={
+              <ProtectedRoute
+                element={<OutreachCampaignsPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/outreach-campaigns/:outreachCampaignId"
+            element={
+              <ProtectedRoute
+                element={<OutreachCampaignDetailPage />}
                 requiredRole="organizationUser"
               />
             }

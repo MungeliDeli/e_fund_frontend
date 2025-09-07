@@ -4,26 +4,40 @@ import { useAuth } from "../../../contexts/AuthContext";
 import Notification from "../../../components/Notification";
 import OutreachHeader from "./OutreachHeader";
 import CampaignOutreachAnalytics from "./CampaignOutreachAnalytics";
-import SocialSharingIntegration from "./SocialSharingIntegration";
+import SocialSharingModal from "./SocialSharingModal";
 import { getCampaignAnalytics } from "../services/outreachApi";
 
 const OutreachSection = ({ campaignId, campaignTitle, className = "" }) => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showSocialModal, setShowSocialModal] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleReachOut = () => {
-    navigate(`/organizer/campaigns/${campaignId}/outreach`);
+    navigate(`/campaigns/${campaignId}/outreach/compose`);
   };
 
-  const handleAnalyticsRefresh = async () => {
+  const handleManageCampaigns = () => {
+    navigate(`/organizer/campaigns/${campaignId}/outreach-campaigns`);
+  };
+
+  const handleSocialShare = () => {
+    setShowSocialModal(true);
+  };
+
+  const [filters, setFilters] = useState({ dateRange: "30d", type: "all" });
+
+  const handleAnalyticsRefresh = async (overrideFilters) => {
     setLoading(true);
     setError(null);
 
     try {
-      const data = await getCampaignAnalytics(campaignId);
+      const data = await getCampaignAnalytics(
+        campaignId,
+        overrideFilters || filters
+      );
       setAnalytics(data);
     } catch (err) {
       setError(err.message || "Failed to load analytics");
@@ -43,33 +57,47 @@ const OutreachSection = ({ campaignId, campaignTitle, className = "" }) => {
   }
 
   return (
-    <div
-      className={`bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6 mt-8 ${className}`}
-    >
-      <OutreachHeader title="Campaign Outreach" onReachOut={handleReachOut} />
+    <>
+      <div
+        className={`bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6 mt-8 ${className}`}
+      >
+        <OutreachHeader
+          title="Campaign Outreach"
+          onReachOut={handleReachOut}
+          onSocialShare={handleSocialShare}
+          onManageCampaigns={handleManageCampaigns}
+        />
 
-      <CampaignOutreachAnalytics
-        campaignId={campaignId}
-        analytics={analytics}
-        loading={loading}
-        onRefresh={handleAnalyticsRefresh}
-      />
+        <CampaignOutreachAnalytics
+          campaignId={campaignId}
+          analytics={analytics}
+          loading={loading}
+          onRefresh={() => handleAnalyticsRefresh()}
+          onFilterChange={(partial) => {
+            const next = { ...filters, ...partial };
+            setFilters(next);
+            handleAnalyticsRefresh(next);
+          }}
+        />
 
-      <SocialSharingIntegration
+        {error && (
+          <Notification
+            type="error"
+            message={error}
+            isVisible={!!error}
+            onClose={() => setError(null)}
+            duration={5000}
+          />
+        )}
+      </div>
+
+      <SocialSharingModal
+        isOpen={showSocialModal}
+        onClose={() => setShowSocialModal(false)}
         campaignId={campaignId}
         campaignTitle={campaignTitle}
       />
-
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          isVisible={!!error}
-          onClose={() => setError(null)}
-          duration={5000}
-        />
-      )}
-    </div>
+    </>
   );
 };
 
