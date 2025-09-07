@@ -1,3 +1,6 @@
+// FormField.jsx
+// This file defines a reusable FormField component for rendering labeled input fields with error messages.
+// It is used throughout the app to standardize form input appearance and validation feedback.
 import React from 'react';
 
 function FormField({
@@ -10,8 +13,11 @@ function FormField({
   onChange,
   placeholder = '',
   className = '',
+  rows = 3,
   ...rest
 }) {
+  const inputClassName = `rounded-lg bg-[color:var(--color-surface)] px-4 py-2 text-[color:var(--color-primary-text)] placeholder-[color:var(--color-secondary-text)] text-base outline-none border border-transparent focus:border-[color:var(--color-accent)] transition ${error ? 'border-red-500' : ''}`;
+
   return (
     <div className={`flex flex-col w-full ${className}`}>
       {label && (
@@ -19,17 +25,30 @@ function FormField({
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
-      <input
-        id={name}
-        name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`rounded-lg bg-[color:var(--color-surface)] px-4 py-2 text-[color:var(--color-primary-text)] placeholder-[color:var(--color-secondary-text)] text-base outline-none border border-transparent focus:border-[color:var(--color-accent)] transition ${error ? 'border-red-500' : ''}`}
-        autoComplete="off"
-        {...rest}
-      />
+      {type === 'textarea' ? (
+        <textarea
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          rows={rows}
+          className={inputClassName}
+          {...rest}
+        />
+      ) : (
+        <input
+          id={name}
+          name={name}
+          type={type}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className={inputClassName}
+          autoComplete="off"
+          {...rest}
+        />
+      )}
       {error && <span className="text-xs text-red-500 mt-1">{error}</span>}
     </div>
   );

@@ -1,3 +1,6 @@
+// ThemeContext.jsx
+// This file defines the ThemeContext and ThemeProvider for managing light/dark theme state across the app.
+// It provides a context and hook for toggling and accessing the current theme.
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 const ThemeContext = createContext();

@@ -113,7 +113,7 @@ export const loginSchema = Joi.object({
     }),
 });
 
-export const resetPasswordSchema = Joi.object({
+export const passwordSchema = Joi.object({
   password: Joi.string()
     .pattern(strongPasswordRegex)
     .required()
@@ -129,6 +129,8 @@ export const resetPasswordSchema = Joi.object({
       'any.required': 'Password confirmation is required',
     }),
   token: Joi.string().required().messages({
-    'any.required': 'Reset token is required',
+    'any.required': 'token is required',
   }),
-}); 
+});
+
+

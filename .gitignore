@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Demolition documentation
+DEMOLITION.md
+
+# Implementation plans
+MESSAGES_MANAGEMENT_IMPLEMENTATION.md
