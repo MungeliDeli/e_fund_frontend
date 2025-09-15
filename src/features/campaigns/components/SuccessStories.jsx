@@ -1,49 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getCampaignPosts } from "../../feed/services/feedApi";
+import { Link } from "react-router-dom";
 
-function SuccessStories({ themeColor }) {
+function SuccessStories({ themeColor, campaignId }) {
   const [showAll, setShowAll] = useState(false);
+  const [stories, setStories] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Mock data - replace with actual API call
-  const mockStories = [
-    {
-      id: 1,
-      image: "/api/placeholder/60/60",
-      text: "I've been enjoying Girl Genius online for years. I guess it's about time I pay up!",
-      author: "Story Contributor",
-    },
-    {
-      id: 2,
-      image: "/api/placeholder/60/60",
-      text: "I've been enjoying Girl Genius online for years. I guess it's about time I pay up!",
-      author: "Story Contributor",
-    },
-    {
-      id: 3,
-      image: "/api/placeholder/60/60",
-      text: "I've been enjoying Girl Genius online for years. I guess it's about time I pay up!",
-      author: "Story Contributor",
-    },
-    {
-      id: 4,
-      image: "/api/placeholder/60/60",
-      text: "I've been enjoying Girl Genius online for years. I guess it's about time I pay up!",
-      author: "Story Contributor",
-    },
-    {
-      id: 5,
-      image: "/api/placeholder/60/60",
-      text: "Another success story about how this campaign made a difference in someone's life.",
-      author: "Another Contributor",
-    },
-    {
-      id: 6,
-      image: "/api/placeholder/60/60",
-      text: "This campaign has been incredibly helpful and I'm grateful for the support provided.",
-      author: "Grateful Beneficiary",
-    },
-  ];
+  useEffect(() => {
+    const fetchStories = async () => {
+      if (!campaignId) return;
+      setLoading(true);
+      try {
+        const posts = await getCampaignPosts(campaignId, {
+          type: "success_story",
+          status: "published",
+          limit: 50,
+        });
+        const pinned = (posts || []).filter((p) => p.isPinnedToCampaign);
+        setStories(pinned);
+      } catch (_) {
+        setStories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStories();
+  }, [campaignId]);
 
-  const displayedStories = showAll ? mockStories : mockStories.slice(0, 4);
+  if (loading) return null;
+  if (!stories || stories.length === 0) return null;
+
+  const displayedStories = showAll ? stories : stories.slice(0, 4);
+
+  const getPostImageUrl = (post) => {
+    const mediaArray = Array.isArray(post.media) ? post.media : [];
+    const firstImage = mediaArray.find((m) => m?.type === "image" && m?.url);
+    return firstImage?.url || null;
+  };
+
+  const getAuthorLabel = (post) => {
+    const fullName = [post.firstName, post.lastName].filter(Boolean).join(" ");
+    return post.organizationName || fullName || "Story Contributor";
+  };
+
+  const getText = (post) => {
+    return post.title || post.body || "";
+  };
 
   return (
     <div className="bg-[color:var(--color-background)] rounded-lg p-6 shadow-[0_2px_16px_0_var(--color-shadow)]">
@@ -63,54 +66,72 @@ function SuccessStories({ themeColor }) {
 
       {/* Stories List */}
       <div className="space-y-4">
-        {displayedStories.map((story) => (
-          <div key={story.id} className="flex gap-3">
-            {/* Story Image */}
-            <div className="w-16 h-16 bg-[color:var(--color-surface)] rounded-lg flex-shrink-0 overflow-hidden">
-              <img
-                src={story.image}
-                alt={`Story by ${story.author}`}
-                className="w-full h-full object-cover "
-                onError={(e) => {
-                  e.target.style.display = "none";
-                  e.target.nextSibling.style.display = "flex";
-                }}
-              />
-              <div className="w-full h-full bg-[color:var(--color-surface)] items-center justify-center text-lg text-[color:var(--color-text)] hidden">
-                {story.author[0]?.toUpperCase()}
+        {displayedStories.map((post) => {
+          const imageUrl = getPostImageUrl(post);
+          const author = getAuthorLabel(post);
+          const text = getText(post);
+          return (
+            <Link
+              to={`/post/${post.postId}`}
+              key={post.postId}
+              className="flex gap-3 group"
+            >
+              {/* Story Image */}
+              <div className="w-16 h-16 bg-[color:var(--color-surface)] rounded-lg flex-shrink-0 overflow-hidden">
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={`Story image`}
+                    className="w-full h-full object-cover group-hover:opacity-90"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "flex";
+                    }}
+                  />
+                ) : null}
+                <div className="w-full h-full bg-[color:var(--color-surface)] items-center justify-center text-lg text-[color:var(--color-text)] hidden">
+                  SS
+                </div>
+                {!imageUrl ? (
+                  <div className="w-full h-full bg-[color:var(--color-surface)] items-center justify-center text-lg text-[color:var(--color-text)] flex">
+                    SS
+                  </div>
+                ) : null}
               </div>
-            </div>
 
-            {/* Story Content */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-[color:var(--color-text)] leading-relaxed mb-1">
-                {story.text}
-              </p>
-              <button
-                className="text-sm underline"
-                style={{ color: themeColor }}
-              >
-                see story
-              </button>
-            </div>
-          </div>
-        ))}
+              {/* Story Content */}
+              <div className="flex-1 min-w-0">
+                <p
+                  className="text-sm text-[color:var(--color-text)] leading-relaxed mb-1 group-hover:underline"
+                  style={{ textDecorationColor: themeColor }}
+                >
+                  {text}
+                </p>
+                <span className="block text-xs text-[color:var(--color-secondary-text)] mb-1">
+                  {author}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
 
       {/* See More Button */}
-      <div className="mt-4 text-center">
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="w-full py-2 px-4 rounded-lg border-2 font-medium transition-colors"
-          style={{
-            borderColor: `${themeColor}40`,
-            color: themeColor,
-            backgroundColor: "bg-[color:var(--color-background)]",
-          }}
-        >
-          See More
-        </button>
-      </div>
+      {stories.length > 4 ? (
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="w-full py-2 px-4 rounded-lg border-2 font-medium transition-colors"
+            style={{
+              borderColor: `${themeColor}40`,
+              color: themeColor,
+              backgroundColor: "bg-[color:var(--color-background)]",
+            }}
+          >
+            {showAll ? "See Less" : "See More"}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

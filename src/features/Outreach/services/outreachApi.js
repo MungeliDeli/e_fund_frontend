@@ -223,7 +223,23 @@ export const getCampaignAnalytics = async (campaignId, params = {}) => {
     const response = await apiClient.get(`/outreach/analytics/${campaignId}`, {
       params,
     });
-    return response.data;
+    // Backend returns { success, message, data }
+    const raw = response?.data?.data || response?.data || {};
+    // Normalize keys for UI expectations
+    return {
+      campaignId: raw.campaignId,
+      outreachCampaigns: raw.outreachCampaigns || 0,
+      emailsSent: raw.totalSends || 0,
+      opens: raw.totalOpens || 0,
+      clicks: raw.totalClicks || 0,
+      donations: raw.totalDonations || 0,
+      revenue: raw.totalDonationAmount || 0,
+      openRate: raw.openRate || 0,
+      clickRate: raw.clickRate || 0,
+      conversionRate: raw.conversionRate || 0,
+      totalSocialShares: raw.totalSocialShares || 0,
+      socialClicks: raw.totalSocialClicks || 0,
+    };
   } catch (error) {
     console.error("Failed to get campaign analytics:", error);
     throw error;
@@ -259,7 +275,8 @@ export const generateSocialMediaLinks = async (campaignId, options = {}) => {
       `/outreach/social-media/campaigns/${campaignId}/generate-links`,
       options
     );
-    return response.data;
+    const raw = response?.data?.data || response?.data || {};
+    return raw;
   } catch (error) {
     console.error("Failed to generate social media links:", error);
     throw error;

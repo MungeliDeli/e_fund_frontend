@@ -103,7 +103,7 @@ function Header({
       return (
         <button
           className="px-2 py-1 rounded bg-[color:var(--color-primary)] text-white font-medium text-xs sm:text-sm hover:bg-[color:var(--color-accent)] transition-colors mr-1"
-          onClick={() => navigate("/organizer/create-campaign")}
+          onClick={() => navigate("/feed/create")}
         >
           Create Post
         </button>
@@ -158,7 +158,7 @@ function Header({
       className={`w-full flex items-center gap-2 justify-between py-2 bg-[color:var(--color-background)] border-b border-[color:var(--color-muted)] relative ${className}`}
     >
       <button
-        className="lg:hidden p-2 rounded hover:bg-[color:var(--color-muted)] focus:outline-none shrink-0"
+        className="xl:hidden p-2 rounded hover:bg-[color:var(--color-muted)] focus:outline-none shrink-0"
         onClick={onMenuClick}
         aria-label="Open sidebar"
       >

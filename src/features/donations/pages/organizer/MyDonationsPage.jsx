@@ -143,7 +143,7 @@ function MyDonationsPage() {
       sortable: true,
       render: (row) => (
         <span className="font-mono text-xs">
-          ${parseFloat(row.amount || 0).toLocaleString()}
+          K{parseFloat(row.amount || 0).toLocaleString()}
         </span>
       ),
     },
@@ -274,7 +274,7 @@ function MyDonationsPage() {
                 {selectedDonation.campaignName}
               </div>
               <div>
-                <span className="font-medium">Amount: </span>$
+                <span className="font-medium">Amount: </span>K
                 {parseFloat(selectedDonation.amount || 0).toLocaleString()}
               </div>
               <div>

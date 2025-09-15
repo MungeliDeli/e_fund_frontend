@@ -1,5 +1,6 @@
 import React from "react";
 import { FiUsers, FiUserCheck, FiUserX } from "react-icons/fi";
+import ColoredIcon from "../../../components/ColoredIcon";
 
 /**
  * DonorInsights Component
@@ -56,7 +57,11 @@ function DonorInsights({ donorInsights, className = "" }) {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="text-center">
           <div className="flex items-center justify-center mb-2">
-            <FiUsers className="text-2xl text-[color:var(--color-accent)]" />
+            <ColoredIcon
+              Icon={FiUsers}
+              color="var(--color-accent)"
+              className="w-8 h-8"
+            />
           </div>
           <div className="text-2xl font-bold text-[color:var(--color-primary-text)]">
             {totalDonations}
@@ -67,7 +72,11 @@ function DonorInsights({ donorInsights, className = "" }) {
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center mb-2">
-            <FiUserCheck className="text-2xl text-[color:var(--color-accent)]" />
+            <ColoredIcon
+              Icon={FiUserCheck}
+              color="var(--color-accent)"
+              className="w-8 h-8"
+            />
           </div>
           <div className="text-2xl font-bold text-[color:var(--color-primary-text)]">
             {uniqueDonors}
@@ -133,9 +142,11 @@ function DonorInsights({ donorInsights, className = "" }) {
         {/* Named Donations */}
         <div className="flex items-center justify-between p-3 bg-[color:var(--color-background)] rounded-lg">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[color:var(--color-accent)] bg-opacity-20">
-              <FiUserCheck className="text-white" />
-            </div>
+            <ColoredIcon
+              Icon={FiUserCheck}
+              color="var(--color-accent)"
+              className="w-8 h-8"
+            />
             <div>
               <div className="font-medium text-[color:var(--color-primary-text)]">
                 Named Donations
@@ -158,9 +169,11 @@ function DonorInsights({ donorInsights, className = "" }) {
         {/* Anonymous Donations */}
         <div className="flex items-center justify-between p-3 bg-[color:var(--color-background)] rounded-lg">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[color:var(--color-muted)] bg-opacity-20">
-              <FiUserX className="text-[color:var(--color-secondary-text)]" />
-            </div>
+            <ColoredIcon
+              Icon={FiUserX}
+              color="var(--color-muted)"
+              className="w-8 h-8"
+            />
             <div>
               <div className="font-medium text-[color:var(--color-primary-text)]">
                 Anonymous Donations

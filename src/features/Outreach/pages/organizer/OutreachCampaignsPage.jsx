@@ -7,6 +7,7 @@ import {
   archiveOutreachCampaign,
 } from "../../services/outreachApi";
 import { getCampaignById } from "../../../campaigns/services/campaignApi";
+import StatusBadge from "../../../../components/StatusBadge";
 
 const OutreachCampaignsPage = () => {
   const { campaignId } = useParams();
@@ -76,18 +77,7 @@ const OutreachCampaignsPage = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "draft":
-        return "bg-yellow-100 text-yellow-800";
-      case "archived":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const getStatusColor = () => ""; // deprecated: replaced by StatusBadge
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -192,7 +182,7 @@ const OutreachCampaignsPage = () => {
               {outreachCampaigns.map((outreachCampaign) => (
                 <div
                   key={outreachCampaign.outreachCampaignId}
-                  className="border border-[color:var(--color-muted)] rounded-lg p-6 hover:bg-[color:var(--color-background)] transition-colors"
+                  className="border border-[color:var(--color-muted)] bg-[color:var(--color-background)] rounded-lg p-6 hover:bg-[color:var(--color-surface)] transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -200,13 +190,7 @@ const OutreachCampaignsPage = () => {
                         <h3 className="text-lg font-medium text-[color:var(--color-text)]">
                           {outreachCampaign.name}
                         </h3>
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                            outreachCampaign.status
-                          )}`}
-                        >
-                          {outreachCampaign.status}
-                        </span>
+                        <StatusBadge status={outreachCampaign.status} />
                       </div>
 
                       {outreachCampaign.description && (

@@ -2,22 +2,20 @@ import React, { useState } from "react";
 import { FiX, FiShare2, FiCopy, FiCheck } from "react-icons/fi";
 import { generateSocialMediaLinks } from "../services/outreachApi";
 import Notification from "../../../components/Notification";
+import facebookIcon from "../../../assets/facebook.png";
+import whatsappIcon from "../../../assets/whatsapp.png";
 
 const SocialSharingModal = ({ isOpen, onClose, campaignId, campaignTitle }) => {
   const [loading, setLoading] = useState(false);
   const [socialLinks, setSocialLinks] = useState(null);
   const [customMessage, setCustomMessage] = useState("");
-  const [selectedPlatform, setSelectedPlatform] = useState("all");
+  const [selectedPlatform, setSelectedPlatform] = useState("whatsapp");
   const [copiedLink, setCopiedLink] = useState(null);
   const [error, setError] = useState(null);
 
   const platforms = [
-    { value: "all", label: "All Platforms", icon: "🌐" },
-    { value: "whatsapp", label: "WhatsApp", icon: "💬" },
-    { value: "facebook", label: "Facebook", icon: "📘" },
-    { value: "twitter", label: "Twitter/X", icon: "🐦" },
-    { value: "linkedin", label: "LinkedIn", icon: "💼" },
-    { value: "telegram", label: "Telegram", icon: "📱" },
+    { value: "whatsapp", label: "WhatsApp", icon: whatsappIcon },
+    { value: "facebook", label: "Facebook", icon: facebookIcon },
   ];
 
   const handleGenerateLinks = async () => {
@@ -53,28 +51,37 @@ const SocialSharingModal = ({ isOpen, onClose, campaignId, campaignTitle }) => {
     }
   };
 
-  const handleShare = (platform, link) => {
-    if (platform === "whatsapp" || platform === "telegram") {
-      window.open(link, "_blank");
-    } else {
-      // For Facebook, Twitter, LinkedIn - open in popup
-      const width = 600;
-      const height = 400;
-      const left = (window.screen.width - width) / 2;
-      const top = (window.screen.height - height) / 2;
+  const handleShare = (platform, shareUrl) => {
+    if (!shareUrl) return;
 
-      window.open(
-        link,
-        "share",
-        `width=${width},height=${height},left=${left},top=${top}`
-      );
+    if (platform === "whatsapp") {
+      const message = customMessage?.trim()
+        ? `${customMessage.trim()}\n${shareUrl}`
+        : shareUrl;
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+      return;
     }
+
+    // For Facebook - open in popup with the share URL so OG scraper fetches preview
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      shareUrl
+    )}`;
+    const width = 600;
+    const height = 400;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+    window.open(
+      fbUrl,
+      "share",
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
   };
 
   const resetModal = () => {
     setSocialLinks(null);
     setCustomMessage("");
-    setSelectedPlatform("all");
+    setSelectedPlatform("whatsapp");
     setCopiedLink(null);
     setError(null);
   };
@@ -135,7 +142,7 @@ const SocialSharingModal = ({ isOpen, onClose, campaignId, campaignTitle }) => {
               <label className="block text-sm font-medium text-[color:var(--color-primary-text)] mb-2">
                 Select Platform
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {platforms.map((platform) => (
                   <button
                     key={platform.value}
@@ -146,7 +153,13 @@ const SocialSharingModal = ({ isOpen, onClose, campaignId, campaignTitle }) => {
                         : "border-[color:var(--color-muted)] hover:border-[color:var(--color-accent)]"
                     }`}
                   >
-                    <div className="text-2xl mb-1">{platform.icon}</div>
+                    <div className="w-8 h-8 mx-auto mb-2">
+                      <img
+                        src={platform.icon}
+                        alt={platform.label}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                     <div className="text-sm font-medium">{platform.label}</div>
                   </button>
                 ))}
@@ -205,60 +218,67 @@ const SocialSharingModal = ({ isOpen, onClose, campaignId, campaignTitle }) => {
 
             {/* Social Media Links */}
             <div className="space-y-3">
-              {Object.entries(socialLinks.socialLinks).map(
-                ([platform, data]) => (
-                  <div
-                    key={platform}
-                    className="p-4 border border-[color:var(--color-muted)] rounded-lg bg-[color:var(--color-surface)]"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">
-                          {platforms.find((p) => p.value === platform)?.icon ||
-                            "📱"}
-                        </div>
-                        <div>
-                          <div className="font-medium text-[color:var(--color-primary-text)] capitalize">
-                            {platform}
+              {socialLinks?.socialLinks &&
+                Object.entries(socialLinks.socialLinks).map(
+                  ([platform, data]) => (
+                    <div
+                      key={platform}
+                      className="p-4 border border-[color:var(--color-muted)] rounded-lg bg-[color:var(--color-surface)]"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8">
+                            <img
+                              src={
+                                platforms.find((p) => p.value === platform)
+                                  ?.icon || whatsappIcon
+                              }
+                              alt={platform}
+                              className="w-full h-full object-contain"
+                            />
                           </div>
-                          <div className="text-sm text-[color:var(--color-secondary-text)]">
-                            {data.type === "share"
-                              ? "Social Share"
-                              : "Direct Link"}
+                          <div>
+                            <div className="font-medium text-[color:var(--color-primary-text)] capitalize">
+                              {platform}
+                            </div>
+                            <div className="text-sm text-[color:var(--color-secondary-text)]">
+                              {data.type === "share"
+                                ? "Social Share"
+                                : "Direct Link"}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleShare(platform, data.url)}
-                          className="px-4 py-2 bg-[color:var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[color:var(--color-primary)]/90 transition-colors"
-                        >
-                          Share
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleCopyLink(data.trackingUrl, platform)
-                          }
-                          className="px-4 py-2 border border-[color:var(--color-muted)] rounded-lg text-sm font-medium hover:bg-[color:var(--color-muted)] transition-colors flex items-center gap-2"
-                        >
-                          {copiedLink === platform ? (
-                            <>
-                              <FiCheck className="w-4 h-4 text-green-500" />
-                              Copied!
-                            </>
-                          ) : (
-                            <>
-                              <FiCopy className="w-4 h-4" />
-                              Copy
-                            </>
-                          )}
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleShare(platform, data.url)}
+                            className="px-4 py-2 bg-[color:var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[color:var(--color-primary)]/90 transition-colors"
+                          >
+                            Share
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleCopyLink(data.trackingUrl, platform)
+                            }
+                            className="px-4 py-2 border border-[color:var(--color-muted)] rounded-lg text-sm font-medium hover:bg-[color:var(--color-muted)] transition-colors flex items-center gap-2"
+                          >
+                            {copiedLink === platform ? (
+                              <>
+                                <FiCheck className="w-4 h-4 text-green-500" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <FiCopy className="w-4 h-4" />
+                                Copy
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )
-              )}
+                  )
+                )}
             </div>
 
             {/* Action Buttons */}

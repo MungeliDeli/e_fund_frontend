@@ -6,6 +6,7 @@ import {
   getStatusColor,
   getStatusDisplay,
 } from "../../campaigns/utils/campaignStatusConfig";
+import StatusBadge from "../../../components/StatusBadge";
 
 function getInitials(name) {
   if (!name) return "";
@@ -86,7 +87,7 @@ const baseColumns = [
     sortable: true,
     render: (row) => (
       <span className="font-mono text-xs">
-        ${row.currentRaisedAmount?.toLocaleString() || "0.00"}
+        K{row.currentRaisedAmount?.toLocaleString() || "0.00"}
       </span>
     ),
   },
@@ -107,25 +108,10 @@ const baseColumns = [
     label: "Status",
     sortable: true,
     render: (row) => {
-      const status = (row.status || "").toLowerCase();
-      const color = getStatusColor(status);
-      const display = getStatusDisplay(status);
+      const statusKey = (row.status || "").toLowerCase();
 
-      return (
-        <span
-          className="px-2 py-1 rounded text-xs font-bold"
-          style={{
-            minWidth: 70,
-            display: "inline-block",
-            textAlign: "center",
-            backgroundColor: color + "22", // 22 = 13% opacity
-            color: color,
-            border: `1px solid ${color}33`, // 33 = 20% opacity for border
-          }}
-        >
-          {display}
-        </span>
-      );
+      const display = getStatusDisplay(statusKey);
+      return <StatusBadge status={row.status} label={display} />;
     },
   },
 ];

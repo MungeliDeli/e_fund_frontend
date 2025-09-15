@@ -142,7 +142,7 @@ export function StatusStatsCard({
           <FiChevronDown className="text-base" />
         </button>
         {open && (
-          <div className="absolute right-0 top-10 z-10 bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded shadow-lg min-w-[160px]">
+          <div className="absolute right-0 top-10 z-20 bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded shadow-lg min-w-[160px]">
             {statuses.map((status) => (
               <div
                 key={status.key}

@@ -48,6 +48,9 @@ export const createDonation = async (donationData) => {
       gatewayTransactionId: donationData.gatewayTransactionId,
       messageText: donationData.messageText?.trim() || undefined,
       subscribeToCampaign: donationData.subscribeToCampaign || true,
+      // Optional outreach attribution
+      linkTokenId: donationData.linkTokenId,
+      contactId: donationData.contactId,
     };
 
     const response = await apiClient.post("/donations", formattedData);

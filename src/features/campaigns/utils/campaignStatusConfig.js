@@ -7,32 +7,53 @@ import {
   FiStopCircle,
   FiXCircle,
 } from "react-icons/fi";
+import { STATUS_COLORS } from "../../../components/StatusBadge";
 
 // Shared campaign status configuration
 export const campaignStatuses = [
-  { key: "draft", label: "Draft", icon: FiEdit2, color: "#60a5fa" },
+ 
   {
     key: "pendingApproval",
     label: "Pending Approval",
     icon: FiClock,
-    color: "#facc15",
+    color: STATUS_COLORS.pendingApproval,
   },
   {
     key: "pendingStart",
     label: "Pending Start",
     icon: FiClock,
-    color: "#f59e0b",
+    color: STATUS_COLORS.pendingStart,
   },
-  { key: "active", label: "Active", icon: FiPlayCircle, color: "#3b82f6" },
+  {
+    key: "active",
+    label: "Active",
+    icon: FiPlayCircle,
+    color: STATUS_COLORS.active,
+  },
   {
     key: "successful",
     label: "Successful",
     icon: FiCheckSquare,
-    color: "#10b981",
+    color: STATUS_COLORS.successful,
   },
-  { key: "closed", label: "Closed", icon: FiStopCircle, color: "#6b7280" },
-  { key: "cancelled", label: "Cancelled", icon: FiXCircle, color: "#ef4444" },
-  { key: "rejected", label: "Rejected", icon: FiXCircle, color: "#f87171" },
+  {
+    key: "closed",
+    label: "Closed",
+    icon: FiStopCircle,
+    color: STATUS_COLORS.closed,
+  },
+  {
+    key: "cancelled",
+    label: "Cancelled",
+    icon: FiXCircle,
+    color: STATUS_COLORS.cancelled,
+  },
+  {
+    key: "rejected",
+    label: "Rejected",
+    icon: FiXCircle,
+    color: STATUS_COLORS.rejected,
+  },
 ];
 
 // Create a map for easy lookup
@@ -44,7 +65,9 @@ export const statusConfigMap = campaignStatuses.reduce((acc, status) => {
 // Get status color with opacity for badges
 export const getStatusColor = (statusKey) => {
   const status = statusConfigMap[statusKey];
-  return status ? status.color : "#6b7280"; // Default gray
+  if (status && status.color) return status.color;
+  // Fall back to StatusBadge colors to keep consistency
+  return STATUS_COLORS[statusKey] || "#6b7280";
 };
 
 // Get status display name
