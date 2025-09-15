@@ -12,37 +12,29 @@ function MainLayout({ children }) {
   const location = useLocation();
   const { user, isAuthenticated } = useAuth() || {};
 
-
-
   return (
     <div className="min-h-screen bg-[color:var(--color-background)] text-[color:var(--color-text)] transition-colors">
       <div className="fixed top-0 left-0 right-0 z-50 ">
-      <Header 
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-        className={"fixed top-0 left-0 right-0 z-50 px-2 sm:px-4 "} 
-        user={user}
-        isAuthenticated={isAuthenticated}
-      />
-      </div>
-      {/* Sidebar for desktop */}
-      <div className="hidden lg:block fixed top-14 left-0 h-[calc(100vh-58px)]  z-40">
-        <Sidebar
-          open={true}
-          onClose={() => {}}
+        <Header
+          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+          className={"fixed top-0 left-0 right-0 z-50 px-2 sm:px-4 "}
           user={user}
+          isAuthenticated={isAuthenticated}
         />
       </div>
-      {/* Sidebar for mobile */}
-      <div className="lg:hidden">
+      {/* Sidebar for desktop - only visible on xl and above */}
+      <div className="hidden xl:block fixed top-14 left-0 h-[calc(100vh-58px)] z-40">
+        <Sidebar open={true} onClose={() => {}} user={user} />
+      </div>
+      {/* Sidebar for mobile and tablet - visible on lg but hidden on xl+ */}
+      <div className="xl:hidden">
         <Sidebar
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           user={user}
         />
       </div>
-      <main className={`mt-14 lg:ml-64     mx-auto`}>
-        {children}
-      </main>
+      <main className={`mt-14 xl:ml-64 mx-auto`}>{children}</main>
     </div>
   );
 }

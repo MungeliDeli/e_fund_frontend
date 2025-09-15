@@ -8,6 +8,7 @@ import {
 import { useAuth } from "../../../contexts/AuthContext";
 import { PrimaryButton, SecondaryButton } from "../../../components/Buttons";
 import MetaCard from "../components/MetaCard";
+import ColoredIcon from "../../../components/ColoredIcon";
 import ReasonModal from "../components/ReasonModal";
 // PreviewCollapse import removed during demolition
 import { FaBullseye, FaRegCalendarCheck } from "react-icons/fa";
@@ -23,10 +24,10 @@ function formatCurrency(amount) {
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
-      currency: "USD",
+      currency: "k",
     }).format(amount);
   } catch {
-    return `$${Number(amount).toFixed(2)}`;
+    return `K${Number(amount).toFixed(2)}`;
   }
 }
 
@@ -229,10 +230,10 @@ export default function CampaignViewPage() {
       </div>
 
       {/* Name and description */}
-      <h1 className="text-3xl md:text-4xl font-extrabold text-[color:var(--color-primary-text)] mb-2">
+      <h1 className="text-xl md:text-3xl font-semibold text-[color:var(--color-primary-text)] mb-2">
         {campaign.name}
       </h1>
-      <p className="text-[color:var(--color-secondary-text)] mb-6 max-w-3xl">
+      <p className="text-[color:var(--color-secondary-text)] mb-6 p-3">
         {campaign.description}
       </p>
 
@@ -368,7 +369,7 @@ export default function CampaignViewPage() {
       )}
 
       {/* Campaign Messages Section */}
-      {isOwner && (
+      {isOwner && isPubliclyLive && (
         <MessagesSection
           campaignId={campaign.campaignId}
           className="mt-8"

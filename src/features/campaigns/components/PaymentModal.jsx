@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FiX, FiAlertTriangle } from "react-icons/fi";
 import airtelLogo from "../../../assets/airtel_logo.png";
 import mtnLogo from "../../../assets/mtn_logo.png";
+import { useAuth } from "../../../contexts/AuthContext.jsx";
 
 function PaymentModal({
   isOpen,
@@ -14,11 +15,16 @@ function PaymentModal({
   campaignEndDate = null,
   campaignStartDate = null,
 }) {
+  const { isAuthenticated } = useAuth();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("airtel");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [message, setMessage] = useState("");
-  const [donateAnonymously, setDonateAnonymously] = useState(false);
-  const [subscribeToCampaign, setSubscribeToCampaign] = useState(true);
+  const [donateAnonymously, setDonateAnonymously] = useState(
+    () => !isAuthenticated
+  );
+  const [subscribeToCampaign, setSubscribeToCampaign] = useState(
+    () => !!isAuthenticated
+  );
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,14 +89,6 @@ function PaymentModal({
       return `Campaign is not accepting donations. Current status: ${campaignStatus}`;
     }
 
-    if (campaignEndDate && new Date(campaignEndDate) < new Date()) {
-      return "Campaign has ended and is no longer accepting donations";
-    }
-
-    if (campaignStartDate && new Date(campaignStartDate) > new Date()) {
-      return "Campaign has not started yet and is not accepting donations";
-    }
-
     return null;
   };
 
@@ -124,13 +122,16 @@ function PaymentModal({
         formattedPhone = "+260" + formattedPhone;
       }
 
+      const isAnonEffective = isAuthenticated ? donateAnonymously : true;
+      const subscribeEffective = isAuthenticated ? subscribeToCampaign : false;
+
       await onDonate({
         amount: parseFloat(amount),
         paymentMethod: selectedPaymentMethod,
         phoneNumber: formattedPhone,
         messageText: message.trim() || undefined,
-        isAnonymous: donateAnonymously,
-        subscribeToCampaign,
+        isAnonymous: isAnonEffective,
+        subscribeToCampaign: subscribeEffective,
         currency: "ZMW",
         gatewayUsed:
           selectedPaymentMethod === "airtel"
@@ -374,38 +375,40 @@ function PaymentModal({
             </p>
           </div>
 
-          {/* Checkboxes */}
-          <div className="space-y-3">
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={donateAnonymously}
-                onChange={(e) => setDonateAnonymously(e.target.checked)}
-                className="w-4 h-4 rounded border-[color:var(--color-muted)] focus:ring-[color:var(--color-primary)] checked:bg-[color:var(--color-primary)] checked:border-[color:var(--color-primary)]"
-                style={{
-                  accentColor: themeColor,
-                }}
-              />
-              <span className="text-sm text-[color:var(--color-primary-text)]">
-                Donate Anonymously
-              </span>
-            </label>
+          {/* Checkboxes: only for authenticated users */}
+          {isAuthenticated && (
+            <div className="space-y-3">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={donateAnonymously}
+                  onChange={(e) => setDonateAnonymously(e.target.checked)}
+                  className="w-4 h-4 rounded border-[color:var(--color-muted)] focus:ring-[color:var(--color-primary)] checked:bg-[color:var(--color-primary)] checked:border-[color:var(--color-primary)]"
+                  style={{
+                    accentColor: themeColor,
+                  }}
+                />
+                <span className="text-sm text-[color:var(--color-primary-text)]">
+                  Donate Anonymously
+                </span>
+              </label>
 
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={subscribeToCampaign}
-                onChange={(e) => setSubscribeToCampaign(e.target.checked)}
-                className="w-4 h-4 rounded border-[color:var(--color-muted)] focus:ring-[color:var(--color-primary)] checked:bg-[color:var(--color-primary)] checked:border-[color:var(--color-primary)]"
-                style={{
-                  accentColor: themeColor,
-                }}
-              />
-              <span className="text-sm text-[color:var(--color-primary-text)]">
-                Subscribe to this campaign
-              </span>
-            </label>
-          </div>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={subscribeToCampaign}
+                  onChange={(e) => setSubscribeToCampaign(e.target.checked)}
+                  className="w-4 h-4 rounded border-[color:var(--color-muted)] focus:ring-[color:var(--color-primary)] checked:bg-[color:var(--color-primary)] checked:border-[color:var(--color-primary)]"
+                  style={{
+                    accentColor: themeColor,
+                  }}
+                />
+                <span className="text-sm text-[color:var(--color-primary-text)]">
+                  Subscribe to this campaign
+                </span>
+              </label>
+            </div>
+          )}
 
           {/* Donate Button */}
           <button

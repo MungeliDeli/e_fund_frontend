@@ -3,24 +3,33 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import Notification from "../../../../components/Notification";
 import EntityFormModal from "../../../../components/EntityFormModal";
 import Table from "../../../../components/Table";
-import { FiMail, FiEye, FiMousePointer, FiDollarSign } from "react-icons/fi";
+import {
+  FiMail,
+  FiEye,
+  FiMousePointer,
+  FiDollarSign,
+  FiUsers,
+} from "react-icons/fi";
 import { FaRegCalendarCheck } from "react-icons/fa";
 import {
   getOutreachCampaign,
   resendFailedInvitations,
   sendOutreachInvitations,
 } from "../../services/outreachApi";
+import StatusBadge from "../../../../components/StatusBadge";
 
-const number = (v) => {
+function formatCurrency(amount) {
+  if (amount === null || amount === undefined) return "-";
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
-      currency: "USD",
-    }).format(v || 0);
+      currency: "k",
+    }).format(amount);
   } catch {
-    return `$${Number(v || 0).toFixed(2)}`;
+    return `K${Number(amount).toFixed(2)}`;
   }
-};
+}
+
 
 const OutreachCampaignDetailPage = () => {
   const { outreachCampaignId } = useParams();
@@ -218,7 +227,7 @@ const OutreachCampaignDetailPage = () => {
               },
               {
                 color: "#14b8a6",
-                Icon: FiDollarSign,
+                Icon: FiUsers,
                 label: "Donations",
                 value: totals.donations || 0,
               },
@@ -226,7 +235,7 @@ const OutreachCampaignDetailPage = () => {
                 color: "#22c55e",
                 Icon: FiDollarSign,
                 label: "Raised",
-                value: number(totals.totalAmount || 0),
+                value: formatCurrency(totals.totalAmount || 0),
               },
             ].map((status, idx) => (
               <div
@@ -279,19 +288,7 @@ const OutreachCampaignDetailPage = () => {
                 {
                   key: "status",
                   label: "Status",
-                  render: (row) => (
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        row.status === "sent"
-                          ? "bg-green-100 text-green-800"
-                          : row.status === "failed"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {row.status}
-                    </span>
-                  ),
+                  render: (row) => <StatusBadge status={row.status} />,
                 },
                 {
                   key: "opened",
@@ -311,7 +308,7 @@ const OutreachCampaignDetailPage = () => {
                 {
                   key: "donatedAmount",
                   label: "Amount",
-                  render: (r) => number(r.donatedAmount || 0),
+                  render: (r) => formatCurrency(r.donatedAmount || 0),
                 },
               ]}
               data={recipients}

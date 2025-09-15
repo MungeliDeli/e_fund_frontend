@@ -38,7 +38,7 @@ function ProgressBar({
       className={`bg-[color:var(--color-surface)] rounded-xl shadow p-6 border border-[color:var(--color-muted)] ${className}`}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-[color:var(--color-primary-text)]">
+        <h3 className="text-lg font-semibold text-[color:var(--color-primary-text)]">
           Campaign Progress
         </h3>
         <span
@@ -57,7 +57,7 @@ function ProgressBar({
           <span className="text-sm font-medium text-[color:var(--color-secondary-text)]">
             Progress
           </span>
-          <span className="text-lg font-bold text-[color:var(--color-primary-text)]">
+          <span className="text-lg font-semibold text-[color:var(--color-primary-text)]">
             {safePercentage.toFixed(1)}%
           </span>
         </div>
@@ -77,16 +77,16 @@ function ProgressBar({
       {/* Amount Display */}
       <div className="grid grid-cols-2 gap-4">
         <div className="text-center">
-          <div className="text-2xl font-bold text-[color:var(--color-primary-text)]">
-            ${currentAmount?.toLocaleString() || "0"}
+          <div className="text-xl font-semibold text-[color:var(--color-primary-text)]">
+            K{currentAmount?.toLocaleString() || "0"}
           </div>
           <div className="text-sm text-[color:var(--color-secondary-text)]">
             Raised
           </div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-[color:var(--color-secondary-text)]">
-            ${goalAmount?.toLocaleString() || "0"}
+          <div className="text-xl font-semibold text-[color:var(--color-secondary-text)]">
+            K{goalAmount?.toLocaleString() || "0"}
           </div>
           <div className="text-sm text-[color:var(--color-secondary-text)]">
             Goal
@@ -100,7 +100,7 @@ function ProgressBar({
           {goalAmount && currentAmount ? (
             <>
               <span className="font-semibold">
-                ${(goalAmount - currentAmount).toLocaleString()}
+                K{(goalAmount - currentAmount).toLocaleString()}
               </span>{" "}
               still needed
             </>

@@ -19,14 +19,8 @@ import { useAuth } from "../../contexts/AuthContext";
 
 // Public navigation items (always visible)
 const publicNavItems = [
-  { label: "Home", icon: FiHome, key: "home", path: "/" },
+  { label: "Home", icon: FiHome, key: "home", path: "/feed" },
   { label: "Campaigns", icon: FiFlag, key: "campaigns", path: "/campaigns" },
-  {
-    label: "Notifications",
-    icon: FiBell,
-    key: "notifications",
-    path: "/notifications",
-  },
 ];
 
 // Role-based navigation config
@@ -90,10 +84,10 @@ const adminNavItems = [
 const navConfig = {
   individualUser: [
     {
-      label: "Add Post",
-      icon: FiPlusCircle,
-      key: "add-post",
-      path: "/add-post",
+      label: "Notifications",
+      icon: FiBell,
+      key: "notifications",
+      path: "/notifications",
     },
     {
       label: "Profile",
@@ -103,11 +97,18 @@ const navConfig = {
     },
   ],
   organizationUser: [
+    
     {
       label: "Dashboard",
       icon: FiHome,
       key: "organizer-dashboard",
       path: "/organizer/dashboard",
+    },
+    {
+      label: "Notifications",
+      icon: FiBell,
+      key: "notifications",
+      path: "/notifications",
     },
     {
       label: "My Campaigns",
@@ -132,6 +133,12 @@ const navConfig = {
       icon: FiPlusCircle,
       key: "create-campaign",
       path: "/organizer/campaigns/create",
+    },
+    {
+      label: "Create Post",
+      icon: FiPlusCircle,
+      key: "create-post",
+      path: "/feed/create",
     },
     {
       label: "Metrics",
@@ -178,7 +185,7 @@ function Sidebar({ open, onClose, className }) {
   return (
     <>
       <div
-        className={`fixed left-0 right-0 z-30 bg-black/40 transition-opacity lg:hidden ${
+        className={`fixed left-0 right-0 z-30 bg-black/40 transition-opacity xl:hidden ${
           open
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -188,11 +195,11 @@ function Sidebar({ open, onClose, className }) {
         aria-hidden={!open}
       />
       <aside
-        className={`fixed left-0  z-40 h-[calc(100vh-56px)] w-64 bg-[color:var(--color-background)] border-r border-[color:var(--color-muted)] flex flex-col pt-4 transition-transform \
-                    lg:static lg:border-r lg:border-[color:var(--color-muted)]\
+        className={`fixed left-0 z-40 h-[calc(100vh-56px)] w-64 bg-[color:var(--color-background)] border-r border-[color:var(--color-muted)] flex flex-col pt-4 transition-transform \
+                    xl:static xl:border-r xl:border-[color:var(--color-muted)]\
                     ${open ? "translate-x-0" : "-translate-x-full"} ${
           className || ""
-        }  lg:translate-x-0`}
+        } xl:translate-x-0`}
         style={{ top: headerHeight }}
         aria-label="Sidebar"
       >

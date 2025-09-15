@@ -1,5 +1,6 @@
 import React from "react";
 import { FiAward, FiUser, FiMessageSquare } from "react-icons/fi";
+import ColoredIcon from "../../../components/ColoredIcon";
 
 /**
  * TopDonors Component
@@ -29,10 +30,10 @@ function TopDonors({ topDonors, className = "" }) {
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",
-        currency: "USD",
+        currency: "k",
       }).format(amount);
     } catch {
-      return `$${Number(amount).toFixed(2)}`;
+      return `K${Number(amount).toFixed(2)}`;
     }
   };
 
@@ -62,26 +63,35 @@ function TopDonors({ topDonors, className = "" }) {
             {/* Ranking */}
             <div className="flex-shrink-0">
               {index === 0 && (
-                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-500 bg-opacity-20">
-                  <FiAward className="text-yellow-500 text-lg" />
-                </div>
+                <ColoredIcon
+                  Icon={FiAward}
+                  color="#eab308"
+                  className="w-8 h-8"
+                />
               )}
               {index === 1 && (
-                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-400 bg-opacity-20">
-                  <FiAward className="text-gray-400 text-lg" />
-                </div>
+                <ColoredIcon
+                  Icon={FiAward}
+                  color="#9ca3af"
+                  className="w-8 h-8"
+                />
               )}
               {index === 2 && (
-                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-500 bg-opacity-20">
-                  <FiAward className="text-orange-500 text-lg" />
-                </div>
+                <ColoredIcon
+                  Icon={FiAward}
+                  color="#f97316"
+                  className="w-8 h-8"
+                />
               )}
               {index > 2 && (
-                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[color:var(--color-muted)] bg-opacity-20">
+                <span
+                  className="w-8 h-8 flex items-center justify-center rounded-full"
+                  style={{ background: "var(--color-muted)" + "33" }}
+                >
                   <span className="text-sm font-bold text-[color:var(--color-secondary-text)]">
                     #{index + 1}
                   </span>
-                </div>
+                </span>
               )}
             </div>
 

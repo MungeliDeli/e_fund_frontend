@@ -206,7 +206,7 @@ function DonationsPage() {
       sortable: true,
       render: (row) => (
         <span className="font-mono text-xs">
-          ${parseFloat(row.amount || 0).toLocaleString()}
+          K{parseFloat(row.amount || 0).toLocaleString()}
         </span>
       ),
     },
@@ -288,7 +288,7 @@ function DonationsPage() {
             />
             <TotalStatsCard
               title="Total Amount"
-              value={`$${rows
+                value={`K${rows
                 .reduce((sum, r) => sum + (parseFloat(r.amount || 0) || 0), 0)
                 .toLocaleString()}`}
               icon={FiDollarSign}
@@ -387,7 +387,7 @@ function DonationsPage() {
                 {selectedDonation.campaignName}
               </div>
               <div>
-                <span className="font-medium">Amount: </span>$
+                <span className="font-medium">Amount: </span>K
                 {parseFloat(selectedDonation.amount || 0).toLocaleString()}
               </div>
               <div>

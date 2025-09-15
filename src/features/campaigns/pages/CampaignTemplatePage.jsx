@@ -65,6 +65,16 @@ function CampaignTemplatePage({
 
   useEffect(() => {
     fetchCampaign();
+    // Capture outreach attribution from URL and persist for this session
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const linkTokenId = params.get("lt");
+      const contactId = params.get("cid");
+      if (linkTokenId) sessionStorage.setItem("outreach_lt", linkTokenId);
+      if (contactId) sessionStorage.setItem("outreach_cid", contactId);
+    } catch (_) {
+      // no-op
+    }
   }, [campaignId, shareParam]);
 
   // Set CSS custom property for theme color
@@ -138,6 +148,9 @@ function CampaignTemplatePage({
       const donationData = {
         ...paymentData,
         campaignId: campaign.campaignId,
+        // Optional outreach attribution
+        linkTokenId: sessionStorage.getItem("outreach_lt") || undefined,
+        contactId: sessionStorage.getItem("outreach_cid") || undefined,
       };
 
       // Call the actual donation API
@@ -436,7 +449,10 @@ function CampaignTemplatePage({
             <RecentDonations themeColor={themeColor} />
 
             {/* Success Stories */}
-            <SuccessStories themeColor={themeColor} />
+            <SuccessStories
+              themeColor={themeColor}
+              campaignId={campaign.campaignId}
+            />
 
             {/* Quick Donation */}
             <QuickDonation
@@ -558,7 +574,10 @@ function CampaignTemplatePage({
           <WordsOfSupport themeColor={themeColor} />
 
           {/* Success Stories */}
-          <SuccessStories themeColor={themeColor} />
+          <SuccessStories
+            themeColor={themeColor}
+            campaignId={campaign.campaignId}
+          />
         </div>
       </div>
 

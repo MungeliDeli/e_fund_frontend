@@ -4,14 +4,15 @@ import { useAuth } from "../../../contexts/AuthContext";
 import Notification from "../../../components/Notification";
 import OutreachHeader from "./OutreachHeader";
 import CampaignOutreachAnalytics from "./CampaignOutreachAnalytics";
-import SocialSharingModal from "./SocialSharingModal";
+import MetaCard from "../../campaigns/components/MetaCard";
+import { FiMail, FiEye, FiMousePointer, FiUsers } from "react-icons/fi";
+import { FiLayers } from "react-icons/fi";
 import { getCampaignAnalytics } from "../services/outreachApi";
 
 const OutreachSection = ({ campaignId, campaignTitle, className = "" }) => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showSocialModal, setShowSocialModal] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -23,9 +24,7 @@ const OutreachSection = ({ campaignId, campaignTitle, className = "" }) => {
     navigate(`/organizer/campaigns/${campaignId}/outreach-campaigns`);
   };
 
-  const handleSocialShare = () => {
-    setShowSocialModal(true);
-  };
+  // Social sharing removed
 
   const [filters, setFilters] = useState({ dateRange: "30d", type: "all" });
 
@@ -64,7 +63,6 @@ const OutreachSection = ({ campaignId, campaignTitle, className = "" }) => {
         <OutreachHeader
           title="Campaign Outreach"
           onReachOut={handleReachOut}
-          onSocialShare={handleSocialShare}
           onManageCampaigns={handleManageCampaigns}
         />
 
@@ -91,12 +89,7 @@ const OutreachSection = ({ campaignId, campaignTitle, className = "" }) => {
         )}
       </div>
 
-      <SocialSharingModal
-        isOpen={showSocialModal}
-        onClose={() => setShowSocialModal(false)}
-        campaignId={campaignId}
-        campaignTitle={campaignTitle}
-      />
+      {/* SocialSharingModal intentionally not rendered */}
     </>
   );
 };

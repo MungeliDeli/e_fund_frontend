@@ -76,6 +76,8 @@ export const AuthProvider = ({ children }) => {
           "/login",
           "/forgot-password",
           "/reset-password",
+          "/setup-account",
+          "/feed",
         ];
         const isPublicRoute =
           publicRoutes.includes(location.pathname) ||

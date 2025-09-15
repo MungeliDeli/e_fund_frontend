@@ -45,6 +45,8 @@ function EmailVerifiedPage() {
             userType: decoded.userType,
           };
         } catch (e) {
+          console.log(e);
+          
           // If decoding fails, fallback to null
         }
         // Update AuthContext state

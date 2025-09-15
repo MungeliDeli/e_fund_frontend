@@ -6,6 +6,8 @@ import {
   IconButton,
 } from "../../../components/Buttons";
 import { FaComments, FaEye, FaStar, FaClock, FaSyncAlt } from "react-icons/fa";
+import ColoredIcon from "../../../components/ColoredIcon";
+import StatusBadge from "../../../components/StatusBadge";
 import { FiMessageSquare } from "react-icons/fi";
 import {
   getFeaturedMessages,
@@ -21,7 +23,6 @@ const MessagesSection = ({
   const [messages, setMessages] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [showAllMessages, setShowAllMessages] = useState(false);
 
@@ -37,8 +38,7 @@ const MessagesSection = ({
   const fetchMessagesData = async (isRefresh = false) => {
     try {
       if (isRefresh) {
-        setRefreshing(true);
-      } else {
+      
         setLoading(true);
       }
 
@@ -75,7 +75,7 @@ const MessagesSection = ({
       }
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      
     }
   };
 
@@ -116,9 +116,11 @@ const MessagesSection = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[color:var(--color-primary)] bg-opacity-10 rounded-lg">
-            <FaComments className="text-[color:var(--color-primary)] text-xl" />
-          </div>
+          <ColoredIcon
+            Icon={FaComments}
+            color="var(--color-primary)"
+            className="w-8 h-8"
+          />
           <div>
             <h3 className="text-xl font-bold text-[color:var(--color-primary-text)]">
               Campaign Messages
@@ -137,24 +139,13 @@ const MessagesSection = ({
 
           {/* Pending Messages Badge */}
           {pendingCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-amber-100 border border-amber-200 rounded-full">
-              <FaClock className="text-amber-600 text-sm" />
-              <span className="text-sm font-medium text-amber-800">
-                {pendingCount} pending
-              </span>
-            </div>
+            <StatusBadge
+              status="pending approval"
+              label={`${pendingCount} pending`}
+            />
           )}
 
-          {/* Refresh Button */}
-          <IconButton
-            onClick={() => fetchMessagesData(true)}
-            icon={FaSyncAlt}
-            className={`p-2 hover:bg-[color:var(--color-muted)] rounded-lg transition-colors ${
-              refreshing ? "animate-spin" : ""
-            }`}
-            title="Refresh messages"
-            disabled={refreshing}
-          />
+         
         </div>
       </div>
 
@@ -200,12 +191,7 @@ const MessagesSection = ({
                   className="bg-[color:var(--color-background)] rounded-lg border border-[color:var(--color-muted)] p-4"
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <FaStar className="text-amber-500 text-sm" />
-                      <span className="text-xs font-medium text-[color:var(--color-secondary-text)]">
-                        Featured Message
-                      </span>
-                    </div>
+                    <StatusBadge status="successful" label="Featured" />
                     <span className="text-xs text-[color:var(--color-secondary-text)]">
                       {new Date(message.postedAt).toLocaleDateString()}
                     </span>

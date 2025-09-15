@@ -70,17 +70,7 @@ function DonationSection({
         return;
       }
 
-      if (campaign.endDate && new Date(campaign.endDate) < new Date()) {
-        setAmountError(
-          "Campaign has ended and is no longer accepting donations"
-        );
-        return;
-      }
-
-      if (campaign.startDate && new Date(campaign.startDate) > new Date()) {
-        setAmountError("Campaign has not started yet");
-        return;
-      }
+     
     }
 
     setAmountError("");

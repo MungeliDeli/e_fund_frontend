@@ -3,6 +3,7 @@
 // It sets up the theme provider, router, and defines all application routes with appropriate layouts.
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import MainLayout from "./layout/MainLayout";
 import HomePage from "./features/home/pages/HomePage";
 import SignUpPage from "./features/auth/pages/SignUpPage";
@@ -61,6 +62,13 @@ const CampaignViewPage = lazy(() =>
 const CampaignTemplatePage = lazy(() =>
   import("./features/campaigns/pages/CampaignTemplatePage")
 );
+const FeedPage = lazy(() => import("./features/feed/pages/FeedPage"));
+const PostDetailPage = lazy(() =>
+  import("./features/feed/pages/PostDetailPage")
+);
+const CreatePostPage = lazy(() =>
+  import("./features/feed/pages/CreatePostPage")
+);
 const OrganizerContactsPage = lazy(() =>
   import("./features/Outreach/pages/organizer/ContactsPage")
 );
@@ -101,6 +109,7 @@ function AppRoutes() {
     "/reset-password",
     "/template-preview",
     "/campaign/:shareSlug",
+    "/setup-account",
   ];
   const shouldHideMainLayout =
     authRoutes.includes(location.pathname) ||
@@ -129,13 +138,17 @@ function AppRoutes() {
             path="/campaign/:shareSlug"
             element={<CampaignTemplatePage />}
           />
-          {/* Template preview route removed during demolition */}
+    
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/email-verified" element={<EmailVerifiedPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/setup-account"
+            element={<OrganizerSetupPasswordPage />}
+          />
           <Route
             path="/notifications"
             element={
@@ -156,6 +169,11 @@ function AppRoutes() {
             path="/setup-account"
             element={<OrganizerSetupPasswordPage />}
           />
+
+          {/* Feed Routes */}
+          <Route path="/feed" element={<FeedPage />} />
+          <Route path="/post/:postId" element={<PostDetailPage />} />
+
           {/* Catch-all for undefined public routes */}
           <Route path="*" element={<NotFoundPage />} />
 
@@ -272,6 +290,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<CreateCampaignPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/feed/create"
+            element={
+              <ProtectedRoute
+                element={<CreatePostPage />}
                 requiredRole="organizationUser"
               />
             }
@@ -395,7 +422,9 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <NotificationProvider>
+            <AppRoutes />
+          </NotificationProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

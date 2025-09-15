@@ -6,6 +6,7 @@ import {
   FiBarChart,
 } from "react-icons/fi";
 import MetaCard from "../../campaigns/components/MetaCard";
+import ColoredIcon from "../../../components/ColoredIcon";
 import ProgressBar from "./ProgressBar";
 import DonorInsights from "./DonorInsights";
 import TopDonors from "./TopDonors";
@@ -108,7 +109,7 @@ function AnalyticsSection({ campaignId, goalAmount, className = "" }) {
         className={`bg-[color:var(--color-surface)] rounded-xl shadow p-6 border border-[color:var(--color-muted)] ${className}`}
       >
         <div className="text-center text-red-500">
-          <FiBarChart3 className="text-2xl mx-auto mb-2" />
+          <FiBarChart className="text-2xl mx-auto mb-2" />
           <p className="font-medium">Failed to load analytics</p>
           <p className="text-sm text-[color:var(--color-secondary-text)]">
             {error}
@@ -133,7 +134,7 @@ function AnalyticsSection({ campaignId, goalAmount, className = "" }) {
       <div className={className}>
         {/* Analytics Header */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-[color:var(--color-primary-text)] mb-2">
+          <h2 className="text-2 xl font-semibold text-[color:var(--color-primary-text)] mb-2">
             Campaign Analytics
           </h2>
           <p className="text-[color:var(--color-secondary-text)]">
@@ -144,42 +145,56 @@ function AnalyticsSection({ campaignId, goalAmount, className = "" }) {
 
         {/* Financial Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <MetaCard
-            title="Total Raised"
-            value={
-              financial?.totalRaised
-                ? `$${financial.totalRaised.toLocaleString()}`
-                : "$0"
-            }
-            Icon={FiDollarSign}
-            color="#10b981"
-          />
-          <MetaCard
-            title="Average Donation"
-            value={
-              financial?.averageDonation
-                ? `$${financial.averageDonation.toFixed(2)}`
-                : "$0"
-            }
-            Icon={FiTrendingUp}
-            color="#3b82f6"
-          />
-          <MetaCard
-            title="Largest Donation"
-            value={
-              financial?.largestDonation
-                ? `$${financial.largestDonation.toLocaleString()}`
-                : "$0"
-            }
-            Icon={FiTrendingUp}
-            color="#8b5cf6"
-          />
-          <MetaCard
-            title="Total Donations"
-            value={financial?.totalDonations || "0"}
-            Icon={FiUsers}
-            color="#f59e0b"
-          />
+          <div className="flex items-center gap-4 bg-[color:var(--color-surface)] rounded-xl shadow p-4 border border-[color:var(--color-muted)]">
+            <ColoredIcon Icon={FiDollarSign} color="#10b981" />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-[color:var(--color-secondary-text)]">
+                Total Raised
+              </span>
+              <span className="text-xl font-semibold text-[color:var(--color-primary-text)]">
+                {financial?.totalRaised
+                  ? `K${financial.totalRaised.toLocaleString()}`
+                  : "K0"}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 bg-[color:var(--color-surface)] rounded-xl shadow p-4 border border-[color:var(--color-muted)]">
+            <ColoredIcon Icon={FiTrendingUp} color="#3b82f6" />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-[color:var(--color-secondary-text)]">
+                Average Donation
+              </span>
+              <span className="text-xl font-semibold text-[color:var(--color-primary-text)]">
+                {financial?.averageDonation
+                  ? `K${financial.averageDonation.toFixed(2)}`
+                  : "K0"}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 bg-[color:var(--color-surface)] rounded-xl shadow p-4 border border-[color:var(--color-muted)]">
+            <ColoredIcon Icon={FiTrendingUp} color="#8b5cf6" />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-[color:var(--color-secondary-text)]">
+                Largest Donation
+              </span>
+              <span className="text-xl font-semibold text-[color:var(--color-primary-text)]">
+                {financial?.largestDonation
+                  ? `K${financial.largestDonation.toLocaleString()}`
+                  : "K0"}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 bg-[color:var(--color-surface)] rounded-xl shadow p-4 border border-[color:var(--color-muted)]">
+            <ColoredIcon Icon={FiUsers} color="#f59e0b" />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-[color:var(--color-secondary-text)]">
+                Total Donations
+              </span>
+              <span className="text-xl font-semibold text-[color:var(--color-primary-text)]">
+                {financial?.totalDonations || "0"}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Progress Bar and Donor Insights */}
