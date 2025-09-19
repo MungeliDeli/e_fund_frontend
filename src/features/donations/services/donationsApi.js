@@ -36,3 +36,15 @@ export async function getAllDonations({ limit = 100, offset = 0 } = {}) {
   const response = await apiClient.get(`/donations?${params.toString()}`);
   return response;
 }
+
+/**
+ * Get donation statistics for a specific campaign
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<Object>} Donation statistics
+ */
+export async function getDonationStats(campaignId) {
+  const response = await apiClient.get(
+    `/donations/campaign/${campaignId}/stats`
+  );
+  return response.data.data;
+}

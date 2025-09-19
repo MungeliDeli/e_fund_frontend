@@ -1,40 +1,56 @@
-import React, { useState } from "react";
-import { FiUser } from "react-icons/fi";
+import React, { useEffect, useMemo, useState } from "react";
+import { FiAward, FiUser } from "react-icons/fi";
+import { getDonationsByCampaign as fetchDonationsByCampaign } from "../../donations/services/donationsApi";
 
-function RecentDonations({ themeColor }) {
+function RecentDonations({ themeColor, campaignId }) {
   const [showAll, setShowAll] = useState(false);
+  const [donations, setDonations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Mock data - replace with actual API call
-  const mockDonations = [
-    {
-      id: 1,
-      name: "Anonymous",
-      amount: 50,
-      isTopDonor: false,
-      timeAgo: "2 hours ago",
-    },
-    {
-      id: 2,
-      name: "Munge deli",
-      amount: 430,
-      isTopDonor: true,
-      timeAgo: "5 hours ago",
-    },
-    {
-      id: 3,
-      name: "Davy Mwansa",
-      amount: 550,
-      isTopDonor: true,
-      timeAgo: "1 day ago",
-    },
-    {
-      id: 4,
-      name: "Davy Mwansa",
-      amount: 40,
-      isTopDonor: false,
-      timeAgo: "2 days ago",
-    },
-  ];
+  useEffect(() => {
+    const load = async () => {
+      if (!campaignId) return;
+      try {
+        setLoading(true);
+        setError("");
+        const res = await fetchDonationsByCampaign(campaignId, {
+          limit: 100,
+          offset: 0,
+        });
+        // Backend responses vary between returning data directly or under data.data
+        const rows = res?.data?.data || res?.data || res || [];
+        setDonations(Array.isArray(rows) ? rows : []);
+      } catch (e) {
+        setError(e?.message || "Failed to load donations");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [campaignId]);
+
+  const sortedByAmountDesc = useMemo(() => {
+    return [...donations]
+      .filter((d) => d && d.amount != null)
+      .sort((a, b) => Number(b.amount) - Number(a.amount));
+  }, [donations]);
+
+  const topTwoDonors = useMemo(
+    () => sortedByAmountDesc.slice(0, 2),
+    [sortedByAmountDesc]
+  );
+
+  const remainingByRecent = useMemo(() => {
+    const ids = new Set(topTwoDonors.map((d) => d.donationId));
+    return donations
+      .filter((d) => !ids.has(d.donationId))
+      .sort(
+        (a, b) =>
+          new Date(b.donationDate).getTime() -
+          new Date(a.donationDate).getTime()
+      );
+  }, [donations, topTwoDonors]);
 
   const formatAmount = (amount) => {
     return new Intl.NumberFormat("en-ZM", {
@@ -45,9 +61,17 @@ function RecentDonations({ themeColor }) {
     }).format(amount || 0);
   };
 
-  const displayedDonations = showAll
-    ? mockDonations
-    : mockDonations.slice(0, 4);
+  const displayList = useMemo(() => {
+    const recentSlice = showAll
+      ? remainingByRecent
+      : remainingByRecent.slice(0, 4);
+    return [...topTwoDonors, ...recentSlice];
+  }, [topTwoDonors, remainingByRecent, showAll]);
+
+  // Hide entire component when no donations to show
+  if (!loading && !error && displayList.length === 0) {
+    return null;
+  }
 
   return (
     <div className="bg-[color:var(--color-background)] rounded-lg p-6 shadow-[0_2px_16px_0_var(--color-shadow)] ">
@@ -66,9 +90,18 @@ function RecentDonations({ themeColor }) {
       </div>
 
       {/* Donations List */}
+      {loading && (
+        <div className="text-sm text-[color:var(--color-secondary-text)]">
+          Loading...
+        </div>
+      )}
+      {error && !loading && <div className="text-sm text-red-500">{error}</div>}
       <div className="space-y-3">
-        {displayedDonations.map((donation) => (
-          <div key={donation.id} className="flex items-center gap-3">
+        {displayList.map((donation, index) => (
+          <div
+            key={donation.donationId || `${donation.amount}-${index}`}
+            className="flex items-center gap-3"
+          >
             {/* Icon */}
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
@@ -82,21 +115,24 @@ function RecentDonations({ themeColor }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
                   <span className="text-sm text-[color:var(--color-text)]">
-                    {donation.name} donated{" "}
+                    {(donation.isAnonymous
+                      ? "Anonymous"
+                      : donation.donorName) || "Donor"}{" "}
+                    donated{" "}
                     <span className="font-bold">
                       {formatAmount(donation.amount)}
                     </span>
                   </span>
                 </div>
-                {donation.isTopDonor && (
+                {index < 2 && (
                   <span
-                    className="text-xs px-2 py-1 rounded font-medium"
+                    className="text-xs px-2 py-1 rounded font-medium flex items-center gap-1"
                     style={{
                       backgroundColor: `${themeColor}20`,
                       color: themeColor,
                     }}
                   >
-                    Top Donor
+                    <FiAward className="w-3 h-3" /> Top Donor
                   </span>
                 )}
               </div>
@@ -116,7 +152,7 @@ function RecentDonations({ themeColor }) {
             backgroundColor: "bg-[color:var(--color-background)]",
           }}
         >
-          See all Donations
+          {showAll ? "Show less" : "See all Donations"}
         </button>
       </div>
     </div>

@@ -23,15 +23,25 @@ import Notification from "../../../components/Notification";
 import FundraiseLogo from "./../../../assets/fundraise logo.svg";
 import PaymentModal from "../components/PaymentModal";
 import ThankYouModal from "../components/ThankYouModal";
+import { useAuth } from "../../../contexts/AuthContext";
+import GuestAuthPrompt from "../../../components/GuestAuthPrompt";
+import { fetchPublicProfile } from "../../users/services/usersApi";
+import { getDonationStats } from "../../donations/services/donationsApi";
 
 function Logo() {
+  const navigate = useNavigate();
   return (
-    <span className="flex items-center">
+    <button
+      type="button"
+      onClick={() => navigate("/")}
+      className="flex items-center cursor-pointer"
+      aria-label="Go to home"
+    >
       <img src={FundraiseLogo} alt="FundFlow Logo" className="w-10 h-10" />
       <span className="ml-2 font-bold text-2xl text-[color:var(--color-primary)] hidden sm:inline">
         FundFlow
       </span>
-    </span>
+    </button>
   );
 }
 
@@ -43,6 +53,7 @@ function CampaignTemplatePage({
   const campaignId = propCampaignId || paramCampaignId || null;
   const shareParam = shareSlug || null;
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const donationSectionRef = useRef(null);
 
   const [campaign, setCampaign] = useState(null);
@@ -59,6 +70,14 @@ function CampaignTemplatePage({
   const [selectedDonationAmount, setSelectedDonationAmount] = useState("50");
   const [donationDetails, setDonationDetails] = useState(null);
   const [isProcessingDonation, setIsProcessingDonation] = useState(false);
+  const [organizerProfile, setOrganizerProfile] = useState(null);
+  const [organizerAvatarUrl, setOrganizerAvatarUrl] = useState("");
+  const [donationStats, setDonationStats] = useState({
+    totalDonations: 0,
+    completedDonations: 0,
+    totalAmount: 0,
+    anonymousDonations: 0,
+  });
 
   // Theme color from campaign settings
   const themeColor = campaign?.customPageSettings?.themeColor || "#10B981";
@@ -118,6 +137,44 @@ function CampaignTemplatePage({
       setLoading(false);
     }
   };
+
+  // Fetch organizer profile and image when campaign loads
+  useEffect(() => {
+    const loadOrganizer = async () => {
+      try {
+        if (!campaign?.organizerId) return;
+        const profRes = await fetchPublicProfile(campaign.organizerId);
+        const profile = profRes?.data || profRes || null;
+        setOrganizerProfile(profile);
+        console.log(profile);
+
+        // Use the profilePictureUrl directly from the backend response
+        const avatarUrl =
+          profile?.profilePictureUrl || profile?.coverPictureUrl || "";
+        setOrganizerAvatarUrl(avatarUrl);
+        console.log(avatarUrl);
+      } catch (_) {
+        setOrganizerAvatarUrl("");
+      }
+    };
+    loadOrganizer();
+  }, [campaign?.organizerId]);
+
+  // Fetch donation statistics when campaign loads
+  useEffect(() => {
+    const loadDonationStats = async () => {
+      try {
+        if (!campaign?.campaignId) return;
+        const stats = await getDonationStats(campaign.campaignId);
+        setDonationStats(stats);
+        console.log("Donation stats:", stats);
+      } catch (error) {
+        console.error("Failed to fetch donation stats:", error);
+        // Keep default values on error
+      }
+    };
+    loadDonationStats();
+  }, [campaign?.campaignId]);
 
   const scrollToDonation = () => {
     if (donationSectionRef.current) {
@@ -183,6 +240,14 @@ function CampaignTemplatePage({
 
       // Refresh campaign data to show updated amounts
       await fetchCampaign();
+
+      // Refresh donation statistics
+      try {
+        const stats = await getDonationStats(campaign.campaignId);
+        setDonationStats(stats);
+      } catch (error) {
+        console.error("Failed to refresh donation stats:", error);
+      }
     } catch (error) {
       console.error("Donation failed:", error);
       setNotification({
@@ -239,7 +304,6 @@ function CampaignTemplatePage({
   };
 
   const calculateProgress = () => {
-    console.log(campaign);
     if (!campaign?.goalAmount) return 0;
     const currentAmount = campaign?.currentRaisedAmount || 0;
     return Math.min((currentAmount / campaign.goalAmount) * 100, 100);
@@ -321,14 +385,25 @@ function CampaignTemplatePage({
         {/* Organizer Header */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[color:var(--color-muted)] rounded-lg flex items-center justify-center">
-              <span className="text-xl font-bold text-[color:var(--color-primary-text)]">
-                {campaign.organizerName?.[0]?.toUpperCase() || "O"}
-              </span>
+            <div className="w-10 h-10 bg-[color:var(--color-muted)] rounded-lg flex items-center justify-center overflow-hidden">
+              {organizerAvatarUrl ? (
+                <img
+                  src={organizerAvatarUrl}
+                  alt="Organizer avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-[color:var(--color-primary-text)]">
+                  {campaign.organizerName?.[0]?.toUpperCase() || "O"}
+                </span>
+              )}
             </div>
             <div>
               <h2 className="font-bold text-xl text-[color:var(--color-primary-text)]">
-                {campaign.organizerName || "Organization"}
+                {campaign.organizerName ||
+                  organizerProfile?.organizationName ||
+                  organizerProfile?.firstName ||
+                  "Organization"}
               </h2>
             </div>
           </div>
@@ -419,13 +494,16 @@ function CampaignTemplatePage({
               <div className="flex items-center gap-2 text-[color:var(--color-secondary-text)]">
                 <FiUsers className="w-4 h-4" />
                 <span className="text-sm">
-                  {campaign.donationCount || 0} supporters
+                  {donationStats.completedDonations || 0} supporters
                 </span>
               </div>
             </div>
 
             {/* Words of Support */}
-            <WordsOfSupport themeColor={themeColor} />
+            <WordsOfSupport
+              themeColor={themeColor}
+              campaignId={campaign.campaignId}
+            />
           </div>
 
           {/* Right Section - 1 column */}
@@ -436,7 +514,7 @@ function CampaignTemplatePage({
                 raisedAmount={campaign.currentRaisedAmount || 0}
                 goalAmount={campaign.goalAmount}
                 progress={progress}
-                donationCount={campaign.donationCount || 0}
+                donationCount={donationStats.completedDonations || 0}
                 predefinedAmounts={predefinedAmounts}
                 themeColor={themeColor}
                 formatAmount={formatAmount}
@@ -446,7 +524,10 @@ function CampaignTemplatePage({
             </div>
 
             {/* Recent Donations */}
-            <RecentDonations themeColor={themeColor} />
+            <RecentDonations
+              themeColor={themeColor}
+              campaignId={campaign.campaignId}
+            />
 
             {/* Success Stories */}
             <SuccessStories
@@ -459,6 +540,9 @@ function CampaignTemplatePage({
               themeColor={themeColor}
               onDonateClick={() => handleDonateClick("50")}
             />
+
+            {/* Auth Prompt for Guests (Mobile bottom) */}
+            <GuestAuthPrompt themeColor={themeColor} />
           </div>
         </div>
 
@@ -477,7 +561,7 @@ function CampaignTemplatePage({
               raisedAmount={campaign.currentRaisedAmount || 0}
               goalAmount={campaign.goalAmount}
               progress={progress}
-              donationCount={campaign.donationCount || 0}
+              donationCount={donationStats.completedDonations || 0}
               predefinedAmounts={predefinedAmounts}
               themeColor={themeColor}
               formatAmount={formatAmount}
@@ -562,22 +646,29 @@ function CampaignTemplatePage({
                 <FiUsers className="w-3 h-3" />
               </div>
               <span className="text-xs text-[color:var(--color-secondary-text)]">
-                {campaign.donationCount || 0} supporters
+                {donationStats.completedDonations || 0} supporters
               </span>
             </div>
           </div>
 
           {/* Recent Donations */}
-          <RecentDonations themeColor={themeColor} />
+          <RecentDonations
+            themeColor={themeColor}
+            campaignId={campaign.campaignId}
+          />
 
           {/* Words of Support */}
-          <WordsOfSupport themeColor={themeColor} />
+          <WordsOfSupport
+            themeColor={themeColor}
+            campaignId={campaign.campaignId}
+          />
 
           {/* Success Stories */}
           <SuccessStories
             themeColor={themeColor}
             campaignId={campaign.campaignId}
           />
+          <GuestAuthPrompt themeColor={themeColor} />
         </div>
       </div>
 

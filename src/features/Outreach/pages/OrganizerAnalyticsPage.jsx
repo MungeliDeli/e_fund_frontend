@@ -120,8 +120,12 @@ const OrganizerAnalyticsPage = () => {
         ) : (
           <>
             {/* KPI Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
               {[
+                {
+                  label: "Outreach Campaigns",
+                  value: analytics.outreachCampaigns || 0,
+                },
                 {
                   label: "Emails Sent",
                   value: analytics.emailsSent || 0,

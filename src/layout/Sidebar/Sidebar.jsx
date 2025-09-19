@@ -140,12 +140,7 @@ const navConfig = {
       key: "create-post",
       path: "/feed/create",
     },
-    {
-      label: "Metrics",
-      icon: FiBarChart,
-      key: "metrics",
-      path: "/organizer/metrics",
-    },
+   
     {
       label: "Outreach Analytics",
       icon: FiBarChart2,

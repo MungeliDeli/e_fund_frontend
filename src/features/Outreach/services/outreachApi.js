@@ -252,11 +252,23 @@ export const getCampaignAnalytics = async (campaignId, params = {}) => {
  */
 export const getOrganizerAnalytics = async (params = {}) => {
   try {
-    console.log("Getting organizer analytics with params:", params);
     const response = await apiClient.get(`/outreach/analytics/organizer`, {
       params,
     });
-    return response.data;
+    const raw = response?.data?.data || response?.data || {};
+    return {
+      emailsSent: raw.emailsSent || 0,
+      opens: raw.opens || 0,
+      clicks: raw.clicks || 0,
+      donations: raw.donations || 0,
+      openRate: raw.openRate || "0%",
+      clickRate: raw.clickRate || "0%",
+      revenue: raw.revenue || 0,
+      outreachCampaigns: raw.outreachCampaigns || 0,
+      topSegments: raw.topSegments || [],
+      topContacts: raw.topContacts || [],
+      campaignBreakdown: raw.campaignBreakdown || [],
+    };
   } catch (error) {
     console.error("Failed to get organizer analytics:", error);
     throw error;

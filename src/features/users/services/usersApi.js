@@ -26,7 +26,7 @@ import apiClient from "../../../services/apiClient";
  * // Returns: { firstName, lastName, gender, country, city, etc. }
  */
 export const fetchPublicProfile = async (userId) => {
-  return apiClient.get(`/users/${userId}/public`).then((res) => res.data);
+  return apiClient.get(`/users/${userId}/profile`).then((res) => res.data);
 };
 
 /**
@@ -91,7 +91,7 @@ export const uploadProfileImages = async ({ profileFile, coverFile }) => {
  */
 export const getMediaUrl = async (mediaId) => {
   const data = await apiClient
-    .get(`users/media/${mediaId}/url`)
+    .get(`/users/media/${mediaId}/url`)
     .then((res) => res.data.data);
 
   return data;
