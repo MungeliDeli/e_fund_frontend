@@ -24,8 +24,6 @@ function AddOrganizationPage() {
     missionDescription: "",
     establishmentDate: "",
     campusAffiliationScope: "",
-    affiliatedSchoolsNames: "",
-    affiliatedDepartmentNames: "",
     primaryContactPersonName: "",
     primaryContactPersonEmail: "",
     primaryContactPersonPhone: "",
@@ -67,9 +65,7 @@ function AddOrganizationPage() {
         address: "",
         missionDescription: "",
         establishmentDate: "",
-          campusAffiliationScope: "",
-        affiliatedSchoolsNames: "",
-        affiliatedDepartmentNames: "",
+        campusAffiliationScope: "",
         primaryContactPersonName: "",
         primaryContactPersonEmail: "",
         primaryContactPersonPhone: "",
@@ -174,11 +170,6 @@ function AddOrganizationPage() {
       formData.append("missionDescription", form.missionDescription);
       formData.append("establishmentDate", form.establishmentDate);
       formData.append("campusAffiliationScope", form.campusAffiliationScope);
-      formData.append("affiliatedSchoolsNames", form.affiliatedSchoolsNames);
-      formData.append(
-        "affiliatedDepartmentNames",
-        form.affiliatedDepartmentNames
-      );
       formData.append(
         "primaryContactPersonName",
         form.primaryContactPersonName
@@ -232,7 +223,7 @@ function AddOrganizationPage() {
           {/* Short Name */}
           <FormField
             label="Short Name"
-              name="organizationShortName"
+            name="organizationShortName"
             value={form.organizationShortName}
             onChange={handleChange}
             error={submitAttempted ? errors.organizationShortName : undefined}
@@ -294,40 +285,15 @@ function AddOrganizationPage() {
           {/* Campus Affiliation Scope */}
           <FormField
             label="Campus Affiliation Scope"
-              name="campusAffiliationScope"
+            name="campusAffiliationScope"
             value={form.campusAffiliationScope}
             onChange={handleChange}
             placeholder="e.g. Main, East, West"
-            error={
-              submitAttempted ? errors.campusAffiliationScope : undefined
-            }
+            error={submitAttempted ? errors.campusAffiliationScope : undefined}
           />
           <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-xs text-[color:var(--color-secondary-text)] mt-4">
-            Comma-separated for multiple values: Campus Affiliation Scope,
-            Affiliated Schools, Affiliated Departments.
+            Comma-separated for multiple values: Campus Affiliation Scope.
           </div>
-          {/* Affiliated Schools */}
-          <FormField
-            label="Affiliated Schools Names"
-            name="affiliatedSchoolsNames"
-            value={form.affiliatedSchoolsNames}
-            onChange={handleChange}
-            placeholder="e.g. School of Science, School of Engineering"
-            error={
-              submitAttempted ? errors.affiliatedSchoolsNames : undefined
-            }
-          />
-          {/* Affiliated Departments */}
-          <FormField
-            label="Affiliated Department Names"
-            name="affiliatedDepartmentNames"
-            value={form.affiliatedDepartmentNames}
-            onChange={handleChange}
-            placeholder="e.g. Dept. of Physics, Dept. of Chemistry"
-            error={
-              submitAttempted ? errors.affiliatedDepartmentNames : undefined
-            }
-          />
           {/* Primary Contact Name */}
           <FormField
             label="Primary Contact Name"
@@ -359,7 +325,7 @@ function AddOrganizationPage() {
             onChange={handleChange}
             required
             error={
-                submitAttempted ? errors.primaryContactPersonPhone : undefined
+              submitAttempted ? errors.primaryContactPersonPhone : undefined
             }
           />
         </div>
