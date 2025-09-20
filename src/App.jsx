@@ -33,6 +33,9 @@ const AdminDashboardPage = lazy(() =>
 const OrganizerPanel = lazy(() =>
   import("./features/users/pages/admin/organizerPanel/OrganizerPanel")
 );
+const OrganizerSettingsPage = lazy(() =>
+  import("./features/users/pages/organizer/OrganizerSettingsPage")
+);
 const AccessDeniedPage = lazy(() =>
   import("./features/auth/pages/AccessDeniedPage")
 );
@@ -138,7 +141,7 @@ function AppRoutes() {
             path="/campaign/:shareSlug"
             element={<CampaignTemplatePage />}
           />
-    
+
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -291,6 +294,33 @@ function AppRoutes() {
               <ProtectedRoute
                 element={<CreateCampaignPage />}
                 requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/settings"
+            element={
+              <ProtectedRoute
+                element={<OrganizerSettingsPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/settings/edit"
+            element={
+              <ProtectedRoute
+                element={<AddOrganizationPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/admin/organizers/edit/:id"
+            element={
+              <ProtectedRoute
+                element={<AddOrganizationPage />}
+                requiredRole={["superAdmin", "supportAdmin"]}
               />
             }
           />

@@ -30,7 +30,7 @@ export const fetchPublicProfile = async (userId) => {
 };
 
 /**
- * Fetch private profile data for the currently authenticated user
+ * Fetch private profile data for the currently authenticated individual user
  * @returns {Promise<Object>} Private profile data
  *
  * @example
@@ -39,6 +39,18 @@ export const fetchPublicProfile = async (userId) => {
  */
 export const fetchPrivateProfile = async () => {
   return apiClient.get("/users/me").then((res) => res.data);
+};
+
+/**
+ * Fetch private profile data for the currently authenticated organization user
+ * @returns {Promise<Object>} Private organization profile data
+ *
+ * @example
+ * const myOrgProfile = await fetchPrivateOrganizationProfile();
+ * // Returns: { email, organizationName, officialEmail, etc. }
+ */
+export const fetchPrivateOrganizationProfile = async () => {
+  return apiClient.get("/organizations/me").then((res) => res.data);
 };
 
 /**
@@ -54,7 +66,53 @@ export const updateUserProfile = async (data) => {
 };
 
 /**
- * Upload profile and/or cover images
+ * Update organization profile information for the authenticated organizer
+ * @param {Object} data - The organization profile data to update
+ * @returns {Promise<Object>} Updated profile data
+ *
+ * @example
+ * await updateOrganizationProfile({ organizationName: 'New Org', organizationType: 'NGO' });
+ */
+export const updateOrganizationProfile = async (data) => {
+  return apiClient.put("/organizations/me/profile", data);
+};
+
+/**
+ * Update organization profile information with images for the authenticated organizer
+ * @param {FormData} formData - The form data including profile data and image files
+ * @returns {Promise<Object>} Updated profile data
+ *
+ * @example
+ * const formData = new FormData();
+ * formData.append('organizationName', 'New Org');
+ * formData.append('profilePicture', profileFile);
+ * await updateOrganizationProfileWithImages(formData);
+ */
+export const updateOrganizationProfileWithImages = async (formData) => {
+  return apiClient.put("/organizations/me/profile-with-images", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    timeout: 60000, // 60 seconds for large/compressed images
+  });
+};
+
+/**
+ * Fetch a specific organizer by ID (admin only)
+ * @param {string} organizerId - The ID of the organizer to fetch
+ * @returns {Promise<Object>} Organizer data
+ *
+ * @example
+ * await fetchOrganizerById('organizer-123');
+ */
+export const fetchOrganizerById = async (organizerId) => {
+  return apiClient
+    .get(`/organizations/${organizerId}/profile`)
+    .then((res) => res.data);
+};
+
+/**
+ * Upload profile and/or cover images for individual users
  *
  * @param {Object} params - Upload parameters
  * @param {File} [params.profileFile] - Profile picture file
@@ -85,13 +143,57 @@ export const uploadProfileImages = async ({ profileFile, coverFile }) => {
 };
 
 /**
- * Get the full URL for a media file
+ * Upload profile and/or cover images for organization users
+ *
+ * @param {Object} params - Upload parameters
+ * @param {File} [params.profileFile] - Profile picture file
+ * @param {File} [params.coverFile] - Cover picture file
+ * @returns {Promise<Object>} Updated profile data with new media IDs
+ *
+ * @example
+ * const result = await uploadOrganizationImages({
+ *   profileFile: profilePicFile,
+ *   coverFile: coverPicFile
+ * });
+ */
+export const uploadOrganizationImages = async ({ profileFile, coverFile }) => {
+  const formData = new FormData();
+  if (profileFile) {
+    formData.append("profilePicture", profileFile);
+  }
+  if (coverFile) {
+    formData.append("coverPicture", coverFile);
+  }
+
+  return apiClient.patch("/organizations/me/profile-image", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    timeout: 60000, // 60 seconds for large/compressed images
+  });
+};
+
+/**
+ * Get the full URL for a media file (individual users)
  * @param {string} mediaId - The ID of the media file
  * @returns {string} The full URL to the media file
  */
 export const getMediaUrl = async (mediaId) => {
   const data = await apiClient
     .get(`/users/media/${mediaId}/url`)
+    .then((res) => res.data.data);
+
+  return data;
+};
+
+/**
+ * Get the full URL for a media file (organization users)
+ * @param {string} mediaId - The ID of the media file
+ * @returns {string} The full URL to the media file
+ */
+export const getOrganizationMediaUrl = async (mediaId) => {
+  const data = await apiClient
+    .get(`/organizations/media/${mediaId}/url`)
     .then((res) => res.data.data);
 
   return data;
@@ -111,7 +213,7 @@ export const fetchOrganizers = async (filters = {}) => {
     params.append("verified", filters.verified);
   if (filters.active !== undefined) params.append("active", filters.active);
   if (filters.search) params.append("search", filters.search);
-  const url = `/users/organizers${
+  const url = `/organizations/organizers${
     params.toString() ? "?" + params.toString() : ""
   }`;
   const res = await apiClient.get(url);
@@ -126,6 +228,6 @@ export const fetchOrganizers = async (filters = {}) => {
  * const allOrganizers = await fetchAllOrganizers();
  */
 export const fetchAllOrganizers = async () => {
-  const res = await apiClient.get("/users/organizers");
+  const res = await apiClient.get("/organizations/organizers");
   return res.data.data;
 };

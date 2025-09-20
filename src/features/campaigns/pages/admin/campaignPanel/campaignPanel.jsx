@@ -15,6 +15,7 @@ import {
   FiFlag,
   FiChevronUp,
   FiChevronDown,
+  FiClock,
 } from "react-icons/fi";
 import CampaignTable from "../../../../users/components/CampaignTable";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +32,7 @@ function CampaignPanel() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
 
   // Fetch all campaigns
   const fetchCampaigns = async (searchFilters = {}) => {
@@ -40,9 +42,11 @@ function CampaignPanel() {
       const filters = {
         ...searchFilters,
         search: searchTerm,
+        ...(showPendingOnly && { status: "pendingApproval" }),
       };
       const response = await getAllCampaigns(filters);
       setAllCampaigns(response.data || []);
+      console.log(response.data);
     } catch (error) {
       console.error("Failed to fetch campaigns:", error);
       setError("Failed to load campaigns. Please try again.");
@@ -60,11 +64,10 @@ function CampaignPanel() {
     }, 500); // 500ms delay
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
+  }, [searchTerm, showPendingOnly]);
 
   // Calculate stats from allCampaigns
   const total = allCampaigns.length;
-  const draft = allCampaigns.filter((c) => c.status === "draft").length;
   const pendingApproval = allCampaigns.filter(
     (c) => c.status === "pendingApproval"
   ).length;
@@ -91,13 +94,16 @@ function CampaignPanel() {
     navigate(`/campaigns/${campaignId}`);
   };
 
+  const handlePendingToggle = () => {
+    setShowPendingOnly(!showPendingOnly);
+  };
+
   // Filter options
   const filterOptions = [
     {
       key: "status",
       label: "Status",
       options: [
-        { value: "draft", label: "Draft" },
         { value: "pendingApproval", label: "Pending Approval" },
         { value: "pendingStart", label: "Pending Start" },
         { value: "active", label: "Active" },
@@ -134,6 +140,24 @@ function CampaignPanel() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+          {/* Pending Campaigns Badge - Admin Only */}
+          {pendingApproval > 0 && (
+            <button
+              onClick={handlePendingToggle}
+              className={`relative inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                showPendingOnly
+                  ? " border-[color:var(--color-primary)] text-[color:var(--color-text)]"
+                  : " border-[color:var(--color-primary)] text-[color:var(--color-text)] hover:border-[color:var(--color-primary)]"
+              }`}
+              type="button"
+            >
+              <FiClock className="w-4 h-4" />
+              <span className="font-medium">Pending</span>
+              <span className="absolute -top-2 -left-2 bg-[color:var(--color-primary)] text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                {pendingApproval}
+              </span>
+            </button>
+          )}
           <SecondaryButton
             icon={FiFilter}
             onClick={handleFilter}

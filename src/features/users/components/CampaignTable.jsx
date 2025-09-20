@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Table from "../../../components/Table";
 import { IconButton } from "../../../components/Buttons";
-import { FiEye, FiImage, FiEdit2, FiCalendar } from "react-icons/fi";
+import { FiEye, FiImage, FiEdit2, FiCalendar, FiPlay } from "react-icons/fi";
 import {
   getStatusColor,
   getStatusDisplay,
 } from "../../campaigns/utils/campaignStatusConfig";
 import StatusBadge from "../../../components/StatusBadge";
+import { fetchOrganizerById } from "../services/usersApi";
 
 function getInitials(name) {
   if (!name) return "";
@@ -29,18 +30,44 @@ function formatDate(dateString) {
 // Base columns that are common to both views
 const baseColumns = [
   {
-    key: "logoImageUrl",
-    label: "Logo",
+    key: "mainMedia",
+    label: "Media",
     render: (row) => {
       const [imgError, setImgError] = React.useState(false);
-      return row.logoImageUrl && !imgError ? (
-        <img
-          src={row.logoImageUrl}
-          alt={row.name + " logo"}
-          className="w-10 h-10 object-contain rounded bg-white border border-[color:var(--color-muted)]"
-          onError={() => setImgError(true)}
-        />
-      ) : (
+      const mainMedia = row.customPageSettings?.mainMedia;
+
+      if (mainMedia && mainMedia.url && !imgError) {
+        if (mainMedia.type === "image") {
+          return (
+            <img
+              src={mainMedia.url}
+              alt={row.name + " media"}
+              className="w-10 h-10 object-cover rounded bg-white border border-[color:var(--color-muted)]"
+              onError={() => setImgError(true)}
+            />
+          );
+        } else if (mainMedia.type === "video") {
+          return (
+            <div className="w-10 h-10 rounded bg-[color:var(--color-muted)] flex items-center justify-center text-lg text-[color:var(--color-secondary-text)] font-bold relative">
+              <FiPlay className="w-4 h-4" />
+            </div>
+          );
+        }
+      }
+
+      // Fallback to logoImageUrl if mainMedia is not available
+      if (row.logoImageUrl && !imgError) {
+        return (
+          <img
+            src={row.logoImageUrl}
+            alt={row.name + " logo"}
+            className="w-10 h-10 object-contain rounded bg-white border border-[color:var(--color-muted)]"
+            onError={() => setImgError(true)}
+          />
+        );
+      }
+
+      return (
         <div className="w-10 h-10 rounded bg-[color:var(--color-muted)] flex items-center justify-center text-lg text-[color:var(--color-secondary-text)] font-bold">
           {row.name ? getInitials(row.name) : <FiImage />}
         </div>
@@ -114,6 +141,16 @@ const baseColumns = [
       return <StatusBadge status={row.status} label={display} />;
     },
   },
+  {
+    key: "createdAt",
+    label: "Created",
+    sortable: true,
+    render: (row) => (
+      <span className="text-xs text-[color:var(--color-secondary-text)]">
+        {formatDate(row.createdAt)}
+      </span>
+    ),
+  },
 ];
 
 // Organizer-specific columns (excludes end date)
@@ -121,13 +158,46 @@ const organizerColumns = [...baseColumns];
 
 // Admin-specific columns (includes organizer name, excludes end date)
 const adminColumns = [
-  ...baseColumns.slice(0, 2), // Logo and Name
+  ...baseColumns.slice(0, 2), // Media and Name
   {
     key: "organizerName",
     label: "Organizer",
     sortable: true,
+    render: (row) => {
+      const [organizerName, setOrganizerName] = React.useState("Loading...");
+
+      React.useEffect(() => {
+        if (row.organizerId) {
+          fetchOrganizerById(row.organizerId)
+            .then((response) => {
+              let name = "Unknown";
+
+              // Access the data property from the response
+              const organizer = response.data || response;
+
+              console.log("Organizer:", organizer);
+
+              name = organizer.organizationShortName;
+
+              setOrganizerName(name);
+            })
+            .catch((error) => {
+              console.error("Failed to fetch organizer:", error);
+              setOrganizerName("Unknown");
+            });
+        } else {
+          setOrganizerName("Unknown");
+        }
+      }, [row.organizerId]);
+
+      return (
+        <span className="text-sm text-[color:var(--color-primary-text)]">
+          {organizerName}
+        </span>
+      );
+    },
   },
-  ...baseColumns.slice(2), // Category, Raised, Donations, Status
+  ...baseColumns.slice(2), // Category, Raised, Donations, Status, Created
 ];
 
 function CampaignTable({

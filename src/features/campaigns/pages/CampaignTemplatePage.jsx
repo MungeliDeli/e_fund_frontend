@@ -25,7 +25,7 @@ import PaymentModal from "../components/PaymentModal";
 import ThankYouModal from "../components/ThankYouModal";
 import { useAuth } from "../../../contexts/AuthContext";
 import GuestAuthPrompt from "../../../components/GuestAuthPrompt";
-import { fetchPublicProfile } from "../../users/services/usersApi";
+import { fetchPrivateOrganizationProfile } from "../../users/services/usersApi";
 import { getDonationStats } from "../../donations/services/donationsApi";
 
 function Logo() {
@@ -143,7 +143,9 @@ function CampaignTemplatePage({
     const loadOrganizer = async () => {
       try {
         if (!campaign?.organizerId) return;
-        const profRes = await fetchPublicProfile(campaign.organizerId);
+        const profRes = await fetchPrivateOrganizationProfile(
+          campaign.organizerId
+        );
         const profile = profRes?.data || profRes || null;
         setOrganizerProfile(profile);
         console.log(profile);

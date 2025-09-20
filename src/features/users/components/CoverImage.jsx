@@ -37,17 +37,26 @@ const fetchImageUrl = async (mediaId) => {
   throw new Error("Failed to fetch image URL");
 };
 
-function CoverImage({ mediaId, alt = "Cover image", className = "" }) {
+function CoverImage({
+  mediaId,
+  imageUrl,
+  alt = "Cover image",
+  className = "",
+}) {
   const [imageLoadError, setImageLoadError] = useState(false);
 
+  // Determine if we have a direct URL or need to fetch via mediaId
+  const hasDirectUrl = !!imageUrl;
+  const hasMediaId = !!mediaId;
+
   const {
-    data: imageUrl,
+    data: fetchedImageUrl,
     isLoading,
     isError,
   } = useQuery({
     queryKey: ["imageUrl", mediaId], // Use the same queryKey structure
     queryFn: () => fetchImageUrl(mediaId),
-    enabled: !!mediaId,
+    enabled: hasMediaId && !hasDirectUrl,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     retry: false,
@@ -55,9 +64,12 @@ function CoverImage({ mediaId, alt = "Cover image", className = "" }) {
 
   useEffect(() => {
     setImageLoadError(false);
-  }, [mediaId]);
+  }, [mediaId, imageUrl]);
 
-  if (isLoading) {
+  // Determine the final image URL to use
+  const finalImageUrl = hasDirectUrl ? imageUrl : fetchedImageUrl;
+
+  if (hasMediaId && !hasDirectUrl && isLoading) {
     return (
       <div
         className={`w-full h-48 bg-gray-300 dark:bg-gray-700 animate-pulse ${className}`}
@@ -65,7 +77,11 @@ function CoverImage({ mediaId, alt = "Cover image", className = "" }) {
     );
   }
 
-  if (isError || imageLoadError || !imageUrl) {
+  if (
+    (hasMediaId && !hasDirectUrl && isError) ||
+    imageLoadError ||
+    !finalImageUrl
+  ) {
     return (
       <div
         className={`w-full h-48 bg-[color:var(--color-muted)] ${className}`}
@@ -75,7 +91,7 @@ function CoverImage({ mediaId, alt = "Cover image", className = "" }) {
 
   return (
     <img
-      src={imageUrl}
+      src={finalImageUrl}
       alt={alt}
       className={`w-full h-48 object-cover ${className}`}
       onError={() => setImageLoadError(true)} // Handle broken image links

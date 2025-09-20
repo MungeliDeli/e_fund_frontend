@@ -97,7 +97,6 @@ const navConfig = {
     },
   ],
   organizationUser: [
-    
     {
       label: "Dashboard",
       icon: FiHome,
@@ -140,12 +139,18 @@ const navConfig = {
       key: "create-post",
       path: "/feed/create",
     },
-   
+
     {
       label: "Outreach Analytics",
       icon: FiBarChart2,
       key: "organizer-outreach-analytics",
       path: "/organizer/outreach/analytics",
+    },
+    {
+      label: "Settings",
+      icon: FiSettings,
+      key: "organizer-settings",
+      path: "/organizer/settings",
     },
   ],
   admin: adminNavItems,
