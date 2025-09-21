@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {
-  PrimaryButton,
-  SecondaryButton,
-} from "../../../../../components/Buttons";
+import { SecondaryButton } from "../../../../../../components/Buttons";
 import {
   FiFilter,
-  FiPlus,
   FiUsers,
   FiCheckCircle,
   FiUserX,
@@ -14,26 +10,25 @@ import {
   FiChevronUp,
   FiChevronDown,
 } from "react-icons/fi";
-import SearchBar from "../../../../../components/SearchBar/SearchBar";
-import { useNavigate } from "react-router-dom";
-import OrganizerTable from "../../../components/OrganizerTable";
-import FilterModal from "../../../../../components/FilterModal";
+import SearchBar from "../../../../../../components/SearchBar/SearchBar";
+import UserTable from "../../../../components/UserTable";
+import FilterModal from "../../../../../../components/FilterModal";
 import {
-  fetchOrganizers,
-  fetchAllOrganizers,
-  toggleOrganizerStatus,
-} from "../../../services/usersApi";
+  fetchUsers,
+  fetchAllUsers,
+  toggleUserStatus,
+  makeUserAdmin,
+} from "../../../../services/usersApi";
 import {
   TotalStatsCard,
   PieStatsCard,
-} from "../../../../../components/StatsCards";
+} from "../../../../../../components/StatsCards";
 
-function OrganizerPanel() {
-  const navigate = useNavigate();
+function UsersTab() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState({});
-  const [organizers, setOrganizers] = useState([]);
-  const [allOrganizers, setAllOrganizers] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showStats, setShowStats] = useState(false);
@@ -47,43 +42,73 @@ function OrganizerPanel() {
     setSearchTerm(e.target.value);
   };
 
-  const handleView = (organizerId) => {
-    navigate(`/admin/organizers/${organizerId}`);
+  const handleView = (userId) => {
+    // Action button does nothing for now as requested
+    console.log("View user:", userId);
   };
 
-  const handleDeactivate = async (organizerId) => {
+  const handleDeactivate = async (userId) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Find the organizer to get current status
-      const organizer = organizers.find((o) => o.userId === organizerId);
-      if (!organizer) {
-        throw new Error("Organizer not found");
+      // Find the user to get current status
+      const user = users.find((u) => u.userId === userId);
+      if (!user) {
+        throw new Error("User not found");
       }
 
-      // Toggle the organizer's active status
-      const newStatus = !organizer.active;
-      await toggleOrganizerStatus(organizerId, newStatus);
+      // Toggle the user's active status
+      const newStatus = !user.isActive;
+      await toggleUserStatus(userId, newStatus);
 
       // Refresh the data after successful toggle
       const searchFilters = {
         ...filters,
         search: searchTerm,
       };
-      const updatedOrganizers = await fetchOrganizers(searchFilters);
-      setOrganizers(updatedOrganizers);
+      const updatedUsers = await fetchUsers(searchFilters);
+      setUsers(updatedUsers);
 
-      // Also update allOrganizers for stats
-      const updatedAllOrganizers = await fetchAllOrganizers();
-      setAllOrganizers(updatedAllOrganizers);
+      // Also update allUsers for stats
+      const updatedAllUsers = await fetchAllUsers();
+      setAllUsers(updatedAllUsers);
 
       console.log(
-        `Organizer ${newStatus ? "activated" : "deactivated"} successfully`
+        `User ${newStatus ? "activated" : "deactivated"} successfully`
       );
     } catch (error) {
-      console.error("Failed to toggle organizer status:", error);
-      setError(error.message || "Failed to toggle organizer status");
+      console.error("Failed to toggle user status:", error);
+      setError(error.message || "Failed to toggle user status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMakeAdmin = async (userId) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Make user admin with default supportAdmin role
+      await makeUserAdmin(userId, "supportAdmin");
+
+      // After successful admin promotion, refresh the data
+      const searchFilters = {
+        ...filters,
+        search: searchTerm,
+      };
+      const updatedUsers = await fetchUsers(searchFilters);
+      setUsers(updatedUsers);
+
+      // Also update allUsers for stats
+      const updatedAllUsers = await fetchAllUsers();
+      setAllUsers(updatedAllUsers);
+
+      console.log("User promoted to admin successfully");
+    } catch (error) {
+      console.error("Failed to make user admin:", error);
+      setError(error.message || "Failed to make user admin");
     } finally {
       setLoading(false);
     }
@@ -91,8 +116,8 @@ function OrganizerPanel() {
 
   const filterOptions = [
     {
-      key: "verified",
-      label: "Verified Status",
+      key: "emailVerified",
+      label: "Email Verification Status",
       options: [
         { value: "true", label: "Verified" },
         { value: "false", label: "Not Verified" },
@@ -109,9 +134,9 @@ function OrganizerPanel() {
   ];
 
   useEffect(() => {
-    fetchAllOrganizers()
-      .then(setAllOrganizers)
-      .catch(() => setAllOrganizers([]));
+    fetchAllUsers()
+      .then(setAllUsers)
+      .catch(() => setAllUsers([]));
   }, []);
 
   // Debounced search effect
@@ -123,39 +148,39 @@ function OrganizerPanel() {
         ...filters,
         search: searchTerm,
       };
-      fetchOrganizers(searchFilters)
-        .then(setOrganizers)
-        .catch((err) => setError(err.message || "Failed to fetch organizers"))
+      fetchUsers(searchFilters)
+        .then(setUsers)
+        .catch((err) => setError(err.message || "Failed to fetch users"))
         .finally(() => setLoading(false));
     }, 500); // 500ms delay
 
     return () => clearTimeout(timeoutId);
   }, [filters, searchTerm]);
 
-  // Calculate stats from allOrganizers
-  const total = allOrganizers.length;
-  const verified = allOrganizers.filter((o) => o.status === "VERIFIED").length;
-  const unverified = total - verified;
-  const active = allOrganizers.filter((o) => o.active).length;
+  // Calculate stats from allUsers
+  const total = allUsers.length;
+  const emailVerified = allUsers.filter((u) => u.isEmailVerified).length;
+  const emailUnverified = total - emailVerified;
+  const active = allUsers.filter((u) => u.isActive).length;
   const inactive = total - active;
 
   return (
-    <div className="p-2 sm:p-2 bg-[color:var(--color-background)] min-h-screen transition-colors">
+    <div className="w-full">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 w-full">
         {/* Title */}
-        <h1 className="text-3xl font-bold text-[color:var(--color-primary-text)]">
-          Organizers
-        </h1>
+        <h2 className="text-2xl font-bold text-[color:var(--color-primary-text)]">
+          Individual Users
+        </h2>
         {/* SearchBar */}
         <div className="flex-1 min-w-[180px]">
           <SearchBar
-            placeholder="Search organizers..."
+            placeholder="Search users..."
             value={searchTerm}
             onChange={handleSearch}
           />
         </div>
-        {/* Controls:  Filter, Add */}
+        {/* Controls: Filter */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           {/* Filter Button */}
           <SecondaryButton
@@ -165,14 +190,6 @@ function OrganizerPanel() {
           >
             <span className="hidden sm:inline">Filter</span>
           </SecondaryButton>
-          {/* Add Organizer Button */}
-          <PrimaryButton
-            icon={FiPlus}
-            onClick={() => navigate("/admin/organizers/add")}
-            className="w-full sm:w-auto"
-          >
-            <span className="hidden sm:inline">Add Organizer</span>
-          </PrimaryButton>
         </div>
       </div>
 
@@ -196,23 +213,23 @@ function OrganizerPanel() {
         {showStats && (
           <div className="flex flex-col sm:flex-row gap-6 w-full">
             <TotalStatsCard
-              title="Total Organizers"
+              title="Total Users"
               value={total}
               icon={FiUsers}
               iconColor="#43e97b"
               className="flex-1"
             />
             <PieStatsCard
-              title1="Verified"
-              value1={verified}
+              title1="Email Verified"
+              value1={emailVerified}
               icon1={FiCheckCircle}
               color1="#43e97b"
               label1="Verified"
-              title2="Unverified"
-              value2={unverified}
+              title2="Not Verified"
+              value2={emailUnverified}
               icon2={FiUserX}
               color2="#3b82f6"
-              label2="Unverified"
+              label2="Not Verified"
               className="flex-1"
             />
             <PieStatsCard
@@ -246,16 +263,17 @@ function OrganizerPanel() {
       >
         {loading ? (
           <div className="text-center text-[color:var(--color-secondary-text)] py-8">
-            Loading organizers...
+            Loading users...
           </div>
         ) : error ? (
           <div className="text-center text-red-500 py-8">{error}</div>
         ) : (
           <div className="h-full overflow-hidden">
-            <OrganizerTable
-              data={organizers}
+            <UserTable
+              data={users}
               onView={handleView}
               onDeactivate={handleDeactivate}
+              onMakeAdmin={handleMakeAdmin}
               filters={filters}
             />
           </div>
@@ -274,4 +292,4 @@ function OrganizerPanel() {
   );
 }
 
-export default OrganizerPanel;
+export default UsersTab;

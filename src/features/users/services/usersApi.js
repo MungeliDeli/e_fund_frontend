@@ -231,3 +231,126 @@ export const fetchAllOrganizers = async () => {
   const res = await apiClient.get("/organizations/organizers");
   return res.data.data;
 };
+
+/**
+ * Fetch a list of individual users with optional filters
+ * @param {Object} filters - { emailVerified, active, search }
+ * @returns {Promise<Array>} List of individual users
+ *
+ * @example
+ * const users = await fetchUsers({ emailVerified: true, active: true, search: 'john' });
+ */
+export const fetchUsers = async (filters = {}) => {
+  const params = new URLSearchParams();
+  if (filters.emailVerified !== undefined)
+    params.append("emailVerified", filters.emailVerified);
+  if (filters.active !== undefined) params.append("active", filters.active);
+  if (filters.search) params.append("search", filters.search);
+  const url = `/users${params.toString() ? "?" + params.toString() : ""}`;
+  const res = await apiClient.get(url);
+  return res.data.data;
+};
+
+/**
+ * Fetch all individual users without filters (for stats)
+ * @returns {Promise<Array>} List of all individual users
+ *
+ * @example
+ * const allUsers = await fetchAllUsers();
+ */
+export const fetchAllUsers = async () => {
+  const res = await apiClient.get("/users");
+  return res.data.data;
+};
+
+/**
+ * Toggle user active status (admin only)
+ * @param {string} userId - User ID to toggle
+ * @param {boolean} isActive - New active status
+ * @returns {Promise<Object>} Updated user data
+ *
+ * @example
+ * await toggleUserStatus('user-123', false);
+ */
+export const toggleUserStatus = async (userId, isActive) => {
+  const res = await apiClient.patch(`/users/${userId}/status`, { isActive });
+  return res.data.data;
+};
+
+/**
+ * Make user an admin (super admin only)
+ * @param {string} userId - User ID to promote to admin
+ * @param {string} adminRole - Admin role to assign (default: supportAdmin)
+ * @returns {Promise<Object>} Updated user data
+ *
+ * @example
+ * await makeUserAdmin('user-123', 'supportAdmin');
+ */
+export const makeUserAdmin = async (userId, adminRole = "supportAdmin") => {
+  const res = await apiClient.patch(`/users/${userId}/make-admin`, {
+    adminRole,
+  });
+  return res.data.data;
+};
+
+/**
+ * Fetch a list of admin users with optional filters
+ * @param {Object} filters - { emailVerified, active, search }
+ * @returns {Promise<Array>} List of admin users
+ *
+ * @example
+ * const admins = await fetchAdmins({ emailVerified: true, active: true, search: 'john' });
+ */
+export const fetchAdmins = async (filters = {}) => {
+  const params = new URLSearchParams();
+  if (filters.emailVerified !== undefined)
+    params.append("emailVerified", filters.emailVerified);
+  if (filters.active !== undefined) params.append("active", filters.active);
+  if (filters.search) params.append("search", filters.search);
+  const url = `/users/admins${
+    params.toString() ? "?" + params.toString() : ""
+  }`;
+  const res = await apiClient.get(url);
+  return res.data.data;
+};
+
+/**
+ * Fetch all admin users without filters (for stats)
+ * @returns {Promise<Array>} List of all admin users
+ *
+ * @example
+ * const allAdmins = await fetchAllAdmins();
+ */
+export const fetchAllAdmins = async () => {
+  const res = await apiClient.get("/users/admins");
+  return res.data.data;
+};
+
+/**
+ * Remove admin privileges from user (super admin only)
+ * @param {string} userId - User ID to remove admin privileges from
+ * @returns {Promise<Object>} Updated user data
+ *
+ * @example
+ * await removeAdminPrivileges('user-123');
+ */
+export const removeAdminPrivileges = async (userId) => {
+  const res = await apiClient.patch(`/users/${userId}/remove-admin`);
+  return res.data.data;
+};
+
+/**
+ * Toggle organizer active status (admin only)
+ * @param {string} organizerId - Organizer ID to toggle
+ * @param {boolean} isActive - New active status
+ * @returns {Promise<Object>} Updated organizer data
+ *
+ * @example
+ * await toggleOrganizerStatus('organizer-123', false);
+ */
+export const toggleOrganizerStatus = async (organizerId, isActive) => {
+  const res = await apiClient.patch(`/organizations/${organizerId}/status`, {
+    isActive,
+  });
+  return res.data.data;
+};

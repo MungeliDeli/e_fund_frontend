@@ -80,6 +80,9 @@ function DonationsPage() {
           ? donationsResp.data.data
           : [];
 
+          console.log(donations);
+          
+
         const mapped = donations.map((d) => ({
           donationId: d.donationId,
           donorUserId: d.donorUserId,

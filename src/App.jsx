@@ -17,7 +17,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UserProfilePage from "./features/users/pages/individual/UserProfilePage";
-import OrganizerProfilePage from "./features/users/pages/individual/OrganizerProfilePage";
+import OrganizerProfilePage from "./features/users/pages/organizer/OrganizerProfilePage";
 // Template imports removed during demolition
 
 // Lazy load role-specific dashboards, AccessDeniedPage, and NotFoundPage
@@ -42,6 +42,9 @@ const AccessDeniedPage = lazy(() =>
 const NotFoundPage = lazy(() => import("./features/auth/pages/NotFoundPage"));
 const AddOrganizationPage = lazy(() =>
   import("./features/users/pages/admin/organizerPanel/AddOrganizationPage")
+);
+const UserManagementPage = lazy(() =>
+  import("./features/users/pages/admin/userManagement/UserManagementPage")
 );
 const CampaignPanel = lazy(() =>
   import("./features/campaigns/pages/admin/campaignPanel/campaignPanel")
@@ -201,22 +204,25 @@ function AppRoutes() {
             }
           />
           <Route path="/users/:userId" element={<UserProfilePage />} />
-          {/* Organizer profile routes */}
           <Route
-            path="/organizer/profile-view"
-            element={
-              <ProtectedRoute
-                element={<OrganizerProfilePage />}
-                requiredRole="organizationUser"
-              />
-            }
+            path="/organizers/:organizerId"
+            element={<OrganizerProfilePage />}
           />
-          <Route path="/organizer/:userId" element={<OrganizerProfilePage />} />
+
           <Route
             path="/organizer/dashboard"
             element={
               <ProtectedRoute
                 element={<OrganizerDashboardPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/profile"
+            element={
+              <ProtectedRoute
+                element={<OrganizerProfilePage />}
                 requiredRole="organizationUser"
               />
             }
@@ -415,6 +421,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<AddOrganizationPage />}
+                requiredRole={["superAdmin", "supportAdmin"]}
+              />
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute
+                element={<UserManagementPage />}
                 requiredRole={["superAdmin", "supportAdmin"]}
               />
             }

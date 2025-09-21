@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import {
   PrimaryButton,
   SecondaryButton,
-} from "../../../../../components/Buttons";
+} from "../../../../../../components/Buttons";
 import {
   FiFilter,
   FiPlus,
-  FiUsers,
+  FiShield,
   FiCheckCircle,
   FiUserX,
   FiActivity,
@@ -14,26 +14,25 @@ import {
   FiChevronUp,
   FiChevronDown,
 } from "react-icons/fi";
-import SearchBar from "../../../../../components/SearchBar/SearchBar";
-import { useNavigate } from "react-router-dom";
-import OrganizerTable from "../../../components/OrganizerTable";
-import FilterModal from "../../../../../components/FilterModal";
+import SearchBar from "../../../../../../components/SearchBar/SearchBar";
+import AdminTable from "../../../../components/AdminTable";
+import FilterModal from "../../../../../../components/FilterModal";
 import {
-  fetchOrganizers,
-  fetchAllOrganizers,
-  toggleOrganizerStatus,
-} from "../../../services/usersApi";
+  fetchAdmins,
+  fetchAllAdmins,
+  toggleUserStatus,
+  removeAdminPrivileges,
+} from "../../../../services/usersApi";
 import {
   TotalStatsCard,
   PieStatsCard,
-} from "../../../../../components/StatsCards";
+} from "../../../../../../components/StatsCards";
 
-function OrganizerPanel() {
-  const navigate = useNavigate();
+function AdminsTab() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState({});
-  const [organizers, setOrganizers] = useState([]);
-  const [allOrganizers, setAllOrganizers] = useState([]);
+  const [admins, setAdmins] = useState([]);
+  const [allAdmins, setAllAdmins] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showStats, setShowStats] = useState(false);
@@ -47,43 +46,78 @@ function OrganizerPanel() {
     setSearchTerm(e.target.value);
   };
 
-  const handleView = (organizerId) => {
-    navigate(`/admin/organizers/${organizerId}`);
+  const handleAddAdmin = () => {
+    // TODO: Navigate to add admin page or open add admin modal
+    console.log("Add admin clicked");
   };
 
-  const handleDeactivate = async (organizerId) => {
+  const handleView = (adminId) => {
+    // Action button does nothing for now as requested
+    console.log("View admin:", adminId);
+  };
+
+  const handleDeactivate = async (adminId) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Find the organizer to get current status
-      const organizer = organizers.find((o) => o.userId === organizerId);
-      if (!organizer) {
-        throw new Error("Organizer not found");
+      // Find the admin to get current status
+      const admin = admins.find((a) => a.userId === adminId);
+      if (!admin) {
+        throw new Error("Admin not found");
       }
 
-      // Toggle the organizer's active status
-      const newStatus = !organizer.active;
-      await toggleOrganizerStatus(organizerId, newStatus);
+      // Toggle the admin's active status
+      const newStatus = !admin.isActive;
+      await toggleUserStatus(adminId, newStatus);
 
       // Refresh the data after successful toggle
       const searchFilters = {
         ...filters,
         search: searchTerm,
       };
-      const updatedOrganizers = await fetchOrganizers(searchFilters);
-      setOrganizers(updatedOrganizers);
+      const updatedAdmins = await fetchAdmins(searchFilters);
+      setAdmins(updatedAdmins);
 
-      // Also update allOrganizers for stats
-      const updatedAllOrganizers = await fetchAllOrganizers();
-      setAllOrganizers(updatedAllOrganizers);
+      // Also update allAdmins for stats
+      const updatedAllAdmins = await fetchAllAdmins();
+      setAllAdmins(updatedAllAdmins);
 
       console.log(
-        `Organizer ${newStatus ? "activated" : "deactivated"} successfully`
+        `Admin ${newStatus ? "activated" : "deactivated"} successfully`
       );
     } catch (error) {
-      console.error("Failed to toggle organizer status:", error);
-      setError(error.message || "Failed to toggle organizer status");
+      console.error("Failed to toggle admin status:", error);
+      setError(error.message || "Failed to toggle admin status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveAdmin = async (adminId) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Remove admin privileges
+      await removeAdminPrivileges(adminId);
+
+      // Refresh the data after successful removal
+      const searchFilters = {
+        ...filters,
+        search: searchTerm,
+      };
+      const updatedAdmins = await fetchAdmins(searchFilters);
+      setAdmins(updatedAdmins);
+
+      // Also update allAdmins for stats
+      const updatedAllAdmins = await fetchAllAdmins();
+      setAllAdmins(updatedAllAdmins);
+
+      console.log("Admin privileges removed successfully");
+    } catch (error) {
+      console.error("Failed to remove admin privileges:", error);
+      setError(error.message || "Failed to remove admin privileges");
     } finally {
       setLoading(false);
     }
@@ -91,8 +125,8 @@ function OrganizerPanel() {
 
   const filterOptions = [
     {
-      key: "verified",
-      label: "Verified Status",
+      key: "emailVerified",
+      label: "Email Verification Status",
       options: [
         { value: "true", label: "Verified" },
         { value: "false", label: "Not Verified" },
@@ -109,9 +143,9 @@ function OrganizerPanel() {
   ];
 
   useEffect(() => {
-    fetchAllOrganizers()
-      .then(setAllOrganizers)
-      .catch(() => setAllOrganizers([]));
+    fetchAllAdmins()
+      .then(setAllAdmins)
+      .catch(() => setAllAdmins([]));
   }, []);
 
   // Debounced search effect
@@ -123,39 +157,39 @@ function OrganizerPanel() {
         ...filters,
         search: searchTerm,
       };
-      fetchOrganizers(searchFilters)
-        .then(setOrganizers)
-        .catch((err) => setError(err.message || "Failed to fetch organizers"))
+      fetchAdmins(searchFilters)
+        .then(setAdmins)
+        .catch((err) => setError(err.message || "Failed to fetch admins"))
         .finally(() => setLoading(false));
     }, 500); // 500ms delay
 
     return () => clearTimeout(timeoutId);
   }, [filters, searchTerm]);
 
-  // Calculate stats from allOrganizers
-  const total = allOrganizers.length;
-  const verified = allOrganizers.filter((o) => o.status === "VERIFIED").length;
-  const unverified = total - verified;
-  const active = allOrganizers.filter((o) => o.active).length;
+  // Calculate stats from allAdmins
+  const total = allAdmins.length;
+  const emailVerified = allAdmins.filter((a) => a.isEmailVerified).length;
+  const emailUnverified = total - emailVerified;
+  const active = allAdmins.filter((a) => a.isActive).length;
   const inactive = total - active;
 
   return (
-    <div className="p-2 sm:p-2 bg-[color:var(--color-background)] min-h-screen transition-colors">
+    <div className="w-full">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 w-full">
         {/* Title */}
-        <h1 className="text-3xl font-bold text-[color:var(--color-primary-text)]">
-          Organizers
-        </h1>
+        <h2 className="text-2xl font-bold text-[color:var(--color-primary-text)]">
+          Administrators
+        </h2>
         {/* SearchBar */}
         <div className="flex-1 min-w-[180px]">
           <SearchBar
-            placeholder="Search organizers..."
+            placeholder="Search admins..."
             value={searchTerm}
             onChange={handleSearch}
           />
         </div>
-        {/* Controls:  Filter, Add */}
+        {/* Controls: Filter, Add */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           {/* Filter Button */}
           <SecondaryButton
@@ -165,13 +199,13 @@ function OrganizerPanel() {
           >
             <span className="hidden sm:inline">Filter</span>
           </SecondaryButton>
-          {/* Add Organizer Button */}
+          {/* Add Admin Button */}
           <PrimaryButton
             icon={FiPlus}
-            onClick={() => navigate("/admin/organizers/add")}
+            onClick={handleAddAdmin}
             className="w-full sm:w-auto"
           >
-            <span className="hidden sm:inline">Add Organizer</span>
+            <span className="hidden sm:inline">Add Admin</span>
           </PrimaryButton>
         </div>
       </div>
@@ -196,23 +230,23 @@ function OrganizerPanel() {
         {showStats && (
           <div className="flex flex-col sm:flex-row gap-6 w-full">
             <TotalStatsCard
-              title="Total Organizers"
+              title="Total Admins"
               value={total}
-              icon={FiUsers}
+              icon={FiShield}
               iconColor="#43e97b"
               className="flex-1"
             />
             <PieStatsCard
-              title1="Verified"
-              value1={verified}
+              title1="Email Verified"
+              value1={emailVerified}
               icon1={FiCheckCircle}
               color1="#43e97b"
               label1="Verified"
-              title2="Unverified"
-              value2={unverified}
+              title2="Not Verified"
+              value2={emailUnverified}
               icon2={FiUserX}
               color2="#3b82f6"
-              label2="Unverified"
+              label2="Not Verified"
               className="flex-1"
             />
             <PieStatsCard
@@ -246,16 +280,17 @@ function OrganizerPanel() {
       >
         {loading ? (
           <div className="text-center text-[color:var(--color-secondary-text)] py-8">
-            Loading organizers...
+            Loading admins...
           </div>
         ) : error ? (
           <div className="text-center text-red-500 py-8">{error}</div>
         ) : (
           <div className="h-full overflow-hidden">
-            <OrganizerTable
-              data={organizers}
+            <AdminTable
+              data={admins}
               onView={handleView}
               onDeactivate={handleDeactivate}
+              onRemoveAdmin={handleRemoveAdmin}
               filters={filters}
             />
           </div>
@@ -274,4 +309,4 @@ function OrganizerPanel() {
   );
 }
 
-export default OrganizerPanel;
+export default AdminsTab;

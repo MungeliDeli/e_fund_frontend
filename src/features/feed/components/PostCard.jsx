@@ -25,6 +25,8 @@ const PostCard = ({ post }) => {
         return "Success Story";
       case "thank_you":
         return "Thank You";
+      case "campaign":
+        return "Campaign";
       default:
         return null;
     }
@@ -110,8 +112,9 @@ const PostCard = ({ post }) => {
         </div>
       )}
 
-      {/* Campaign Link - Only for pinned posts */}
-      {post.isPinnedToCampaign && post.campaignTitle && (
+      {/* Campaign Link - For pinned posts or campaign posts */}
+      {((post.isPinnedToCampaign && post.campaignTitle) ||
+        (post.type === "campaign" && post.campaignTitle)) && (
         <div className="mt-4 pt-4 border-t border-[var(--color-muted)]">
           <div
             className="flex items-center justify-between bg-[var(--color-background)] rounded-lg p-3 hover:bg-[var(--color-surface)] transition-colors border border-[var(--color-muted)]"
@@ -122,7 +125,7 @@ const PostCard = ({ post }) => {
                 {post.campaignTitle}
               </h4>
               <p className="text-xs text-[var(--color-secondary-text)]">
-                Campaign Update
+                {post.type === "campaign" ? "New Campaign" : "Campaign Update"}
               </p>
             </div>
             <Link
@@ -136,7 +139,7 @@ const PostCard = ({ post }) => {
                 .slice(0, 80)}`}
               className="ml-3 px-4 py-2 text-xs font-medium text-[var(--color-primary)] border border-[var(--color-primary)] rounded-md hover:bg-[var(--color-surface)]  transition-colors"
             >
-              Visit
+              {post.type === "campaign" ? "Support" : "Visit"}
             </Link>
           </div>
         </div>

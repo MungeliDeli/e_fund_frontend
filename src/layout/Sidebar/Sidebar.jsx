@@ -104,6 +104,12 @@ const navConfig = {
       path: "/organizer/dashboard",
     },
     {
+      label: "Profile",
+      icon: FiUser,
+      key: "organizer-profile",
+      path: "/organizer/profile",
+    },
+    {
       label: "Notifications",
       icon: FiBell,
       key: "notifications",

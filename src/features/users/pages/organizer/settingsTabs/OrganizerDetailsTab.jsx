@@ -10,10 +10,10 @@ import {
   FiXCircle,
   FiClock,
 } from "react-icons/fi";
-import { PrimaryButton } from "../../../../components/Buttons";
-import ProfileImage from "../../components/ProfileImage";
-import CoverImage from "../../components/CoverImage";
-import { fetchPrivateOrganizationProfile } from "../../services/usersApi";
+import { PrimaryButton } from "../../../../../components/Buttons";
+import ProfileImage from "../../../components/ProfileImage";
+import CoverImage from "../../../components/CoverImage";
+import { fetchPrivateOrganizationProfile } from "../../../services/usersApi";
 
 function OrganizerDetailsTab({ onEditDetails }) {
   const [organizerData, setOrganizerData] = useState(null);

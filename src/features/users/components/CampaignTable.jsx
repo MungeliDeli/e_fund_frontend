@@ -30,52 +30,6 @@ function formatDate(dateString) {
 // Base columns that are common to both views
 const baseColumns = [
   {
-    key: "mainMedia",
-    label: "Media",
-    render: (row) => {
-      const [imgError, setImgError] = React.useState(false);
-      const mainMedia = row.customPageSettings?.mainMedia;
-
-      if (mainMedia && mainMedia.url && !imgError) {
-        if (mainMedia.type === "image") {
-          return (
-            <img
-              src={mainMedia.url}
-              alt={row.name + " media"}
-              className="w-10 h-10 object-cover rounded bg-white border border-[color:var(--color-muted)]"
-              onError={() => setImgError(true)}
-            />
-          );
-        } else if (mainMedia.type === "video") {
-          return (
-            <div className="w-10 h-10 rounded bg-[color:var(--color-muted)] flex items-center justify-center text-lg text-[color:var(--color-secondary-text)] font-bold relative">
-              <FiPlay className="w-4 h-4" />
-            </div>
-          );
-        }
-      }
-
-      // Fallback to logoImageUrl if mainMedia is not available
-      if (row.logoImageUrl && !imgError) {
-        return (
-          <img
-            src={row.logoImageUrl}
-            alt={row.name + " logo"}
-            className="w-10 h-10 object-contain rounded bg-white border border-[color:var(--color-muted)]"
-            onError={() => setImgError(true)}
-          />
-        );
-      }
-
-      return (
-        <div className="w-10 h-10 rounded bg-[color:var(--color-muted)] flex items-center justify-center text-lg text-[color:var(--color-secondary-text)] font-bold">
-          {row.name ? getInitials(row.name) : <FiImage />}
-        </div>
-      );
-    },
-    sortable: false,
-  },
-  {
     key: "name",
     label: "Name",
     sortable: true,
@@ -158,7 +112,7 @@ const organizerColumns = [...baseColumns];
 
 // Admin-specific columns (includes organizer name, excludes end date)
 const adminColumns = [
-  ...baseColumns.slice(0, 2), // Media and Name
+  ...baseColumns.slice(0, 1), // Name
   {
     key: "organizerName",
     label: "Organizer",

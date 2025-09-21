@@ -1,35 +1,35 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FiEdit3, FiUser, FiSettings } from "react-icons/fi";
-import { PrimaryButton } from "../../../../components/Buttons";
-import OrganizerDetailsTab from "./settingsTabs/OrganizerDetailsTab";
+import { FiUsers, FiUserCheck, FiShield } from "react-icons/fi";
+import UsersTab from "./tabs/UsersTab";
+import OrganizersTab from "./tabs/OrganizersTab";
+import AdminsTab from "./tabs/AdminsTab";
 
-function OrganizerSettingsPage() {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("details");
+function UserManagementPage() {
+  const [activeTab, setActiveTab] = useState("users");
 
   const tabs = [
     {
-      id: "details",
-      label: "Organizer Details",
-      icon: FiUser,
+      id: "users",
+      label: "Users",
+      icon: FiUsers,
     },
     {
-      id: "settings",
-      label: "Settings",
-      icon: FiSettings,
+      id: "organizers",
+      label: "Organizers",
+      icon: FiUserCheck,
+    },
+    {
+      id: "admins",
+      label: "Admins",
+      icon: FiShield,
     },
   ];
-
-  const handleEditDetails = () => {
-    navigate("/organizer/settings/edit");
-  };
 
   return (
     <div className="p-2 sm:p-8 bg-[color:var(--color-background)] min-h-screen transition-colors">
       {/* Title */}
       <h1 className="text-3xl font-bold text-[color:var(--color-primary-text)] mb-8">
-        Settings
+        User Management
       </h1>
 
       {/* Tabs */}
@@ -59,17 +59,12 @@ function OrganizerSettingsPage() {
 
       {/* Tab Content */}
       <div className="bg-[color:var(--color-background)] rounded-lg border border-[color:var(--color-muted)] shadow-md p-6">
-        {activeTab === "details" && (
-          <OrganizerDetailsTab onEditDetails={handleEditDetails} />
-        )}
-        {activeTab === "settings" && (
-          <div className="text-center text-[color:var(--color-secondary-text)] py-8">
-            Settings tab content coming soon...
-          </div>
-        )}
+        {activeTab === "users" && <UsersTab />}
+        {activeTab === "organizers" && <OrganizersTab />}
+        {activeTab === "admins" && <AdminsTab />}
       </div>
     </div>
   );
 }
 
-export default OrganizerSettingsPage;
+export default UserManagementPage;

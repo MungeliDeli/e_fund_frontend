@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Table from "../../../components/Table";
 import { IconButton } from "../../../components/Buttons";
-import { FiEye, FiUserX, FiActivity } from "react-icons/fi";
+import { FiEye, FiUser, FiUserX, FiShield } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 
@@ -14,68 +14,98 @@ function getInitials(name) {
 
 const columns = [
   {
-    key: "organizationName",
+    key: "firstName",
     label: "Name",
     sortable: true,
     render: (row) => (
-      <span className="font-semibold text-[color:var(--color-primary-text)] leading-tight">
-        {row.organizationName}
+      <div className="flex flex-col">
+        <span className="font-semibold text-[color:var(--color-primary-text)] leading-tight">
+          {row.firstName} {row.lastName}
+        </span>
+        <span className="text-xs text-[color:var(--color-secondary-text)]">
+          {row.email}
+        </span>
+      </div>
+    ),
+  },
+  {
+    key: "gender",
+    label: "Gender",
+    sortable: true,
+    render: (row) => (
+      <span className="capitalize text-[color:var(--color-primary-text)]">
+        {row.gender || "Not specified"}
       </span>
     ),
   },
   {
-    key: "organizationShortName",
-    label: "Acronym",
+    key: "country",
+    label: "Country",
     sortable: true,
+    render: (row) => (
+      <span className="text-[color:var(--color-primary-text)]">
+        {row.country || "Not specified"}
+      </span>
+    ),
   },
   {
-    key: "status",
-    label: "Verified",
+    key: "isEmailVerified",
+    label: "Email Verified",
     sortable: true,
     render: (row) => (
       <span
         className={`px-2 py-1 rounded text-xs font-bold ${
-          row.status === "VERIFIED"
+          row.isEmailVerified
             ? "bg-[color:var(--color-primary)] text-white"
             : "bg-[color:var(--color-muted)] text-[color:var(--color-secondary-text)]"
         }`}
         style={{ minWidth: 70, display: "inline-block", textAlign: "center" }}
       >
-        {row.status === "VERIFIED" ? "Verified" : "Pending"}
+        {row.isEmailVerified ? "Verified" : "Pending"}
       </span>
     ),
   },
   {
-    key: "active",
+    key: "isActive",
     label: "Active",
     sortable: true,
     render: (row) => (
       <span
         className={`px-2 py-1 rounded text-xs font-bold ${
-          row.active
+          row.isActive
             ? "bg-[color:var(--color-primary)] text-white"
             : "bg-[color:var(--color-muted)] text-[color:var(--color-secondary-text)]"
         }`}
         style={{ minWidth: 70, display: "inline-block", textAlign: "center" }}
       >
-        {row.active ? "Active" : "Inactive"}
+        {row.isActive ? "Active" : "Inactive"}
       </span>
     ),
   },
   {
-    key: "email",
-    label: "Email",
+    key: "createdAt",
+    label: "Joined",
     sortable: true,
-    render: (row) => <span className="font-mono text-xs">{row.email}</span>,
+    render: (row) => (
+      <span className="text-xs text-[color:var(--color-secondary-text)]">
+        {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "N/A"}
+      </span>
+    ),
   },
 ];
 
-function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
+function UserTable({
+  data = [],
+  onView,
+  onDeactivate,
+  onMakeAdmin,
+  filters = {},
+}) {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const [showOrganizerModal, setShowOrganizerModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [selectedOrganizer, setSelectedOrganizer] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
 
   // Sorting state
@@ -87,17 +117,17 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
   // Check if current user is super admin
   const isSuperAdmin = currentUser?.userType === "superAdmin";
 
-  // Handle organizer details modal
-  const handleOrganizerDetails = (organizer) => {
-    setSelectedOrganizer(organizer);
-    setShowOrganizerModal(true);
+  // Handle user details modal
+  const handleUserDetails = (user) => {
+    setSelectedUser(user);
+    setShowUserModal(true);
   };
 
   // Handle profile view
   const handleProfileView = () => {
-    if (selectedOrganizer) {
-      navigate(`/organizers/${selectedOrganizer.userId}`);
-      setShowOrganizerModal(false);
+    if (selectedUser) {
+      navigate(`/users/${selectedUser.userId}`);
+      setShowUserModal(false);
     }
   };
 
@@ -107,16 +137,24 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
     setShowConfirmModal(true);
   };
 
+  // Handle make admin with confirmation
+  const handleMakeAdminClick = () => {
+    setConfirmAction("makeAdmin");
+    setShowConfirmModal(true);
+  };
+
   // Handle confirmation
   const handleConfirmAction = () => {
-    if (selectedOrganizer) {
+    if (selectedUser) {
       if (confirmAction === "deactivate" && onDeactivate) {
-        onDeactivate(selectedOrganizer.userId);
+        onDeactivate(selectedUser.userId);
+      } else if (confirmAction === "makeAdmin" && onMakeAdmin) {
+        onMakeAdmin(selectedUser.userId);
       }
     }
     setShowConfirmModal(false);
-    setShowOrganizerModal(false);
-    setSelectedOrganizer(null);
+    setShowUserModal(false);
+    setSelectedUser(null);
     setConfirmAction(null);
   };
 
@@ -128,22 +166,23 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
   // Normalize data for new states
   const normalizedData = (data || []).map((row) => ({
     ...row,
-    status:
-      row.status === true || row.status === "VERIFIED" ? "VERIFIED" : "PENDING",
-    active: !!row.active,
+    isEmailVerified: !!row.isEmailVerified,
+    isActive: !!row.isActive,
   }));
 
   // Apply filters
   let processedData = normalizedData;
-  if (filters.verified !== undefined) {
+  if (filters.emailVerified !== undefined) {
     processedData = processedData.filter(
-      (row) => row.status === (filters.verified ? "VERIFIED" : "PENDING")
+      (row) =>
+        row.isEmailVerified ===
+        (filters.emailVerified === true || filters.emailVerified === "true")
     );
   }
   if (filters.active !== undefined) {
     processedData = processedData.filter(
       (row) =>
-        row.active === (filters.active === true || filters.active === "true")
+        row.isActive === (filters.active === true || filters.active === "true")
     );
   }
 
@@ -170,43 +209,45 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
         scrollable={true}
         rowAction={(row) => (
           <IconButton
-            onClick={() => handleOrganizerDetails(row)}
+            onClick={() => handleUserDetails(row)}
             className="p-2 text-[color:var(--color-primary)] transition-colors"
-            title="View Organizer Details"
+            title="View User Details"
           >
             <FiEye className="w-4 h-4" />
           </IconButton>
         )}
       />
 
-      {/* Organizer Details Modal */}
-      {showOrganizerModal && selectedOrganizer && (
+      {/* User Details Modal */}
+      {showUserModal && selectedUser && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-[color:var(--color-background)] rounded-lg p-6 max-w-md w-full mx-4 border border-[color:var(--color-muted)]">
             <h3 className="text-lg font-semibold text-[color:var(--color-primary-text)] mb-4">
-              Organizer Details
+              User Details
             </h3>
 
-            {/* Organizer Info */}
+            {/* User Info */}
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-3">
-                {selectedOrganizer.profilePictureUrl ? (
+                {selectedUser.profilePictureUrl ? (
                   <img
-                    src={selectedOrganizer.profilePictureUrl}
-                    alt={`${selectedOrganizer.organizationName} logo`}
+                    src={selectedUser.profilePictureUrl}
+                    alt={`${selectedUser.firstName} ${selectedUser.lastName} avatar`}
                     className="w-12 h-12 object-cover rounded-full bg-white border border-[color:var(--color-muted)]"
                   />
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-[color:var(--color-muted)] flex items-center justify-center text-lg text-[color:var(--color-secondary-text)] font-bold">
-                    {getInitials(selectedOrganizer.organizationName)}
+                    {getInitials(
+                      `${selectedUser.firstName} ${selectedUser.lastName}`
+                    )}
                   </div>
                 )}
                 <div>
                   <h4 className="font-semibold text-[color:var(--color-primary-text)]">
-                    {selectedOrganizer.organizationName}
+                    {selectedUser.firstName} {selectedUser.lastName}
                   </h4>
                   <p className="text-sm text-[color:var(--color-secondary-text)]">
-                    {selectedOrganizer.email}
+                    {selectedUser.email}
                   </p>
                 </div>
               </div>
@@ -218,36 +259,36 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
                   </span>
                   <span
                     className={`px-2 py-1 rounded text-xs font-bold ${
-                      selectedOrganizer.active
+                      selectedUser.isActive
                         ? "bg-[color:var(--color-primary)] text-white"
                         : "bg-[color:var(--color-muted)] text-[color:var(--color-secondary-text)]"
                     }`}
                   >
-                    {selectedOrganizer.active ? "Active" : "Inactive"}
+                    {selectedUser.isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[color:var(--color-secondary-text)]">
-                    Verified:
+                    Email Verified:
                   </span>
                   <span
                     className={`px-2 py-1 rounded text-xs font-bold ${
-                      selectedOrganizer.status === "VERIFIED"
+                      selectedUser.isEmailVerified
                         ? "bg-[color:var(--color-primary)] text-white"
                         : "bg-[color:var(--color-muted)] text-[color:var(--color-secondary-text)]"
                     }`}
                   >
-                    {selectedOrganizer.status === "VERIFIED"
-                      ? "Verified"
-                      : "Pending"}
+                    {selectedUser.isEmailVerified ? "Verified" : "Pending"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[color:var(--color-secondary-text)]">
-                    Acronym:
+                    Joined:
                   </span>
                   <span className="text-[color:var(--color-primary-text)]">
-                    {selectedOrganizer.organizationShortName || "N/A"}
+                    {selectedUser.createdAt
+                      ? new Date(selectedUser.createdAt).toLocaleDateString()
+                      : "N/A"}
                   </span>
                 </div>
               </div>
@@ -264,25 +305,35 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
               </button>
 
               {isSuperAdmin && (
-                <button
-                  onClick={handleDeactivateClick}
-                  className={`w-full px-4 py-2 rounded transition-colors flex items-center justify-center gap-2 ${
-                    selectedOrganizer.active
-                      ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-[color:var(--color-primary)] text-white hover:bg-[color:var(--color-accent)]"
-                  }`}
-                >
-                  <FiUserX className="w-4 h-4" />
-                  {selectedOrganizer.active
-                    ? "Deactivate Organizer"
-                    : "Activate Organizer"}
-                </button>
+                <>
+                  <button
+                    onClick={handleDeactivateClick}
+                    className={`w-full px-4 py-2 rounded transition-colors flex items-center justify-center gap-2 ${
+                      selectedUser.isActive
+                        ? "bg-red-600 text-white hover:bg-red-700"
+                        : "bg-[color:var(--color-primary)] text-white hover:bg-[color:var(--color-accent)]"
+                    }`}
+                  >
+                    <FiUserX className="w-4 h-4" />
+                    {selectedUser.isActive
+                      ? "Deactivate User"
+                      : "Activate User"}
+                  </button>
+
+                  <button
+                    onClick={handleMakeAdminClick}
+                    className="w-full px-4 py-2 bg-[color:var(--color-muted)] text-[color:var(--color-primary-text)] rounded hover:bg-[color:var(--color-primary)] hover:text-white transition-colors flex items-center justify-center gap-2"
+                  >
+                    <FiShield className="w-4 h-4" />
+                    Make Admin
+                  </button>
+                </>
               )}
             </div>
 
             {/* Close Button */}
             <button
-              onClick={() => setShowOrganizerModal(false)}
+              onClick={() => setShowUserModal(false)}
               className="w-full mt-4 px-4 py-2 border border-[color:var(--color-muted)] rounded text-[color:var(--color-primary-text)] hover:bg-[color:var(--color-muted)] transition-colors"
             >
               Close
@@ -292,18 +343,22 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
       )}
 
       {/* Confirmation Modal */}
-      {showConfirmModal && selectedOrganizer && (
+      {showConfirmModal && selectedUser && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-[color:var(--color-background)] rounded-lg p-6 max-w-md w-full mx-4 border border-[color:var(--color-muted)]">
             <h3 className="text-lg font-semibold text-[color:var(--color-primary-text)] mb-4">
-              {selectedOrganizer.active
-                ? "Deactivate Organizer"
-                : "Activate Organizer"}
+              {confirmAction === "deactivate"
+                ? selectedUser.isActive
+                  ? "Deactivate User"
+                  : "Activate User"
+                : "Make Admin"}
             </h3>
             <p className="text-[color:var(--color-secondary-text)] mb-6">
-              {selectedOrganizer.active
-                ? `Are you sure you want to deactivate ${selectedOrganizer.organizationName}? They will no longer be able to access their organizer account.`
-                : `Are you sure you want to activate ${selectedOrganizer.organizationName}? They will regain access to their organizer account.`}
+              {confirmAction === "deactivate"
+                ? selectedUser.isActive
+                  ? `Are you sure you want to deactivate ${selectedUser.firstName} ${selectedUser.lastName}? They will no longer be able to access their account.`
+                  : `Are you sure you want to activate ${selectedUser.firstName} ${selectedUser.lastName}? They will regain access to their account.`
+                : `Are you sure you want to make ${selectedUser.firstName} ${selectedUser.lastName} an admin? This will give them administrative privileges.`}
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -315,12 +370,18 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
               <button
                 onClick={handleConfirmAction}
                 className={`px-4 py-2 rounded text-white transition-colors ${
-                  selectedOrganizer.active
-                    ? "bg-red-600 hover:bg-red-700"
+                  confirmAction === "deactivate"
+                    ? selectedUser.isActive
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-[color:var(--color-primary)] hover:bg-[color:var(--color-accent)]"
                     : "bg-[color:var(--color-primary)] hover:bg-[color:var(--color-accent)]"
                 }`}
               >
-                {selectedOrganizer.active ? "Deactivate" : "Activate"}
+                {confirmAction === "deactivate"
+                  ? selectedUser.isActive
+                    ? "Deactivate"
+                    : "Activate"
+                  : "Make Admin"}
               </button>
             </div>
           </div>
@@ -330,4 +391,4 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
   );
 }
 
-export default OrganizerTable;
+export default UserTable;
