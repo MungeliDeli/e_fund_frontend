@@ -25,7 +25,7 @@ import PaymentModal from "../components/PaymentModal";
 import ThankYouModal from "../components/ThankYouModal";
 import { useAuth } from "../../../contexts/AuthContext";
 import GuestAuthPrompt from "../../../components/GuestAuthPrompt";
-import { fetchPrivateOrganizationProfile } from "../../users/services/usersApi";
+import { fetchOrganizerById } from "../../users/services/usersApi";
 import { getDonationStats } from "../../donations/services/donationsApi";
 
 function Logo() {
@@ -143,18 +143,16 @@ function CampaignTemplatePage({
     const loadOrganizer = async () => {
       try {
         if (!campaign?.organizerId) return;
-        const profRes = await fetchPrivateOrganizationProfile(
-          campaign.organizerId
-        );
+
+        const profRes = await fetchOrganizerById(campaign.organizerId);
+
         const profile = profRes?.data || profRes || null;
         setOrganizerProfile(profile);
-        console.log(profile);
 
         // Use the profilePictureUrl directly from the backend response
         const avatarUrl =
           profile?.profilePictureUrl || profile?.coverPictureUrl || "";
         setOrganizerAvatarUrl(avatarUrl);
-        console.log(avatarUrl);
       } catch (_) {
         setOrganizerAvatarUrl("");
       }
@@ -169,7 +167,6 @@ function CampaignTemplatePage({
         if (!campaign?.campaignId) return;
         const stats = await getDonationStats(campaign.campaignId);
         setDonationStats(stats);
-        console.log("Donation stats:", stats);
       } catch (error) {
         console.error("Failed to fetch donation stats:", error);
         // Keep default values on error
@@ -201,7 +198,6 @@ function CampaignTemplatePage({
   const handlePaymentSubmit = async (paymentData) => {
     try {
       setIsProcessingDonation(true);
-      console.log("Processing donation:", paymentData);
 
       // Add campaign ID to payment data
       const donationData = {
@@ -214,8 +210,6 @@ function CampaignTemplatePage({
 
       // Call the actual donation API
       const response = await createDonation(donationData);
-
-      console.log("Donation successful:", response);
 
       // Store donation details for ThankYouModal
       setDonationDetails({
@@ -386,7 +380,15 @@ function CampaignTemplatePage({
       <div className="px-1 sm:px-4 lg:px-6 max-w-7xl mx-auto py-4">
         {/* Organizer Header */}
         <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={() => {
+              if (campaign?.organizerId)
+                navigate(`/organizers/${campaign.organizerId}`);
+            }}
+            role="button"
+            aria-label="View organizer profile"
+          >
             <div className="w-10 h-10 bg-[color:var(--color-muted)] rounded-lg flex items-center justify-center overflow-hidden">
               {organizerAvatarUrl ? (
                 <img
@@ -400,8 +402,8 @@ function CampaignTemplatePage({
                 </span>
               )}
             </div>
-            <div>
-              <h2 className="font-bold text-xl text-[color:var(--color-primary-text)]">
+            <div className="flex flex-wrap">
+              <h2 className="font-bold text-base sm:text-lg md:text-xl text-[color:var(--color-primary-text)] break-words whitespace-pre-line w-full">
                 {campaign.organizerName ||
                   organizerProfile?.organizationName ||
                   organizerProfile?.firstName ||
@@ -428,15 +430,28 @@ function CampaignTemplatePage({
             {/* Campaign Message */}
             <div className="bg-[color:var(--color-background)] rounded-lg p-4">
               <div className="prose max-w-none">
-                <p className="text-[color:var(--color-primary-text)] leading-relaxed">
-                  {showFullMessage
-                    ? campaign.customPageSettings?.message ||
-                      campaign.description
-                    : truncateMessage(
-                        campaign.customPageSettings?.message ||
-                          campaign.description
-                      )}
-                </p>
+                <div className="text-[color:var(--color-primary-text)] leading-relaxed">
+                  {showFullMessage ? (
+                    <div
+                      className="formatted-text"
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          campaign.customPageSettings?.message ||
+                          campaign.description,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="formatted-text"
+                      dangerouslySetInnerHTML={{
+                        __html: truncateMessage(
+                          campaign.customPageSettings?.message ||
+                            campaign.description
+                        ),
+                      }}
+                    />
+                  )}
+                </div>
                 {(campaign.customPageSettings?.message || campaign.description)
                   ?.length > 200 && (
                   <button
@@ -575,14 +590,28 @@ function CampaignTemplatePage({
           {/* Campaign Message */}
           <div className="bg-[color:var(--color-background)] rounded-lg p-4">
             <div className="prose max-w-none">
-              <p className="text-[color:var(--color-primary-text)] leading-relaxed">
-                {showFullMessage
-                  ? campaign.customPageSettings?.message || campaign.description
-                  : truncateMessage(
-                      campaign.customPageSettings?.message ||
-                        campaign.description
-                    )}
-              </p>
+              <div className="text-[color:var(--color-primary-text)] leading-relaxed">
+                {showFullMessage ? (
+                  <div
+                    className="formatted-text"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        campaign.customPageSettings?.message ||
+                        campaign.description,
+                    }}
+                  />
+                ) : (
+                  <div
+                    className="formatted-text"
+                    dangerouslySetInnerHTML={{
+                      __html: truncateMessage(
+                        campaign.customPageSettings?.message ||
+                          campaign.description
+                      ),
+                    }}
+                  />
+                )}
+              </div>
               {(campaign.customPageSettings?.message || campaign.description)
                 ?.length > 200 && (
                 <button

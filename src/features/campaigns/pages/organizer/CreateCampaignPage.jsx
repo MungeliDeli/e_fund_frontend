@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import FormField from "../../../../components/FormField";
 import SearchableDropdown from "../../../../components/SearchableDropdown";
+import SimpleRichTextEditor from "../../../../components/SimpleRichTextEditor";
 import { PrimaryButton, SecondaryButton } from "../../../../components/Buttons";
 import Notification from "../../../../components/Notification";
 import { FiUpload, FiX, FiPlus, FiEye } from "react-icons/fi";
@@ -288,8 +289,11 @@ function CreateCampaignPage() {
     const newErrors = {};
 
     if (!form.title.trim()) newErrors.title = "Campaign title is required";
-    if (!form.message.trim())
+    // Check if message has actual text content (not just HTML tags)
+    const messageText = form.message.replace(/<[^>]*>/g, "").trim();
+    if (!messageText) {
       newErrors.message = "Campaign message is required";
+    }
     if (!form.name.trim()) newErrors.name = "Campaign name is required";
     if (!form.description.trim())
       newErrors.description = "Campaign description is required";
@@ -491,17 +495,16 @@ function CreateCampaignPage() {
               <label className="block text-sm font-medium text-[color:var(--color-primary-text)] mb-2">
                 Campaign Message <span className="text-red-500">*</span>
               </label>
-              <textarea
-                name="message"
+              <SimpleRichTextEditor
                 value={form.message}
-                onChange={handleChange}
+                onChange={(value) =>
+                  setForm((prev) => ({ ...prev, message: value }))
+                }
+                placeholder="Write a compelling message that will inspire people to donate to your campaign. Use the toolbar to format your text with bold, italic, and lists."
                 rows={4}
-                className="w-full px-3 py-2 border border-[color:var(--color-muted)] rounded-md bg-[color:var(--color-background)] text-[color:var(--color-primary-text)] focus:ring-2 focus:ring-[color:var(--color-primary)] focus:border-[color:var(--color-primary)]"
-                placeholder="Write a compelling message that will inspire people to donate to your campaign"
+                error={submitAttempted ? errors.message : undefined}
+                className="w-full"
               />
-              {submitAttempted && errors.message && (
-                <p className="text-red-500 text-sm mt-1">{errors.message}</p>
-              )}
             </div>
 
             {/* Theme Color Selection */}
@@ -867,9 +870,18 @@ function CreateCampaignPage() {
                 {form.title || "Campaign Title"}
               </h3>
 
-              <p className="text-[color:var(--color-secondary-text)] mb-4">
-                {form.message || "Your campaign message will appear here..."}
-              </p>
+              <div className="text-[color:var(--color-secondary-text)] mb-4">
+                {form.message ? (
+                  <div
+                    className="formatted-text prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: form.message }}
+                  />
+                ) : (
+                  <p className="italic">
+                    Your campaign message will appear here...
+                  </p>
+                )}
+              </div>
 
               {/* Categories */}
               {form.categoryIds.filter((id) => id && id.trim() !== "").length >

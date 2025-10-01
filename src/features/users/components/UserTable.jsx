@@ -105,8 +105,10 @@ function UserTable({
   const { user: currentUser } = useAuth();
   const [showUserModal, setShowUserModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [selectedAdminRole, setSelectedAdminRole] = useState("supportAdmin");
 
   // Sorting state
   const [sort, setSort] = useState({ key: "", direction: "asc" });
@@ -139,8 +141,8 @@ function UserTable({
 
   // Handle make admin with confirmation
   const handleMakeAdminClick = () => {
-    setConfirmAction("makeAdmin");
-    setShowConfirmModal(true);
+    setSelectedAdminRole("supportAdmin");
+    setShowRoleModal(true);
   };
 
   // Handle confirmation
@@ -148,8 +150,6 @@ function UserTable({
     if (selectedUser) {
       if (confirmAction === "deactivate" && onDeactivate) {
         onDeactivate(selectedUser.userId);
-      } else if (confirmAction === "makeAdmin" && onMakeAdmin) {
-        onMakeAdmin(selectedUser.userId);
       }
     }
     setShowConfirmModal(false);
@@ -351,14 +351,14 @@ function UserTable({
                 ? selectedUser.isActive
                   ? "Deactivate User"
                   : "Activate User"
-                : "Make Admin"}
+                : ""}
             </h3>
             <p className="text-[color:var(--color-secondary-text)] mb-6">
               {confirmAction === "deactivate"
                 ? selectedUser.isActive
                   ? `Are you sure you want to deactivate ${selectedUser.firstName} ${selectedUser.lastName}? They will no longer be able to access their account.`
                   : `Are you sure you want to activate ${selectedUser.firstName} ${selectedUser.lastName}? They will regain access to their account.`
-                : `Are you sure you want to make ${selectedUser.firstName} ${selectedUser.lastName} an admin? This will give them administrative privileges.`}
+                : ""}
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -374,14 +374,64 @@ function UserTable({
                     ? selectedUser.isActive
                       ? "bg-red-600 hover:bg-red-700"
                       : "bg-[color:var(--color-primary)] hover:bg-[color:var(--color-accent)]"
-                    : "bg-[color:var(--color-primary)] hover:bg-[color:var(--color-accent)]"
+                    : ""
                 }`}
               >
                 {confirmAction === "deactivate"
                   ? selectedUser.isActive
                     ? "Deactivate"
                     : "Activate"
-                  : "Make Admin"}
+                  : ""}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role Selection Modal for Make Admin */}
+      {showRoleModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-[color:var(--color-background)] rounded-lg p-6 max-w-md w-full mx-4 border border-[color:var(--color-muted)]">
+            <h3 className="text-lg font-semibold text-[color:var(--color-primary-text)] mb-2">
+              Promote to Admin
+            </h3>
+            <p className="text-[color:var(--color-secondary-text)] mb-4">
+              Select the admin role for {selectedUser.firstName}{" "}
+              {selectedUser.lastName}.
+            </p>
+            <div className="mb-6">
+              <label className="block text-sm text-[color:var(--color-secondary-text)] mb-1">
+                Admin Role
+              </label>
+              <select
+                value={selectedAdminRole}
+                onChange={(e) => setSelectedAdminRole(e.target.value)}
+                className="w-full rounded bg-[color:var(--color-surface)] px-3 py-2 text-[color:var(--color-primary-text)] border border-[color:var(--color-muted)] focus:border-[color:var(--color-accent)] outline-none"
+              >
+                <option value="supportAdmin">Support Admin</option>
+                <option value="eventModerator">Event Moderator</option>
+                <option value="financialAdmin">Financial Admin</option>
+              </select>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowRoleModal(false)}
+                className="px-4 py-2 border border-[color:var(--color-muted)] rounded text-[color:var(--color-primary-text)] hover:bg-[color:var(--color-muted)] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (onMakeAdmin && selectedUser) {
+                    onMakeAdmin(selectedUser.userId, selectedAdminRole);
+                  }
+                  setShowRoleModal(false);
+                  setShowUserModal(false);
+                  setSelectedUser(null);
+                }}
+                className="px-4 py-2 rounded text-white bg-[color:var(--color-primary)] hover:bg-[color:var(--color-accent)] transition-colors"
+              >
+                Confirm
               </button>
             </div>
           </div>

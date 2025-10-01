@@ -13,6 +13,7 @@ import {
 import SearchBar from "../../../../../../components/SearchBar/SearchBar";
 import UserTable from "../../../../components/UserTable";
 import FilterModal from "../../../../../../components/FilterModal";
+import { useNotification } from "../../../../../../contexts/NotificationContext";
 import {
   fetchUsers,
   fetchAllUsers,
@@ -25,6 +26,7 @@ import {
 } from "../../../../../../components/StatsCards";
 
 function UsersTab() {
+  const { showSuccess, showError } = useNotification();
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState({});
   const [users, setUsers] = useState([]);
@@ -74,24 +76,25 @@ function UsersTab() {
       const updatedAllUsers = await fetchAllUsers();
       setAllUsers(updatedAllUsers);
 
-      console.log(
+      showSuccess(
         `User ${newStatus ? "activated" : "deactivated"} successfully`
       );
     } catch (error) {
       console.error("Failed to toggle user status:", error);
       setError(error.message || "Failed to toggle user status");
+      showError(error.message || "Failed to toggle user status");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMakeAdmin = async (userId) => {
+  const handleMakeAdmin = async (userId, adminRole = "supportAdmin") => {
     try {
       setLoading(true);
       setError(null);
 
-      // Make user admin with default supportAdmin role
-      await makeUserAdmin(userId, "supportAdmin");
+      // Make user admin with selected role
+      await makeUserAdmin(userId, adminRole);
 
       // After successful admin promotion, refresh the data
       const searchFilters = {
@@ -105,10 +108,11 @@ function UsersTab() {
       const updatedAllUsers = await fetchAllUsers();
       setAllUsers(updatedAllUsers);
 
-      console.log("User promoted to admin successfully");
+      showSuccess(`User promoted to ${adminRole} successfully`);
     } catch (error) {
       console.error("Failed to make user admin:", error);
       setError(error.message || "Failed to make user admin");
+      showError(error.message || "Failed to make user admin");
     } finally {
       setLoading(false);
     }

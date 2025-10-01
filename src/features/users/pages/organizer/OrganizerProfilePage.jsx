@@ -89,9 +89,13 @@ function OrganizerProfilePage() {
   } = useQuery({
     queryKey: ["organizerProfile", organizerId, isPublicView],
     queryFn: async () => {
+      // Public view should fetch organizer by URL param; private view fetches current organizer
+      if (isPublicView && organizerId) {
+        const res = await fetchOrganizerById(organizerId);
+        return res?.data || res;
+      }
       const res = await fetchPrivateOrganizationProfile();
-
-      return res.data || res;
+      return res?.data || res;
     },
     enabled: true, // Always run query
   });

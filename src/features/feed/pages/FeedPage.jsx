@@ -23,6 +23,7 @@ const FeedPage = () => {
         setLoading(true);
         const data = await getPosts();
         setPosts(data);
+        console.log(data);
         setError(null);
       } catch (err) {
         setError(err.message);

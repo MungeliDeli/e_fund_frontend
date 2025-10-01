@@ -218,19 +218,45 @@ const PostDetailPage = () => {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center space-x-3">
-                    {/* Profile Picture */}
-                    <div className="w-10 h-10 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-white font-medium text-sm">
-                      {post.organizationName?.slice(0, 1)}
-                    </div>
+                    {/* Profile Picture + Name as link to organizer profile */}
+                    <div
+                      className="flex items-center space-x-3 cursor-pointer"
+                      onClick={() => {
+                        if (post.organizerId)
+                          navigate(`/organizers/${post.organizerId}`);
+                      }}
+                      role="button"
+                      aria-label="View organizer profile"
+                    >
+                      {post.profilePictureUrl ? (
+                        <img
+                          src={post.profilePictureUrl}
+                          alt={`${post.organizationName} profile`}
+                          className="w-8 h-8 rounded-full object-cover"
+                          onError={(e) => {
+                            // Fallback to initials if image fails to load
+                            e.target.style.display = "none";
+                            e.target.nextSibling.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className={`w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-white font-medium text-sm ${
+                          post.profilePictureUrl ? "hidden" : "flex"
+                        }`}
+                      >
+                        {post.organizationName?.slice(0, 1)}
+                      </div>
 
-                    {/* Name and Time */}
-                    <div>
-                      <h3 className="font-medium text-[var(--color-text)] text-base">
-                        {post.organizationName}
-                      </h3>
-                      <p className="text-sm text-[var(--color-secondary-text)] opacity-70">
-                        {formatTimeAgo(post.createdAt)}
-                      </p>
+                      {/* Name and Time */}
+                      <div>
+                        <h3 className="font-medium text-[var(--color-text)] text-base ">
+                          {post.organizationName}
+                        </h3>
+                        <p className="text-sm text-[var(--color-secondary-text)] opacity-70">
+                          {formatTimeAgo(post.createdAt)}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -252,9 +278,10 @@ const PostDetailPage = () => {
                 {/* Body - Full text with preserved formatting */}
                 {post.body && (
                   <div className="text-[var(--color-text)] mb-6">
-                    <div className="text-base leading-relaxed whitespace-pre-wrap">
-                      {post.body}
-                    </div>
+                    <div
+                      className="formatted-text text-base leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: post.body }}
+                    />
                   </div>
                 )}
 
