@@ -56,6 +56,8 @@ const PostDetailPage = () => {
         return "Success Story";
       case "thank_you":
         return "Thank You";
+      case "campaign":
+        return "Campaign";
       default:
         return null;
     }

@@ -26,7 +26,10 @@ import ThankYouModal from "../components/ThankYouModal";
 import { useAuth } from "../../../contexts/AuthContext";
 import GuestAuthPrompt from "../../../components/GuestAuthPrompt";
 import { fetchOrganizerById } from "../../users/services/usersApi";
-import { getDonationStats } from "../../donations/services/donationsApi";
+import {
+  getDonationStats,
+  getDonationStatus,
+} from "../../donations/services/donationsApi";
 
 function Logo() {
   const navigate = useNavigate();
@@ -70,6 +73,13 @@ function CampaignTemplatePage({
   const [selectedDonationAmount, setSelectedDonationAmount] = useState("50");
   const [donationDetails, setDonationDetails] = useState(null);
   const [isProcessingDonation, setIsProcessingDonation] = useState(false);
+  const [paymentPhase, setPaymentPhase] = useState("idle"); // idle | submitting | processing | polling | success | failed | timeout
+  const pollingRef = useRef(null);
+  const [activeDonation, setActiveDonation] = useState({
+    donationId: null,
+    transactionId: null,
+    gatewayRequestId: null,
+  });
   const [organizerProfile, setOrganizerProfile] = useState(null);
   const [organizerAvatarUrl, setOrganizerAvatarUrl] = useState("");
   const [donationStats, setDonationStats] = useState({
@@ -198,6 +208,7 @@ function CampaignTemplatePage({
   const handlePaymentSubmit = async (paymentData) => {
     try {
       setIsProcessingDonation(true);
+      setPaymentPhase("submitting");
 
       // Add campaign ID to payment data
       const donationData = {
@@ -211,38 +222,77 @@ function CampaignTemplatePage({
       // Call the actual donation API
       const response = await createDonation(donationData);
 
-      // Store donation details for ThankYouModal
+      const resData = response?.data || response;
+      const donationId =
+        resData?.donation?.donationId || resData?.donationId || null;
+      const transactionId =
+        resData?.transaction?.transactionId || resData?.transactionId || null;
+      const gatewayRequestId =
+        resData?.transaction?.gatewayRequestId ||
+        resData?.gatewayRequestId ||
+        null;
+
+      setActiveDonation({ donationId, transactionId, gatewayRequestId });
+
+      // Prepare ThankYou data but do not show yet
       setDonationDetails({
         amount: paymentData.amount,
         paymentMethod: paymentData.paymentMethod,
         message: paymentData.messageText,
-        donationId:
-          response?.data?.donation?.donationId ||
-          response?.donation?.donationId,
+        donationId,
       });
 
-      // Close payment modal and show thank you modal
-      setShowPaymentModal(false);
-      setShowThankYouModal(true);
-
-      // Show success notification
+      // Move to processing and start polling for terminal state
+      setPaymentPhase("processing");
       setNotification({
         isVisible: true,
         type: "success",
-        message: `Donation of ${formatAmount(
-          paymentData.amount
-        )} submitted successfully!`,
+        message:
+          "Payment request sent to your phone. Please approve on your device.",
       });
 
-      // Refresh campaign data to show updated amounts
-      await fetchCampaign();
-
-      // Refresh donation statistics
-      try {
-        const stats = await getDonationStats(campaign.campaignId);
-        setDonationStats(stats);
-      } catch (error) {
-        console.error("Failed to refresh donation stats:", error);
+      // Begin polling donation status
+      setPaymentPhase("polling");
+      const startedAt = Date.now();
+      const timeoutMs = 2 * 60 * 1000; // 2 minutes
+      pollingRef.current && clearInterval(pollingRef.current);
+      if (donationId) {
+        pollingRef.current = setInterval(async () => {
+          try {
+            const { status } = await getDonationStatus(donationId);
+            if (status === "completed") {
+              clearInterval(pollingRef.current);
+              setPaymentPhase("success");
+              setShowPaymentModal(false);
+              setShowThankYouModal(true);
+              await fetchCampaign();
+              try {
+                const stats = await getDonationStats(campaign.campaignId);
+                setDonationStats(stats);
+              } catch (_) {}
+            } else if (status === "failed") {
+              clearInterval(pollingRef.current);
+              setPaymentPhase("failed");
+              setNotification({
+                isVisible: true,
+                type: "error",
+                message: "Payment was declined. You can try again.",
+              });
+            }
+          } catch (_) {
+            // ignore transient polling errors
+          }
+          if (Date.now() - startedAt > timeoutMs) {
+            clearInterval(pollingRef.current);
+            setPaymentPhase("timeout");
+            setNotification({
+              isVisible: true,
+              type: "error",
+              message:
+                "Payment is taking longer than expected. If you approved, it will reflect shortly; otherwise, please retry.",
+            });
+          }
+        }, 2500);
       }
     } catch (error) {
       console.error("Donation failed:", error);
@@ -250,12 +300,30 @@ function CampaignTemplatePage({
         isVisible: true,
         type: "error",
         message:
-          error.message || "Failed to process donation. Please try again.",
+          mapProviderError(error?.message) ||
+          error?.message ||
+          "Failed to process donation. Please try again.",
       });
       throw error; // Re-throw to let PaymentModal handle it
     } finally {
       setIsProcessingDonation(false);
     }
+  };
+
+  const mapProviderError = (message = "") => {
+    if (message.includes("9905")) {
+      return "That phone number isn't eligible for Mobile Money payments.";
+    }
+    if (message.includes("9906")) {
+      return "Please retry; your previous attempt is still in progress.";
+    }
+    if (message.includes("995")) {
+      return "Payment was declined. You can try again.";
+    }
+    if (message.includes("2000") || message.includes("No active simulator")) {
+      return "Phone number not registered for Mobile Money. Please check your number or try a different payment method.";
+    }
+    return null;
   };
 
   const handleThankYouClose = () => {

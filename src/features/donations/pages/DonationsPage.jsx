@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SearchBar from "../../../components/SearchBar/SearchBar";
 import Table from "../../../components/Table";
 import { IconButton, SecondaryButton } from "../../../components/Buttons";
@@ -38,8 +39,37 @@ function formatDate(dateString) {
   }
 }
 
+function getDonorDisplayName(donation) {
+  if (donation.isAnonymous) {
+    return "Anonymous";
+  }
+
+  if (donation.donorDetails) {
+    return donation.donorDetails.displayName || "Anonymous";
+  }
+
+  // Fallback to old logic if donorDetails is not available
+  return donation.donorName || "Anonymous";
+}
+
+function handleDonorClick(donation, navigate) {
+  if (donation.isAnonymous || !donation.donorName) {
+    return;
+  }
+
+  const donorId = donation.donorUserId;
+  const donorType = donation.donorType;
+
+  if (donorType === "individual") {
+    navigate(`/users/${donorId}`);
+  } else if (donorType === "organization") {
+    navigate(`/organizers/${donorId}`);
+  }
+}
+
 function DonationsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const organizerId = user?.userId;
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({});
@@ -80,13 +110,13 @@ function DonationsPage() {
           ? donationsResp.data.data
           : [];
 
-          console.log(donations);
-          
+        console.log(donations);
 
         const mapped = donations.map((d) => ({
           donationId: d.donationId,
           donorUserId: d.donorUserId,
-          donorName: d.isAnonymous ? null : d.donorName || d.donorEmail || null,
+          donorName: d.isAnonymous ? null : d.donorDetails.displayName,
+          donorType: d.isAnonymous ? null : d.donorDetails.donorType,
           isAnonymous: !!d.isAnonymous,
           campaignId: d.campaignId,
           campaignName: d.campaignName,
@@ -157,10 +187,10 @@ function DonationsPage() {
   const filteredRows = useMemo(() => {
     const term = (searchTerm || "").toLowerCase();
     return rows.filter((r) => {
-      const donor = r.isAnonymous ? "anonymous" : r.donorName || "";
+      const donor = getDonorDisplayName(r).toLowerCase();
       const msg = r.messageText || "";
       const matchesText =
-        donor.toLowerCase().includes(term) ||
+        donor.includes(term) ||
         (r.campaignName || "").toLowerCase().includes(term) ||
         String(r.amount || "").includes(term) ||
         msg.toLowerCase().includes(term);
@@ -192,11 +222,23 @@ function DonationsPage() {
       key: "donor",
       label: "Donor",
       sortable: true,
-      render: (row) => (
-        <span className="text-[color:var(--color-primary-text)]">
-          {row.isAnonymous ? "Anonymous" : row.donorName || "Anonymous"}
-        </span>
-      ),
+      render: (row) => {
+        const displayName = getDonorDisplayName(row);
+        const isClickable = !row.isAnonymous && row.donorName;
+        console.log("row", row);
+        return (
+          <span
+            className={`text-[color:var(--color-primary-text)] ${
+              isClickable
+                ? "cursor-pointer hover:text-[color:var(--color-primary)] hover:underline transition-colors"
+                : ""
+            }`}
+            onClick={() => isClickable && handleDonorClick(row, navigate)}
+          >
+            {displayName}
+          </span>
+        );
+      },
     },
     {
       key: "campaignName",
@@ -291,7 +333,7 @@ function DonationsPage() {
             />
             <TotalStatsCard
               title="Total Amount"
-                value={`K${rows
+              value={`K${rows
                 .reduce((sum, r) => sum + (parseFloat(r.amount || 0) || 0), 0)
                 .toLocaleString()}`}
               icon={FiDollarSign}
@@ -381,9 +423,7 @@ function DonationsPage() {
             <div className="py-3 space-y-2 text-[color:var(--color-primary-text)]">
               <div>
                 <span className="font-medium">Donor: </span>
-                {selectedDonation.isAnonymous
-                  ? "Anonymous"
-                  : selectedDonation.donorName || "Anonymous"}
+                {getDonorDisplayName(selectedDonation)}
               </div>
               <div>
                 <span className="font-medium">Campaign: </span>

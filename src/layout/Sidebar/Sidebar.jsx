@@ -19,8 +19,13 @@ import { useAuth } from "../../contexts/AuthContext";
 
 // Public navigation items (always visible)
 const publicNavItems = [
-  { label: "Home", icon: FiHome, key: "home", path: "/feed" },
-  { label: "Campaigns", icon: FiFlag, key: "campaigns", path: "/campaigns" },
+  { label: "Home", icon: FiHome, key: "home", path: "/" },
+  {
+    label: "Campaigns",
+    icon: FiFlag,
+    key: "campaigns",
+    path: "/feed?tab=campaigns",
+  },
 ];
 
 // Role-based navigation config

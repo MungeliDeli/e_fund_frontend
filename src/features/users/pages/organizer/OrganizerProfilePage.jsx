@@ -95,6 +95,8 @@ function OrganizerProfilePage() {
         return res?.data || res;
       }
       const res = await fetchPrivateOrganizationProfile();
+      console.log("res", res);
+
       return res?.data || res;
     },
     enabled: true, // Always run query
@@ -118,13 +120,16 @@ function OrganizerProfilePage() {
   const renderTabContent = () => {
     if (!organizer) return null;
 
+    // Use organizerId from URL if available (public view), otherwise use organizer.userId (private view)
+    const effectiveOrganizerId = organizerId || organizer.userId;
+
     switch (activeTab) {
       case 0: // About
         return <AboutTab organizer={organizer} />;
       case 1: // Campaigns
-        return <CampaignsTab organizerId={organizerId} />;
+        return <CampaignsTab organizerId={effectiveOrganizerId} />;
       case 2: // Posts
-        return <PostsTab organizerId={organizerId} />;
+        return <PostsTab organizerId={effectiveOrganizerId} />;
       default:
         return <AboutTab organizer={organizer} />;
     }

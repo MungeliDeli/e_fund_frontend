@@ -48,3 +48,32 @@ export async function getDonationStats(campaignId) {
   );
   return response.data.data;
 }
+
+/**
+ * Get donation status for polling
+ * @param {string} donationId - Donation ID
+ * @returns {Promise<{status: string, updatedAt: string}>}
+ */
+export async function getDonationStatus(donationId) {
+  const response = await apiClient.get(`/donations/${donationId}/status`);
+  // Backend uses ResponseFactory; unwrap common shapes
+  const data = response?.data?.data || response?.data || {};
+  return {
+    status: data.status,
+    updatedAt: data.updatedAt,
+  };
+}
+
+/**
+ * Get transaction status for polling (alternative)
+ * @param {string} transactionId - Transaction ID
+ * @returns {Promise<{status: string, updatedAt: string}>}
+ */
+export async function getTransactionStatus(transactionId) {
+  const response = await apiClient.get(`/transactions/${transactionId}/status`);
+  const data = response?.data?.data || response?.data || {};
+  return {
+    status: data.status,
+    updatedAt: data.updatedAt,
+  };
+}

@@ -1,5 +1,11 @@
 import React from "react";
-import { FiAward, FiUser, FiMessageSquare } from "react-icons/fi";
+import {
+  FiAward,
+  FiUser,
+  FiMessageSquare,
+  FiExternalLink,
+} from "react-icons/fi";
+import { Link } from "react-router-dom";
 import ColoredIcon from "../../../components/ColoredIcon";
 
 /**
@@ -99,11 +105,27 @@ function TopDonors({ topDonors, className = "" }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <FiUser className="text-[color:var(--color-secondary-text)]" />
-                <span className="font-medium text-[color:var(--color-primary-text)]">
-                  {donor.isAnonymous
-                    ? "Anonymous Donor"
-                    : `Donor #${donor.donorId}`}
-                </span>
+                {donor.isAnonymous ? (
+                  <span className="font-medium text-[color:var(--color-primary-text)]">
+                    Anonymous Donor
+                  </span>
+                ) : donor.donorDetails ? (
+                  <Link
+                    to={
+                      donor.donorDetails.type === "organization"
+                        ? `/organizers/${donor.donorDetails.userId}`
+                        : `/users/${donor.donorDetails.userId}`
+                    }
+                    className="font-medium text-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]/80 transition-colors duration-200 flex items-center gap-1 group"
+                  >
+                    {donor.donorDetails.displayName}
+                    <FiExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  </Link>
+                ) : (
+                  <span className="font-medium text-[color:var(--color-primary-text)]">
+                    Donor #{donor.donorId}
+                  </span>
+                )}
               </div>
 
               {/* Donation Message */}

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SearchBar from "../../../../components/SearchBar/SearchBar";
 import Table from "../../../../components/Table";
 import { IconButton, SecondaryButton } from "../../../../components/Buttons";
@@ -26,8 +27,36 @@ function formatDate(dateString) {
   }
 }
 
+function getDonorDisplayName(donation) {
+  if (donation.isAnonymous) {
+    return "Anonymous";
+  }
+
+  if (donation.donorDetails) {
+    return donation.donorDetails.displayName || "Anonymous";
+  }
+
+  // Fallback to old logic if donorDetails is not available
+  return donation.donorName || "Anonymous";
+}
+
+function handleDonorClick(donation, navigate) {
+  if (donation.isAnonymous || !donation.donorDetails) {
+    return;
+  }
+
+  const { donorId, donorType } = donation.donorDetails;
+
+  if (donorType === "individual") {
+    navigate(`/users/${donorId}`);
+  } else if (donorType === "organization") {
+    navigate(`/organizers/${donorId}`);
+  }
+}
+
 function MyDonationsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const organizerId = user?.userId;
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({});
@@ -95,10 +124,10 @@ function MyDonationsPage() {
   const filteredRows = useMemo(() => {
     const term = (searchTerm || "").toLowerCase();
     return rows.filter((r) => {
-      const donor = r.isAnonymous ? "anonymous" : r.donorName || "";
+      const donor = getDonorDisplayName(r).toLowerCase();
       const msg = r.messageText || "";
       return (
-        donor.toLowerCase().includes(term) ||
+        donor.includes(term) ||
         (r.campaignName || "").toLowerCase().includes(term) ||
         String(r.amount || "").includes(term) ||
         msg.toLowerCase().includes(term)
@@ -126,11 +155,23 @@ function MyDonationsPage() {
       key: "donor",
       label: "Donor",
       sortable: true,
-      render: (row) => (
-        <span className="text-[color:var(--color-primary-text)]">
-          {row.isAnonymous ? "Anonymous" : row.donorName || "Anonymous"}
-        </span>
-      ),
+      render: (row) => {
+        const displayName = getDonorDisplayName(row);
+        const isClickable = !row.isAnonymous && row.donorDetails;
+
+        return (
+          <span
+            className={`text-[color:var(--color-primary-text)] ${
+              isClickable
+                ? "cursor-pointer hover:text-[color:var(--color-primary)] hover:underline transition-colors"
+                : ""
+            }`}
+            onClick={() => isClickable && handleDonorClick(row, navigate)}
+          >
+            {displayName}
+          </span>
+        );
+      },
     },
     {
       key: "campaignName",
@@ -265,9 +306,7 @@ function MyDonationsPage() {
             <div className="py-3 space-y-2 text-[color:var(--color-primary-text)]">
               <div>
                 <span className="font-medium">Donor: </span>
-                {selectedDonation.isAnonymous
-                  ? "Anonymous"
-                  : selectedDonation.donorName || "Anonymous"}
+                {getDonorDisplayName(selectedDonation)}
               </div>
               <div>
                 <span className="font-medium">Campaign: </span>

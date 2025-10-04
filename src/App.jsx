@@ -139,7 +139,7 @@ function AppRoutes() {
       >
         <Routes>
           {/* Public Routes: pleaser note that for all public routes you have to include it in the publicRoutes array in authContext.jsx or else it will be redirected to login wheneve you try to go to the route */}
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<FeedPage />} />
           <Route
             path="/campaign/:shareSlug"
             element={<CampaignTemplatePage />}

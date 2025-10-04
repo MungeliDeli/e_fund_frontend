@@ -107,12 +107,9 @@ export const getPostById = async (postId) => {
 
 export const getCampaignPosts = async (campaignId, params = {}) => {
   try {
-    const response = await apiClient.get(
-      `/posts/campaigns/${campaignId}`,
-      {
-        params,
-      }
-    );
+    const response = await apiClient.get(`/posts/campaigns/${campaignId}`, {
+      params,
+    });
     return response.data?.data || response.data || [];
   } catch (error) {
     throw new Error(
@@ -130,6 +127,23 @@ export const getOrganizerPosts = async (organizerId, params = {}) => {
   } catch (error) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch organizer posts"
+    );
+  }
+};
+
+export const getOrganizerCampaignPosts = async (organizerId, params = {}) => {
+  try {
+    const response = await apiClient.get(
+      `/posts/organizers/${organizerId}/campaigns`,
+      {
+        params,
+      }
+    );
+    return response.data?.data || response.data || [];
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message ||
+        "Failed to fetch organizer campaign posts"
     );
   }
 };

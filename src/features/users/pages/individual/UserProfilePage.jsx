@@ -98,6 +98,7 @@ function UserProfilePage() {
       const res = isOwner
         ? await fetchPrivateProfile()
         : await fetchPublicProfile(userId);
+      console.log("res", res);
       return res.data || res; // Handle responses that might be wrapped in a data object
     },
     // The query will automatically refetch if userId or isOwner changes
@@ -240,7 +241,7 @@ function UserProfilePage() {
       {/* Cover Photo Section */}
       <div className="w-full max-w-4xl relative rounded-b-lg overflow-hidden">
         <CoverImage
-          mediaId={profile?.coverPictureMediaId}
+          imageUrl={profile?.coverPictureUrl}
           height="h-36 sm:h-44 md:h-52 lg:h-60"
           alt="Cover"
         />
@@ -260,7 +261,7 @@ function UserProfilePage() {
       <div className="relative -mt-14 sm:-mt-16 mb-2">
         <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-1 border-[color:var(--color-background)] shadow-lg">
           <ProfileImage
-            mediaId={profile?.profilePictureMediaId}
+            imageUrl={profile?.profilePictureUrl}
             size="2xl"
             alt="Profile"
             className="w-full h-full"

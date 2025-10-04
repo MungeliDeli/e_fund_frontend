@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import { getPosts } from "../services/feedApi";
 import PostCard from "../components/PostCard";
@@ -8,20 +8,38 @@ import FeedSidebar from "../../../components/FeedSidebar";
 const FeedPage = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("all");
   const [filterValue, setFilterValue] = useState("latest");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const feedRef = useRef(null);
 
+  // Get initial tab from URL parameter
+  const searchParams = new URLSearchParams(location.search);
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(
+    tabParam === "campaigns" ? "campaigns" : "all"
+  );
+
+  // Sync activeTab with URL parameter changes
+  useEffect(() => {
+    const newTabParam = searchParams.get("tab");
+    const newActiveTab = newTabParam === "campaigns" ? "campaigns" : "all";
+    if (newActiveTab !== activeTab) {
+      setActiveTab(newActiveTab);
+    }
+  }, [location.search, activeTab, searchParams]);
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const data = await getPosts();
+        // Fetch all posts or campaign posts based on active tab
+        const params = activeTab === "campaigns" ? { type: "campaign" } : {};
+        const data = await getPosts(params);
         setPosts(data);
         console.log(data);
         setError(null);
@@ -33,7 +51,7 @@ const FeedPage = () => {
     };
 
     fetchPosts();
-  }, []);
+  }, [activeTab]);
 
   // Handle scroll position restoration when returning from post detail
   useEffect(() => {
@@ -61,6 +79,17 @@ const FeedPage = () => {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    // Update URL with tab parameter
+    const newSearchParams = new URLSearchParams(location.search);
+    if (tab === "campaigns") {
+      newSearchParams.set("tab", "campaigns");
+    } else {
+      newSearchParams.delete("tab");
+    }
+    const newUrl = `${location.pathname}${
+      newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""
+    }`;
+    navigate(newUrl, { replace: true });
   };
 
   const handleFilterChange = (filter) => {
@@ -226,10 +255,14 @@ const FeedPage = () => {
             {posts.length === 0 ? (
               <div className="bg-[var(--color-surface)] rounded-lg p-8 text-center">
                 <h2 className="text-xl font-medium text-[var(--color-text)] mb-2">
-                  No posts yet
+                  {activeTab === "campaigns"
+                    ? "No campaign posts yet"
+                    : "No posts yet"}
                 </h2>
                 <p className="text-[var(--color-secondary-text)]">
-                  Be the first to share something with the community!
+                  {activeTab === "campaigns"
+                    ? "No campaign posts have been created yet. Check back later!"
+                    : "Be the first to share something with the community!"}
                 </p>
               </div>
             ) : (

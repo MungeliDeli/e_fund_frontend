@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FiAward, FiUser } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 import { getDonationsByCampaign as fetchDonationsByCampaign } from "../../donations/services/donationsApi";
 
 function RecentDonations({ themeColor, campaignId }) {
@@ -7,6 +8,7 @@ function RecentDonations({ themeColor, campaignId }) {
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const load = async () => {
@@ -59,6 +61,33 @@ function RecentDonations({ themeColor, campaignId }) {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount || 0);
+  };
+
+  const getDonorName = (donation) => {
+    if (donation.isAnonymous) {
+      return "Anonymous";
+    }
+
+    if (donation.donorDetails) {
+      return donation.donorDetails.displayName;
+    }
+
+    // Fallback for old data structure
+    return donation.donorName || "Donor";
+  };
+
+  const handleDonorClick = (donation) => {
+    if (donation.isAnonymous || !donation.donorDetails) {
+      return; // Don't navigate for anonymous donations
+    }
+
+    const { donorId, donorType } = donation.donorDetails;
+
+    if (donorType === "individual") {
+      navigate(`/users/${donorId}`);
+    } else if (donorType === "organization") {
+      navigate(`/organizers/${donorId}`);
+    }
   };
 
   const displayList = useMemo(() => {
@@ -115,9 +144,17 @@ function RecentDonations({ themeColor, campaignId }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
                   <span className="text-sm text-[color:var(--color-text)]">
-                    {(donation.isAnonymous
-                      ? "Anonymous"
-                      : donation.donorName) || "Donor"}{" "}
+                    {donation.isAnonymous || !donation.donorDetails ? (
+                      <span>{getDonorName(donation)}</span>
+                    ) : (
+                      <button
+                        onClick={() => handleDonorClick(donation)}
+                        className="text-sm font-medium hover:underline transition-colors"
+                        style={{ color: themeColor }}
+                      >
+                        {getDonorName(donation)}
+                      </button>
+                    )}{" "}
                     donated{" "}
                     <span className="font-bold">
                       {formatAmount(donation.amount)}
