@@ -73,6 +73,24 @@ const baseColumns = [
     ),
   },
   {
+    key: "totalWithdrawn",
+    label: "Withdrawn",
+    sortable: true,
+    render: (row) => {
+      const withdrawn =
+        row.totalWithdrawn != null
+          ? Number(row.totalWithdrawn)
+          : row.availableToWithdraw != null && row.currentRaisedAmount != null
+          ? Number(row.currentRaisedAmount) - Number(row.availableToWithdraw)
+          : 0;
+      return (
+        <span className="font-mono text-xs">
+          K{Number(withdrawn).toLocaleString()}
+        </span>
+      );
+    },
+  },
+  {
     key: "donationCount",
     label: "Donations",
     sortable: true,
@@ -151,7 +169,7 @@ const adminColumns = [
       );
     },
   },
-  ...baseColumns.slice(2), // Category, Raised, Donations, Status, Created
+  ...baseColumns.slice(2), // Category, Raised, Withdrawn, Donations, Status, Created
 ];
 
 function CampaignTable({

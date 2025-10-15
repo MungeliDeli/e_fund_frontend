@@ -17,6 +17,7 @@ function FilterModal({
   filters,
   onFiltersChange,
   filterOptions,
+  customFilters = [],
 }) {
   if (!isOpen) return null;
 
@@ -88,6 +89,16 @@ function FilterModal({
                   ))}
                 </select>
               )}
+            </div>
+          ))}
+
+          {/* Custom Filters */}
+          {customFilters.map((customFilter) => (
+            <div key={customFilter.key}>
+              <label className="block text-sm font-medium text-[color:var(--color-primary-text)] mb-2">
+                {customFilter.label}
+              </label>
+              {customFilter.component}
             </div>
           ))}
         </div>

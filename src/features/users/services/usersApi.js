@@ -78,6 +78,18 @@ export const updateOrganizationProfile = async (data) => {
 };
 
 /**
+ * Update payout settings for the authenticated organizer
+ * @param {Object} data - The payout settings data to update
+ * @returns {Promise<Object>} Updated profile data
+ *
+ * @example
+ * await updatePayoutSettings({ payoutDisplayName: 'Church Mobile Money', payoutPhoneNumber: '26097xxxxxxx', payoutNetwork: 'mtn' });
+ */
+export const updatePayoutSettings = async (data) => {
+  return apiClient.put("/organizations/me/payout-settings", data);
+};
+
+/**
  * Update organization profile information with images for the authenticated organizer
  * @param {FormData} formData - The form data including profile data and image files
  * @returns {Promise<Object>} Updated profile data

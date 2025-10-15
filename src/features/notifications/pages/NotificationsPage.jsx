@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   getMyNotifications,
   markNotificationAsRead,
+  testNotification,
 } from "../services/notificationsApi";
 import {
   FiBell,
@@ -10,6 +11,7 @@ import {
   FiXCircle,
   FiFlag,
 } from "react-icons/fi";
+import { useRealtimeNotification } from "../../../contexts/RealtimeNotificationContext";
 
 function Badge({ visible }) {
   if (!visible) return null;
@@ -111,8 +113,8 @@ function NotificationItem({ notification }) {
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { notifications, loading, markAllAsRead, markAsRead } =
+    useRealtimeNotification();
   const [error, setError] = useState(null);
   const [hasMarkedOnView, setHasMarkedOnView] = useState(false);
 
@@ -127,82 +129,38 @@ export default function NotificationsPage() {
     return { unreadNotifications: unread, readNotifications: read };
   }, [notifications]);
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getMyNotifications({ unreadOnly: false });
-      console.log("res", res.data);
-      const payload = res?.data || res; // support both wrapped/unwrapped
-      const list = Array.isArray(payload) ? payload : payload?.data || [];
-      setNotifications(list);
-      const unread = list.filter((x) => !x.readAt).length;
-      try {
-        localStorage.setItem("unreadNotifications", String(unread));
-        window.dispatchEvent(new Event("notifications:update"));
-      } catch {}
-    } catch (e) {
-      setError("Failed to load notifications");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Automatically mark all notifications as read when viewing the page (once)
+  // Mark all notifications as read when page is first loaded
+  // Note: This is a fallback in case the user navigates directly to the page
   useEffect(() => {
     if (loading) return;
     if (hasMarkedOnView) return;
+
     const unread = notifications.filter((n) => !n.readAt);
     if (unread.length === 0) {
-      try {
-        localStorage.setItem("unreadNotifications", "0");
-        window.dispatchEvent(new Event("notifications:update"));
-      } catch {}
       setHasMarkedOnView(true);
       return;
     }
 
-    // Add a delay so users can see the demarcation line before notifications are marked as read
-    const timer = setTimeout(async () => {
-      try {
-        await Promise.all(
-          unread.map((n) =>
-            markNotificationAsRead(n.notificationId).catch(() => null)
-          )
-        );
-        setNotifications((prev) =>
-          prev.map((n) =>
-            n.readAt ? n : { ...n, readAt: new Date().toISOString() }
-          )
-        );
-        try {
-          localStorage.setItem("unreadNotifications", "0");
-          window.dispatchEvent(new Event("notifications:update"));
-        } catch {}
-      } finally {
-        setHasMarkedOnView(true);
-      }
-    }, 60 * 1000); // 1 minute delay
-
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, notifications]);
+    // Mark all as read immediately when page loads (fallback)
+    // The main marking happens when user clicks bell/notification link
+    markAllAsRead();
+    setHasMarkedOnView(true);
+  }, [loading, notifications, markAllAsRead, hasMarkedOnView]);
 
   const onMarkRead = async (id) => {
     try {
-      await markNotificationAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === id ? { ...n, readAt: new Date().toISOString() } : n
-        )
-      );
+      await markAsRead(id);
     } catch (e) {
-      // no-op UI error for now
+      setError("Failed to mark notification as read");
+    }
+  };
+
+  const handleTestNotification = async () => {
+    try {
+      await testNotification();
+      // The real-time context will handle updating the UI
+    } catch (e) {
+      setError("Failed to send test notification");
     }
   };
 
@@ -212,6 +170,12 @@ export default function NotificationsPage() {
         <h1 className="text-xl sm:text-2xl font-bold text-[color:var(--color-primary-text)]">
           Notifications
         </h1>
+        <button
+          onClick={handleTestNotification}
+          className="px-3 py-1 text-sm bg-[color:var(--color-primary)] text-white rounded hover:bg-[color:var(--color-accent)] transition-colors"
+        >
+          Test Notification
+        </button>
       </div>
 
       {/* Filter controls removed for simplicity */}

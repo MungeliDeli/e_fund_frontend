@@ -48,7 +48,7 @@ const MediaContainer = ({
           <img
             src={media.url}
             alt={media.altText || media.fileName || media.name || "Media"}
-            className="relative z-10 max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-200"
+            className="relative z-10 max-w-full max-h-full object-contain transition-transform duration-200"
             loading="lazy"
           />
         </>

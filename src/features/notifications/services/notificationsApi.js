@@ -19,7 +19,28 @@ export const markNotificationAsRead = async (notificationId) => {
   return response.data;
 };
 
+export const getUnreadCount = async () => {
+  const response = await apiClient.get("/notifications/unread-count");
+  return response.data;
+};
+
+export const broadcastNotification = async (notificationData) => {
+  const response = await apiClient.post(
+    "/notifications/broadcast",
+    notificationData
+  );
+  return response.data;
+};
+
+export const testNotification = async () => {
+  const response = await apiClient.post("/notifications/test");
+  return response.data;
+};
+
 export default {
   getMyNotifications,
   markNotificationAsRead,
+  getUnreadCount,
+  broadcastNotification,
+  testNotification,
 };

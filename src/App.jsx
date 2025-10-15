@@ -4,6 +4,8 @@
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { SocketProvider } from "./contexts/SocketContext";
+import { RealtimeNotificationProvider } from "./contexts/RealtimeNotificationContext";
 import MainLayout from "./layout/MainLayout";
 import HomePage from "./features/home/pages/HomePage";
 import SignUpPage from "./features/auth/pages/SignUpPage";
@@ -30,6 +32,12 @@ const OrganizerDashboardPage = lazy(() =>
 const AdminDashboardPage = lazy(() =>
   import("./features/users/pages/admin/AdminDashboardPage")
 );
+const AdminAuditLogsPage = lazy(() =>
+  import("./features/users/pages/admin/auditLogs/AdminAuditLogsPage")
+);
+const AdminTransactionsPage = lazy(() =>
+  import("./features/users/pages/admin/transactions/AdminTransactionsPage")
+);
 const OrganizerPanel = lazy(() =>
   import("./features/users/pages/admin/organizerPanel/OrganizerPanel")
 );
@@ -51,6 +59,14 @@ const CampaignPanel = lazy(() =>
 );
 const CampaignCategories = lazy(() =>
   import("./features/campaigns/pages/admin/campaignPanel/campaignCategories")
+);
+const AdminWithdrawalPanel = lazy(() =>
+  import(
+    "./features/campaigns/pages/admin/withdrawalPanel/AdminWithdrawalPanel"
+  )
+);
+const OrganizerWithdrawalPage = lazy(() =>
+  import("./features/campaigns/pages/organizer/OrganizerWithdrawalPage")
 );
 // Builder components removed during demolition
 const MyCampaignsPage = lazy(() =>
@@ -304,6 +320,15 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/organizer/withdrawals"
+            element={
+              <ProtectedRoute
+                element={<OrganizerWithdrawalPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
             path="/organizer/settings"
             element={
               <ProtectedRoute
@@ -408,6 +433,34 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/admin/audit-logs"
+            element={
+              <ProtectedRoute
+                element={<AdminAuditLogsPage />}
+                requiredRole={[
+                  "superAdmin",
+                  "supportAdmin",
+                  "eventModerator",
+                  "financialAdmin",
+                ]}
+              />
+            }
+          />
+          <Route
+            path="/admin/transactions"
+            element={
+              <ProtectedRoute
+                element={<AdminTransactionsPage />}
+                requiredRole={[
+                  "superAdmin",
+                  "supportAdmin",
+                  "eventModerator",
+                  "financialAdmin",
+                ]}
+              />
+            }
+          />
+          <Route
             path="/admin/organizers"
             element={
               <ProtectedRoute
@@ -452,6 +505,15 @@ function AppRoutes() {
               />
             }
           />
+          <Route
+            path="/admin/withdrawals"
+            element={
+              <ProtectedRoute
+                element={<AdminWithdrawalPanel />}
+                requiredRole={["superAdmin", "financialAdmin"]}
+              />
+            }
+          />
           {/* ...other protected routes... */}
           <Route path="/access-denied" element={<AccessDeniedPage />} />
           {/* Catch-all for undefined protected routes */}
@@ -467,9 +529,13 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <NotificationProvider>
-            <AppRoutes />
-          </NotificationProvider>
+          <SocketProvider>
+            <RealtimeNotificationProvider>
+              <NotificationProvider>
+                <AppRoutes />
+              </NotificationProvider>
+            </RealtimeNotificationProvider>
+          </SocketProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

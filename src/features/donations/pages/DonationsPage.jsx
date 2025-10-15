@@ -121,6 +121,7 @@ function DonationsPage() {
           campaignId: d.campaignId,
           campaignName: d.campaignName,
           organizerId: d.organizerId,
+          status: d.status,
           amount: d.amount,
           donationDate: d.donationDate,
           messageText: d.messageText || null,
@@ -198,7 +199,10 @@ function DonationsPage() {
         !filters.campaignId || r.campaignId === filters.campaignId;
       const matchesOrganizer =
         !filters.organizerId || r.organizerId === filters.organizerId;
-      return matchesText && matchesCampaign && matchesOrganizer;
+      const matchesStatus = !filters.status || r.status === filters.status;
+      return (
+        matchesText && matchesCampaign && matchesOrganizer && matchesStatus
+      );
     });
   }, [rows, searchTerm, filters.campaignId, filters.organizerId]);
 
@@ -244,6 +248,35 @@ function DonationsPage() {
       key: "campaignName",
       label: "Campaign",
       sortable: true,
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (row) => {
+        const status = String(row.status || "-").toLowerCase();
+        const classes = (function () {
+          switch (status) {
+            case "completed":
+              return "bg-green-100 text-green-800 border border-green-200";
+            case "pending":
+              return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+            case "failed":
+              return "bg-red-100 text-red-800 border border-red-200";
+            case "cancelled":
+              return "bg-orange-100 text-orange-800 border border-orange-200";
+            default:
+              return "bg-gray-100 text-gray-700 border border-gray-200";
+          }
+        })();
+        return (
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${classes}`}
+          >
+            {status}
+          </span>
+        );
+      },
     },
     {
       key: "amount",
@@ -483,6 +516,17 @@ function DonationsPage() {
             label: "Campaign",
             type: "searchable",
             options: campaignOptions,
+          });
+          opts.push({
+            key: "status",
+            label: "Status",
+            type: "searchable",
+            options: [
+              { name: "Completed", categoryId: "completed" },
+              { name: "Pending", categoryId: "pending" },
+              { name: "Failed", categoryId: "failed" },
+              { name: "Cancelled", categoryId: "cancelled" },
+            ],
           });
           return opts;
         })()}

@@ -15,12 +15,20 @@ const SearchableDropdown = ({
   const [selectedOption, setSelectedOption] = useState(null);
   const dropdownRef = useRef(null);
 
-  // Filter options based on search term
-  const filteredOptions = Array.isArray(options)
-    ? options.filter((option) =>
-        option.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+  const getDisplayName = (option) =>
+    (option?.name ?? option?.label ?? "").toString();
+  const getValueKey = (option) => option?.categoryId ?? option?.value ?? "";
+
+  // Normalize list once per render to avoid repeated optional chaining work
+  const normalizedOptions = Array.isArray(options)
+    ? options.map((opt) => ({ ...opt }))
     : [];
+
+  // Filter options based on search term (null-safe)
+  const lowerSearch = (searchTerm || "").toLowerCase();
+  const filteredOptions = normalizedOptions.filter((option) =>
+    getDisplayName(option).toLowerCase().includes(lowerSearch)
+  );
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -37,9 +45,11 @@ const SearchableDropdown = ({
 
   // Set selected option when value changes
   useEffect(() => {
-    if (value) {
-      const option = options.find((opt) => opt.categoryId === value);
-      setSelectedOption(option);
+    if (value !== undefined && value !== null && value !== "") {
+      const option = normalizedOptions.find(
+        (opt) => getValueKey(opt) === value
+      );
+      setSelectedOption(option || null);
     } else {
       setSelectedOption(null);
     }
@@ -47,7 +57,7 @@ const SearchableDropdown = ({
 
   const handleSelect = (option) => {
     setSelectedOption(option);
-    onChange(option.categoryId);
+    onChange?.(getValueKey(option));
     setIsOpen(false);
     setSearchTerm("");
   };
@@ -55,12 +65,12 @@ const SearchableDropdown = ({
   const handleRemove = (e) => {
     e.stopPropagation();
     setSelectedOption(null);
-    onChange("");
+    onChange?.("");
     setSearchTerm("");
   };
 
   const handleInputChange = (e) => {
-    setSearchTerm(e.target.value);
+    setSearchTerm(e.target.value || "");
     setIsOpen(true);
   };
 
@@ -88,7 +98,7 @@ const SearchableDropdown = ({
           {selectedOption ? (
             <div className="flex items-center gap-2 flex-1">
               <span className="text-[color:var(--color-primary-text)]">
-                {selectedOption.name}
+                {getDisplayName(selectedOption)}
               </span>
               <button
                 onClick={handleRemove}
@@ -130,15 +140,15 @@ const SearchableDropdown = ({
           ) : (
             filteredOptions.map((option) => (
               <div
-                key={option.categoryId}
+                key={getValueKey(option)}
                 className={`px-3 py-2 cursor-pointer hover:bg-[color:var(--color-surface)] transition-colors ${
-                  selectedOption?.categoryId === option.categoryId
+                  getValueKey(selectedOption || {}) === getValueKey(option)
                     ? "bg-[color:var(--color-primary)] text-white"
                     : "text-[color:var(--color-primary-text)]"
                 }`}
                 onClick={() => handleSelect(option)}
               >
-                {option.name}
+                {getDisplayName(option) || "Unnamed"}
               </div>
             ))
           )}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { formatTimeAgo } from "../../../utils/timeUtils";
 import MediaContainer from "../../../components/MediaContainer";
-import ImageSlider from "../../../components/ImageSlider";
+import MediaGallery from "../../campaigns/components/MediaGallery";
 import FeedSidebar from "../../../components/FeedSidebar";
 import { getPostById } from "../services/feedApi";
 
@@ -287,7 +287,7 @@ const PostDetailPage = () => {
                   </div>
                 )}
 
-                {/* Media - Full size image slider */}
+                {/* Media - Basic display */}
                 {post.media && post.media.length > 0 && (
                   <div className="mb-6">
                     {post.media.length === 1 ? (
@@ -297,11 +297,16 @@ const PostDetailPage = () => {
                         className="w-full"
                       />
                     ) : (
-                      <ImageSlider
-                        media={post.media}
-                        size="large"
-                        className="w-full"
-                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        {post.media.map((media, index) => (
+                          <MediaContainer
+                            key={index}
+                            media={media}
+                            size="medium"
+                            className="w-full"
+                          />
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}

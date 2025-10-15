@@ -22,6 +22,7 @@ import { createDonation } from "../services/donationApi";
 import Notification from "../../../components/Notification";
 import FundraiseLogo from "./../../../assets/fundraise logo.svg";
 import PaymentModal from "../components/PaymentModal";
+import PaymentResultModal from "../components/PaymentResultModal";
 import ThankYouModal from "../components/ThankYouModal";
 import { useAuth } from "../../../contexts/AuthContext";
 import GuestAuthPrompt from "../../../components/GuestAuthPrompt";
@@ -69,6 +70,9 @@ function CampaignTemplatePage({
     message: "",
   });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPaymentResultModal, setShowPaymentResultModal] = useState(false);
+  const [paymentResultError, setPaymentResultError] = useState(null);
+  const [providerLabel, setProviderLabel] = useState("your selected provider");
   const [showThankYouModal, setShowThankYouModal] = useState(false);
   const [selectedDonationAmount, setSelectedDonationAmount] = useState("50");
   const [donationDetails, setDonationDetails] = useState(null);
@@ -210,6 +214,18 @@ function CampaignTemplatePage({
       setIsProcessingDonation(true);
       setPaymentPhase("submitting");
 
+      // Open result modal immediately and close the payment modal
+      const provider =
+        paymentData?.paymentMethod === "airtel"
+          ? "Airtel Zambia"
+          : paymentData?.paymentMethod === "mtn"
+          ? "MTN Zambia"
+          : "your selected provider";
+      setProviderLabel(provider);
+      setPaymentResultError(null);
+      setShowPaymentResultModal(true);
+      setShowPaymentModal(false);
+
       // Add campaign ID to payment data
       const donationData = {
         ...paymentData,
@@ -251,6 +267,8 @@ function CampaignTemplatePage({
           "Payment request sent to your phone. Please approve on your device.",
       });
 
+      // Keep showing the result modal while we poll
+
       // Begin polling donation status
       setPaymentPhase("polling");
       const startedAt = Date.now();
@@ -264,6 +282,7 @@ function CampaignTemplatePage({
               clearInterval(pollingRef.current);
               setPaymentPhase("success");
               setShowPaymentModal(false);
+              setShowPaymentResultModal(false);
               setShowThankYouModal(true);
               await fetchCampaign();
               try {
@@ -273,6 +292,7 @@ function CampaignTemplatePage({
             } else if (status === "failed") {
               clearInterval(pollingRef.current);
               setPaymentPhase("failed");
+              setPaymentResultError("Payment was declined. You can try again.");
               setNotification({
                 isVisible: true,
                 type: "error",
@@ -285,6 +305,9 @@ function CampaignTemplatePage({
           if (Date.now() - startedAt > timeoutMs) {
             clearInterval(pollingRef.current);
             setPaymentPhase("timeout");
+            setPaymentResultError(
+              "Payment is taking longer than expected. If you approved, it will reflect shortly; otherwise, please retry."
+            );
             setNotification({
               isVisible: true,
               type: "error",
@@ -296,6 +319,12 @@ function CampaignTemplatePage({
       }
     } catch (error) {
       console.error("Donation failed:", error);
+      setPaymentResultError(
+        mapProviderError(error?.message) ||
+          error?.message ||
+          "Failed to process donation. Please try again."
+      );
+      setShowPaymentResultModal(true);
       setNotification({
         isVisible: true,
         type: "error",
@@ -304,7 +333,8 @@ function CampaignTemplatePage({
           error?.message ||
           "Failed to process donation. Please try again.",
       });
-      throw error; // Re-throw to let PaymentModal handle it
+      // Keep the error visible in the result modal; also rethrow for any upstream handling
+      throw error;
     } finally {
       setIsProcessingDonation(false);
     }
@@ -533,6 +563,27 @@ function CampaignTemplatePage({
               </div>
             </div>
 
+            {/* Campaign Categories */}
+            {campaign?.categories && campaign.categories.length > 0 && (
+              <div className="px-4 mb-4">
+                <div className="flex flex-wrap gap-2">
+                  {campaign.categories.map((category) => (
+                    <span
+                      key={category.categoryId}
+                      className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                      style={{
+                        backgroundColor: `${themeColor}20`,
+                        border: `1px solid ${themeColor}40`,
+                        color: themeColor,
+                      }}
+                    >
+                      {category.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Donate and Share Buttons */}
             <div className="flex gap-3 px-4">
               <button
@@ -693,6 +744,27 @@ function CampaignTemplatePage({
             </div>
           </div>
 
+          {/* Campaign Categories */}
+          {campaign?.categories && campaign.categories.length > 0 && (
+            <div className="px-4 mb-4">
+              <div className="flex flex-wrap gap-2">
+                {campaign.categories.map((category) => (
+                  <span
+                    key={category.categoryId}
+                    className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                    style={{
+                      backgroundColor: `${themeColor}20`,
+                      border: `1px solid ${themeColor}40`,
+                      color: themeColor,
+                    }}
+                  >
+                    {category.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Donate and Share Buttons */}
           <div className="flex flex-col gap-2">
             <button
@@ -785,7 +857,20 @@ function CampaignTemplatePage({
         campaignStartDate={campaign?.startDate}
       />
 
-      {/* Thank You Modal */}
+      {/* Payment Result Modal */}
+      <PaymentResultModal
+        isOpen={showPaymentResultModal}
+        onClose={() => setShowPaymentResultModal(false)}
+        themeColor={themeColor}
+        providerLabel={providerLabel}
+        isProcessing={
+          paymentPhase === "processing" || paymentPhase === "polling"
+        }
+        errorMessage={paymentResultError}
+        title="Payment Result"
+      />
+
+      {/* Thank You Modal on success */}
       <ThankYouModal
         isOpen={showThankYouModal}
         onClose={handleThankYouClose}

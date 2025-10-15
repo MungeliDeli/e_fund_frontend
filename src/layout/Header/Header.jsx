@@ -8,14 +8,17 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import FundraiseLogo from "../../assets/Fundraise logo.svg";
 import { useAuth } from "../../contexts/AuthContext";
+import { useRealtimeNotification } from "../../contexts/RealtimeNotificationContext";
 import { useEffect, useRef, useState } from "react";
+import ProfileImage from "../../features/users/components/ProfileImage";
+import { useUserProfile } from "../../hooks/useUserProfile";
 
 function Logo() {
   return (
     <span className="flex items-center">
       <img src={FundraiseLogo} alt="FundFlow Logo" className="w-7 h-7" />
       <span className="ml-2 font-bold text-xl text-[color:var(--color-primary)] hidden sm:inline">
-        FundFlow
+        Fundizo
       </span>
     </span>
   );
@@ -45,6 +48,8 @@ function Header({
   const navigate = useNavigate();
   const location = useLocation();
   const { user: userCtx, isAuthenticated: isAuthCtx, logout } = useAuth();
+  const { unreadCount, handleNotificationsPageOpened } =
+    useRealtimeNotification();
   const user = userProp || userCtx;
   const isAuthenticated =
     typeof isAuthenticatedProp === "boolean" ? isAuthenticatedProp : isAuthCtx;
@@ -52,15 +57,9 @@ function Header({
   const isLogin = location.pathname === "/login";
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef();
-  const [unreadCount, setUnreadCount] = useState(() => {
-    try {
-      return (
-        parseInt(localStorage.getItem("unreadNotifications") || "0", 10) || 0
-      );
-    } catch {
-      return 0;
-    }
-  });
+
+  // Fetch user profile data for profile picture
+  const { profile } = useUserProfile(user);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -77,25 +76,12 @@ function Header({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [profileOpen]);
 
-  // Sync unread notifications badge from localStorage and custom event
-  useEffect(() => {
-    const syncUnread = () => {
-      try {
-        const val =
-          parseInt(localStorage.getItem("unreadNotifications") || "0", 10) || 0;
-        setUnreadCount(val);
-      } catch {
-        setUnreadCount(0);
-      }
-    };
-    syncUnread();
-    window.addEventListener("notifications:update", syncUnread);
-    window.addEventListener("storage", syncUnread);
-    return () => {
-      window.removeEventListener("notifications:update", syncUnread);
-      window.removeEventListener("storage", syncUnread);
-    };
-  }, []);
+  // Handle notification click - mark all as read when navigating to notifications
+  const handleNotificationClick = async () => {
+    // Mark all notifications as read immediately when clicking the bell
+    await handleNotificationsPageOpened();
+    navigate("/notifications");
+  };
 
   // Organizer quick action
   const renderOrganizerActions = () => {
@@ -178,7 +164,7 @@ function Header({
             <button
               className="p-2 rounded hover:bg-[color:var(--color-muted)] focus:outline-none relative"
               aria-label="Notifications"
-              onClick={() => navigate("/notifications")}
+              onClick={handleNotificationClick}
             >
               <FiBell className="text-xl text-[color:var(--color-primary-text)]" />
               {/* Badge dot for unread notifications */}
@@ -189,11 +175,22 @@ function Header({
             {/* Profile avatar */}
             <div className="relative" ref={profileRef}>
               <button
-                className="w-9 h-9 rounded-full bg-[color:var(--color-muted)] flex items-center justify-center text-[color:var(--color-primary)] font-bold text-base focus:outline-none border border-[color:var(--color-muted)] hover:border-[color:var(--color-primary)]"
+                className="w-9 h-9 rounded-full focus:outline-none border border-[color:var(--color-muted)] hover:border-[color:var(--color-primary)] overflow-hidden"
                 onClick={() => setProfileOpen((v) => !v)}
                 aria-label="Profile menu"
               >
-                {getInitials(user?.name, user?.email)}
+                {profile?.profilePictureUrl ? (
+                  <ProfileImage
+                    imageUrl={profile.profilePictureUrl}
+                    size="sm"
+                    alt="Profile"
+                    className="w-full h-full"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-[color:var(--color-muted)] flex items-center justify-center text-[color:var(--color-primary)] font-bold text-base">
+                    {getInitials(user?.name, user?.email)}
+                  </div>
+                )}
               </button>
               {renderProfileMenu()}
             </div>

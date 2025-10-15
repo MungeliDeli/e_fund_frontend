@@ -38,6 +38,28 @@ export async function getAllDonations({ limit = 100, offset = 0 } = {}) {
 }
 
 /**
+ * Get donations by user ID
+ * @param {string} userId - User ID
+ * @param {Object} options - Query options
+ * @param {number} options.limit - Number of donations to fetch
+ * @param {number} options.offset - Number of donations to skip
+ * @returns {Promise<Object>} User donations
+ */
+export async function getDonationsByUser(
+  userId,
+  { limit = 50, offset = 0 } = {}
+) {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const response = await apiClient.get(
+    `/donations/user/${userId}?${params.toString()}`
+  );
+  return response;
+}
+
+/**
  * Get donation statistics for a specific campaign
  * @param {string} campaignId - Campaign ID
  * @returns {Promise<Object>} Donation statistics

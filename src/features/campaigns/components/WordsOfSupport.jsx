@@ -61,6 +61,7 @@ function WordsOfSupport({ themeColor, campaignId }) {
     [mergedMessages, showCount]
   );
 
+  console.log(displayedSupports);
   const handleSeeMore = () => {
     setShowCount((prev) => Math.min(prev + 5, mergedMessages.length));
   };
@@ -112,7 +113,9 @@ function WordsOfSupport({ themeColor, campaignId }) {
                   -{" "}
                   {support.isAnonymous
                     ? "Anonymous"
-                    : support.donorEmail || "Supporter"}
+                    : support?.donorDetails?.displayName ||
+                      support.donorEmail ||
+                      "Supporter"}
                 </p>
               </div>
 

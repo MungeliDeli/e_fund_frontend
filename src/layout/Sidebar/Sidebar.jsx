@@ -13,9 +13,12 @@ import {
   FiX,
   FiBriefcase,
   FiBell,
+  FiDollarSign,
+  FiCreditCard,
 } from "react-icons/fi";
 import SidebarItem from "../../components/SidebarItem/SidebarItem";
 import { useAuth } from "../../contexts/AuthContext";
+import { useRealtimeNotification } from "../../contexts/RealtimeNotificationContext";
 
 // Public navigation items (always visible)
 const publicNavItems = [
@@ -69,7 +72,38 @@ const adminNavItems = [
       "financialAdmin",
     ],
   },
+  {
+    label: "Withdrawals",
+    icon: FiDollarSign,
+    key: "admin-withdrawals",
+    path: "/admin/withdrawals",
+    allowedRoles: ["superAdmin", "financialAdmin"],
+  },
+  {
+    label: "Transactions",
+    icon: FiCreditCard,
+    key: "admin-transactions",
+    path: "/admin/transactions",
+    allowedRoles: [
+      "superAdmin",
+      "supportAdmin",
+      "eventModerator",
+      "financialAdmin",
+    ],
+  },
 
+  {
+    label: "Audit Logs",
+    icon: FiSearch,
+    key: "admin-audit-logs",
+    path: "/admin/audit-logs",
+    allowedRoles: [
+      "superAdmin",
+      "supportAdmin",
+      "eventModerator",
+      "financialAdmin",
+    ],
+  },
   {
     label: "Financial Reports",
     icon: FiBarChart2,
@@ -158,6 +192,12 @@ const navConfig = {
       path: "/organizer/outreach/analytics",
     },
     {
+      label: "My Withdrawals",
+      icon: FiDollarSign,
+      key: "organizer-withdrawals",
+      path: "/organizer/withdrawals",
+    },
+    {
       label: "Settings",
       icon: FiSettings,
       key: "organizer-settings",
@@ -177,6 +217,8 @@ const adminRoles = [
 function Sidebar({ open, onClose, className }) {
   const headerHeight = 56;
   const { user, isAuthenticated } = useAuth();
+  const { unreadCount, handleNotificationsPageOpened } =
+    useRealtimeNotification();
   const userType = user?.userType;
 
   let roleNavItems = [];
@@ -235,6 +277,11 @@ function Sidebar({ open, onClose, className }) {
               icon={item.icon}
               label={item.label}
               path={item.path}
+              onClick={
+                item.key === "notifications"
+                  ? async () => await handleNotificationsPageOpened()
+                  : undefined
+              }
             />
           ))}
         </nav>

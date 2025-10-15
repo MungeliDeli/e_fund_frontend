@@ -28,8 +28,6 @@ import React, { useMemo, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import OverviewTab from "./tabs/OverviewTab";
 import DonationsTab from "./tabs/DonationsTab";
-import CampaignsTab from "./tabs/CampaignsTab";
-import MessagesTab from "./tabs/MessagesTab";
 import AccountSettingsTab from "./tabs/AccountSettingsTab";
 import { FiCamera } from "react-icons/fi";
 import {
@@ -59,9 +57,7 @@ function UserProfilePage() {
   const tabMap = {
     overview: 0,
     donations: 1,
-    campaigns: 2,
-    messages: 3,
-    "account-settings": isOwner ? 4 : undefined, // Only show for owners
+    "account-settings": isOwner ? 2 : undefined, // Only show for owners
   };
 
   // Extract tab from URL query parameters for deep linking
@@ -124,14 +120,11 @@ function UserProfilePage() {
         ? [
             { label: "Overview", key: "overview" },
             { label: "Donations", key: "donations" },
-            { label: "Campaigns", key: "campaigns" },
-            { label: "Messages", key: "messages" },
             { label: "Account Settings", key: "account-settings" },
           ]
         : [
             { label: "Overview", key: "overview" },
             { label: "Donations", key: "donations" },
-            { label: "Campaigns", key: "campaigns" },
           ],
     [isOwner]
   );
@@ -160,11 +153,7 @@ function UserProfilePage() {
         );
       case 1: // Donations
         return <DonationsTab />;
-      case 2: // Campaigns
-        return <CampaignsTab />;
-      case 3: // Messages
-        return isOwner ? <MessagesTab /> : null;
-      case 4: // Account Settings
+      case 2: // Account Settings (only for owners)
         return isOwner ? (
           <AccountSettingsTab
             profile={profile}

@@ -38,13 +38,12 @@ const MessagesSection = ({
   const fetchMessagesData = async (isRefresh = false) => {
     try {
       if (isRefresh) {
-      
         setLoading(true);
       }
 
       // Fetch featured messages and pending count using service
       const [featuredData, pendingData] = await Promise.all([
-        getFeaturedMessages(campaignId, 3),
+        getFeaturedMessages(campaignId, 2), // Limit to 2 featured messages
         getPendingMessagesCount(campaignId),
       ]);
 
@@ -75,7 +74,6 @@ const MessagesSection = ({
       }
     } finally {
       setLoading(false);
-      
     }
   };
 
@@ -144,8 +142,6 @@ const MessagesSection = ({
               label={`${pendingCount} pending`}
             />
           )}
-
-         
         </div>
       </div>
 

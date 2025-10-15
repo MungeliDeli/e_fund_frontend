@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiEdit3, FiUser, FiSettings } from "react-icons/fi";
 import { PrimaryButton } from "../../../../components/Buttons";
 import OrganizerDetailsTab from "./settingsTabs/OrganizerDetailsTab";
+import OrganizerPayoutSettings from "./settingsTabs/OrganizerPayoutSettings";
 
 function OrganizerSettingsPage() {
   const navigate = useNavigate();
@@ -62,11 +63,7 @@ function OrganizerSettingsPage() {
         {activeTab === "details" && (
           <OrganizerDetailsTab onEditDetails={handleEditDetails} />
         )}
-        {activeTab === "settings" && (
-          <div className="text-center text-[color:var(--color-secondary-text)] py-8">
-            Settings tab content coming soon...
-          </div>
-        )}
+        {activeTab === "settings" && <OrganizerPayoutSettings />}
       </div>
     </div>
   );
