@@ -20,7 +20,7 @@ import {
 } from "../services/campaignApi";
 import { createDonation } from "../services/donationApi";
 import Notification from "../../../components/Notification";
-import FundraiseLogo from "./../../../assets/fundraise logo.svg";
+import FundraiseLogo from "../../../assets/fundraise logo.svg";
 import PaymentModal from "../components/PaymentModal";
 import PaymentResultModal from "../components/PaymentResultModal";
 import ThankYouModal from "../components/ThankYouModal";
