@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   getMyNotifications,
   markNotificationAsRead,
-  testNotification,
 } from "../services/notificationsApi";
 import {
   FiBell,
@@ -155,14 +154,7 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleTestNotification = async () => {
-    try {
-      await testNotification();
-      // The real-time context will handle updating the UI
-    } catch (e) {
-      setError("Failed to send test notification");
-    }
-  };
+  // Test notification removed
 
   return (
     <div className="p-3 sm:p-4">
@@ -170,12 +162,6 @@ export default function NotificationsPage() {
         <h1 className="text-xl sm:text-2xl font-bold text-[color:var(--color-primary-text)]">
           Notifications
         </h1>
-        <button
-          onClick={handleTestNotification}
-          className="px-3 py-1 text-sm bg-[color:var(--color-primary)] text-white rounded hover:bg-[color:var(--color-accent)] transition-colors"
-        >
-          Test Notification
-        </button>
       </div>
 
       {/* Filter controls removed for simplicity */}

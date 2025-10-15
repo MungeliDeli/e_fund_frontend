@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { formatTimeAgo } from "../../../utils/timeUtils";
 import MediaContainer from "../../../components/MediaContainer";
@@ -7,6 +7,9 @@ import MediaGallery from "../../campaigns/components/MediaGallery";
 const PostCard = ({ post }) => {
   const navigate = useNavigate();
   console.log(post);
+
+  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  const [liked, setLiked] = useState(!!post.liked);
 
   const handlePostClick = () => {
     navigate(`/post/${post.postId}`, {
@@ -201,6 +204,54 @@ const PostCard = ({ post }) => {
             )}
           </div>
         )}
+        {/* like heart can come here */}
+        <div className="flex items-center gap-2 mt-3">
+          <button
+            type="button"
+            aria-label={liked ? "Unlike" : "Like"}
+            onClick={async (e) => {
+              e.stopPropagation();
+              try {
+                const { toggleLikePost } = await import("../services/feedApi");
+                // optimistic update
+                setLiked((v) => !v);
+                setLikesCount((c) => (liked ? Math.max(0, c - 1) : c + 1));
+                const result = await toggleLikePost(post.postId);
+                if (result && typeof result.likesCount === "number") {
+                  setLikesCount(result.likesCount);
+                  setLiked(!!result.liked);
+                }
+              } catch (err) {
+                // revert on error
+                setLiked((v) => !v);
+                setLikesCount((c) => (liked ? c + 1 : Math.max(0, c - 1)));
+              }
+            }}
+            className={`transition-colors`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill={liked ? "currentColor" : "none"}
+              stroke="currentColor"
+              className={`${
+                liked
+                  ? "text-[var(--color-primary)]"
+                  : "text-[var(--color-secondary-text)]"
+              } w-5 h-5`}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+              />
+            </svg>
+          </button>
+          <span className="text-xs text-[var(--color-secondary-text)]">
+            {likesCount}
+          </span>
+        </div>
       </div>
       <style>{`
       .formatted-text p { margin: 0.5rem 0; line-height: 1.5; }

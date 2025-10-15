@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import ProfileImage from "../../features/users/components/ProfileImage";
 import { useUserProfile } from "../../hooks/useUserProfile";
 
-function Logo() {
+export function Logo() {
   return (
     <span className="flex items-center">
       <img src={FundraiseLogo} alt="FundFlow Logo" className="w-7 h-7" />

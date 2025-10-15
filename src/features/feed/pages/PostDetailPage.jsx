@@ -3,7 +3,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { formatTimeAgo } from "../../../utils/timeUtils";
 import MediaContainer from "../../../components/MediaContainer";
 import MediaGallery from "../../campaigns/components/MediaGallery";
-import FeedSidebar from "../../../components/FeedSidebar";
+import { toggleLikePost } from "../services/feedApi";
+
 import { getPostById } from "../services/feedApi";
 
 const PostDetailPage = () => {
@@ -11,6 +12,8 @@ const PostDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [post, setPost] = useState(null);
+  const [likesCount, setLikesCount] = useState(0);
+  const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,6 +23,7 @@ const PostDetailPage = () => {
         setLoading(true);
         const data = await getPostById(postId);
         setPost(data);
+        setLikesCount(data.likesCount || 0);
         setError(null);
       } catch (err) {
         setError(err.message);
@@ -67,9 +71,9 @@ const PostDetailPage = () => {
     return (
       <div className="min-h-screen bg-[var(--color-background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-6 pt-2 lg:px-6 xl:px-8 2xl:px-">
+          <div className="pt-2 lg:px-6 xl:px-8 2xl:px-">
             {/* Main content area */}
-            <div className="flex-1">
+            <div>
               <div className="pt-6">
                 <div className="animate-pulse">
                   <div className="h-8 bg-[var(--color-muted)] rounded w-16 mb-6"></div>
@@ -85,9 +89,6 @@ const PostDetailPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Sidebar */}
-            <FeedSidebar />
           </div>
         </div>
       </div>
@@ -98,9 +99,9 @@ const PostDetailPage = () => {
     return (
       <div className="min-h-screen bg-[var(--color-background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-6 pt-2 lg:px-6 xl:px-8 2xl:px-">
+          <div className="pt-2 lg:px-6 xl:px-8 2xl:px-">
             {/* Main content area */}
-            <div className="flex-1">
+            <div>
               <div className="pt-6">
                 <button
                   onClick={handleBackClick}
@@ -129,9 +130,6 @@ const PostDetailPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Sidebar */}
-            <FeedSidebar />
           </div>
         </div>
       </div>
@@ -176,9 +174,6 @@ const PostDetailPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Sidebar */}
-            <FeedSidebar />
           </div>
         </div>
       </div>
@@ -277,6 +272,55 @@ const PostDetailPage = () => {
                   </h1>
                 )}
 
+                {/* Like */}
+                <div className="flex items-center gap-2 mb-4">
+                  <button
+                    type="button"
+                    aria-label={liked ? "Unlike" : "Like"}
+                    onClick={async () => {
+                      try {
+                        setLiked((v) => !v);
+                        setLikesCount((c) =>
+                          liked ? Math.max(0, c - 1) : c + 1
+                        );
+                        const result = await toggleLikePost(post.postId);
+                        if (result && typeof result.likesCount === "number") {
+                          setLikesCount(result.likesCount);
+                          setLiked(!!result.liked);
+                        }
+                      } catch (e) {
+                        setLiked((v) => !v);
+                        setLikesCount((c) =>
+                          liked ? c + 1 : Math.max(0, c - 1)
+                        );
+                      }
+                    }}
+                    className={`transition-colors`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill={liked ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      className={`${
+                        liked
+                          ? "text-[var(--color-primary)]"
+                          : "text-[var(--color-secondary-text)]"
+                      } w-6 h-6`}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                      />
+                    </svg>
+                  </button>
+                  <span className="text-sm text-[var(--color-secondary-text)]">
+                    {likesCount}
+                  </span>
+                </div>
+
                 {/* Body - Full text with preserved formatting */}
                 {post.body && (
                   <div className="text-[var(--color-text)] mb-6">
@@ -342,9 +386,6 @@ const PostDetailPage = () => {
               </div>
             </div>
           </div>
-
-          {/* Sidebar */}
-          <FeedSidebar />
         </div>
       </div>
     </div>

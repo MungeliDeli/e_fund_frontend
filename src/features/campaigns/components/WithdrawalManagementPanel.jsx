@@ -147,6 +147,10 @@ function WithdrawalManagementPanel({ isAdmin = false }) {
 
   // Calculate stats from withdrawals
   const total = totalCount;
+  const totalWithdrawAmount = withdrawals.reduce((sum, w) => {
+    const amount = Number(w.amount || 0);
+    return sum + (isNaN(amount) ? 0 : amount);
+  }, 0);
   const pending = withdrawals.filter((w) => w.status === "pending").length;
   const approved = withdrawals.filter((w) => w.status === "approved").length;
   const rejected = withdrawals.filter((w) => w.status === "rejected").length;
@@ -341,6 +345,16 @@ function WithdrawalManagementPanel({ isAdmin = false }) {
             <TotalStatsCard
               title="Total Withdrawals"
               value={total}
+              icon={FiDollarSign}
+              iconColor="#10b981"
+              className="flex-1"
+            />
+            <TotalStatsCard
+              title="Total Withdraw Amount"
+              value={new Intl.NumberFormat(undefined, {
+                style: "currency",
+                currency: "ZMW",
+              }).format(totalWithdrawAmount)}
               icon={FiDollarSign}
               iconColor="#10b981"
               className="flex-1"

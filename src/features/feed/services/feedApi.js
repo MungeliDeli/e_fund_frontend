@@ -147,3 +147,12 @@ export const getOrganizerCampaignPosts = async (organizerId, params = {}) => {
     );
   }
 };
+
+export const toggleLikePost = async (postId) => {
+  try {
+    const response = await apiClient.post(`/posts/${postId}/like`);
+    return response.data?.data || response.data; // { liked, likesCount }
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to update like");
+  }
+};

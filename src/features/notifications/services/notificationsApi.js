@@ -32,15 +32,9 @@ export const broadcastNotification = async (notificationData) => {
   return response.data;
 };
 
-export const testNotification = async () => {
-  const response = await apiClient.post("/notifications/test");
-  return response.data;
-};
-
 export default {
   getMyNotifications,
   markNotificationAsRead,
   getUnreadCount,
   broadcastNotification,
-  testNotification,
 };
