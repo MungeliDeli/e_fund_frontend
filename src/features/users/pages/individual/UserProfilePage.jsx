@@ -28,8 +28,6 @@ import React, { useMemo, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import OverviewTab from "./tabs/OverviewTab";
 import DonationsTab from "./tabs/DonationsTab";
-import CampaignsTab from "./tabs/CampaignsTab";
-import MessagesTab from "./tabs/MessagesTab";
 import AccountSettingsTab from "./tabs/AccountSettingsTab";
 import { FiCamera } from "react-icons/fi";
 import {
@@ -59,9 +57,7 @@ function UserProfilePage() {
   const tabMap = {
     overview: 0,
     donations: 1,
-    campaigns: 2,
-    messages: 3,
-    "account-settings": isOwner ? 4 : undefined, // Only show for owners
+    "account-settings": isOwner ? 2 : undefined, // Only show for owners
   };
 
   // Extract tab from URL query parameters for deep linking
@@ -98,6 +94,7 @@ function UserProfilePage() {
       const res = isOwner
         ? await fetchPrivateProfile()
         : await fetchPublicProfile(userId);
+      console.log("res", res);
       return res.data || res; // Handle responses that might be wrapped in a data object
     },
     // The query will automatically refetch if userId or isOwner changes
@@ -123,14 +120,11 @@ function UserProfilePage() {
         ? [
             { label: "Overview", key: "overview" },
             { label: "Donations", key: "donations" },
-            { label: "Campaigns", key: "campaigns" },
-            { label: "Messages", key: "messages" },
             { label: "Account Settings", key: "account-settings" },
           ]
         : [
             { label: "Overview", key: "overview" },
             { label: "Donations", key: "donations" },
-            { label: "Campaigns", key: "campaigns" },
           ],
     [isOwner]
   );
@@ -159,11 +153,7 @@ function UserProfilePage() {
         );
       case 1: // Donations
         return <DonationsTab />;
-      case 2: // Campaigns
-        return <CampaignsTab />;
-      case 3: // Messages
-        return isOwner ? <MessagesTab /> : null;
-      case 4: // Account Settings
+      case 2: // Account Settings (only for owners)
         return isOwner ? (
           <AccountSettingsTab
             profile={profile}
@@ -240,7 +230,7 @@ function UserProfilePage() {
       {/* Cover Photo Section */}
       <div className="w-full max-w-4xl relative rounded-b-lg overflow-hidden">
         <CoverImage
-          mediaId={profile?.coverPictureMediaId}
+          imageUrl={profile?.coverPictureUrl}
           height="h-36 sm:h-44 md:h-52 lg:h-60"
           alt="Cover"
         />
@@ -260,7 +250,7 @@ function UserProfilePage() {
       <div className="relative -mt-14 sm:-mt-16 mb-2">
         <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-1 border-[color:var(--color-background)] shadow-lg">
           <ProfileImage
-            mediaId={profile?.profilePictureMediaId}
+            imageUrl={profile?.profilePictureUrl}
             size="2xl"
             alt="Profile"
             className="w-full h-full"

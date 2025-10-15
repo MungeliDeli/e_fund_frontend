@@ -4,6 +4,8 @@
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { SocketProvider } from "./contexts/SocketContext";
+import { RealtimeNotificationProvider } from "./contexts/RealtimeNotificationContext";
 import MainLayout from "./layout/MainLayout";
 import HomePage from "./features/home/pages/HomePage";
 import SignUpPage from "./features/auth/pages/SignUpPage";
@@ -17,7 +19,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UserProfilePage from "./features/users/pages/individual/UserProfilePage";
-import OrganizerProfilePage from "./features/users/pages/individual/OrganizerProfilePage";
+import OrganizerProfilePage from "./features/users/pages/organizer/OrganizerProfilePage";
 // Template imports removed during demolition
 
 // Lazy load role-specific dashboards, AccessDeniedPage, and NotFoundPage
@@ -30,8 +32,17 @@ const OrganizerDashboardPage = lazy(() =>
 const AdminDashboardPage = lazy(() =>
   import("./features/users/pages/admin/AdminDashboardPage")
 );
+const AdminAuditLogsPage = lazy(() =>
+  import("./features/users/pages/admin/auditLogs/AdminAuditLogsPage")
+);
+const AdminTransactionsPage = lazy(() =>
+  import("./features/users/pages/admin/transactions/AdminTransactionsPage")
+);
 const OrganizerPanel = lazy(() =>
   import("./features/users/pages/admin/organizerPanel/OrganizerPanel")
+);
+const OrganizerSettingsPage = lazy(() =>
+  import("./features/users/pages/organizer/OrganizerSettingsPage")
 );
 const AccessDeniedPage = lazy(() =>
   import("./features/auth/pages/AccessDeniedPage")
@@ -40,11 +51,22 @@ const NotFoundPage = lazy(() => import("./features/auth/pages/NotFoundPage"));
 const AddOrganizationPage = lazy(() =>
   import("./features/users/pages/admin/organizerPanel/AddOrganizationPage")
 );
+const UserManagementPage = lazy(() =>
+  import("./features/users/pages/admin/userManagement/UserManagementPage")
+);
 const CampaignPanel = lazy(() =>
   import("./features/campaigns/pages/admin/campaignPanel/campaignPanel")
 );
 const CampaignCategories = lazy(() =>
   import("./features/campaigns/pages/admin/campaignPanel/campaignCategories")
+);
+const AdminWithdrawalPanel = lazy(() =>
+  import(
+    "./features/campaigns/pages/admin/withdrawalPanel/AdminWithdrawalPanel"
+  )
+);
+const OrganizerWithdrawalPage = lazy(() =>
+  import("./features/campaigns/pages/organizer/OrganizerWithdrawalPage")
 );
 // Builder components removed during demolition
 const MyCampaignsPage = lazy(() =>
@@ -133,12 +155,12 @@ function AppRoutes() {
       >
         <Routes>
           {/* Public Routes: pleaser note that for all public routes you have to include it in the publicRoutes array in authContext.jsx or else it will be redirected to login wheneve you try to go to the route */}
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<FeedPage />} />
           <Route
             path="/campaign/:shareSlug"
             element={<CampaignTemplatePage />}
           />
-    
+
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -198,22 +220,25 @@ function AppRoutes() {
             }
           />
           <Route path="/users/:userId" element={<UserProfilePage />} />
-          {/* Organizer profile routes */}
           <Route
-            path="/organizer/profile-view"
-            element={
-              <ProtectedRoute
-                element={<OrganizerProfilePage />}
-                requiredRole="organizationUser"
-              />
-            }
+            path="/organizers/:organizerId"
+            element={<OrganizerProfilePage />}
           />
-          <Route path="/organizer/:userId" element={<OrganizerProfilePage />} />
+
           <Route
             path="/organizer/dashboard"
             element={
               <ProtectedRoute
                 element={<OrganizerDashboardPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/profile"
+            element={
+              <ProtectedRoute
+                element={<OrganizerProfilePage />}
                 requiredRole="organizationUser"
               />
             }
@@ -295,6 +320,42 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/organizer/withdrawals"
+            element={
+              <ProtectedRoute
+                element={<OrganizerWithdrawalPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/settings"
+            element={
+              <ProtectedRoute
+                element={<OrganizerSettingsPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/organizer/settings/edit"
+            element={
+              <ProtectedRoute
+                element={<AddOrganizationPage />}
+                requiredRole="organizationUser"
+              />
+            }
+          />
+          <Route
+            path="/admin/organizers/edit/:id"
+            element={
+              <ProtectedRoute
+                element={<AddOrganizationPage />}
+                requiredRole={["superAdmin", "supportAdmin"]}
+              />
+            }
+          />
+          <Route
             path="/feed/create"
             element={
               <ProtectedRoute
@@ -372,6 +433,34 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/admin/audit-logs"
+            element={
+              <ProtectedRoute
+                element={<AdminAuditLogsPage />}
+                requiredRole={[
+                  "superAdmin",
+                  "supportAdmin",
+                  "eventModerator",
+                  "financialAdmin",
+                ]}
+              />
+            }
+          />
+          <Route
+            path="/admin/transactions"
+            element={
+              <ProtectedRoute
+                element={<AdminTransactionsPage />}
+                requiredRole={[
+                  "superAdmin",
+                  "supportAdmin",
+                  "eventModerator",
+                  "financialAdmin",
+                ]}
+              />
+            }
+          />
+          <Route
             path="/admin/organizers"
             element={
               <ProtectedRoute
@@ -385,6 +474,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute
                 element={<AddOrganizationPage />}
+                requiredRole={["superAdmin", "supportAdmin"]}
+              />
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute
+                element={<UserManagementPage />}
                 requiredRole={["superAdmin", "supportAdmin"]}
               />
             }
@@ -407,6 +505,15 @@ function AppRoutes() {
               />
             }
           />
+          <Route
+            path="/admin/withdrawals"
+            element={
+              <ProtectedRoute
+                element={<AdminWithdrawalPanel />}
+                requiredRole={["superAdmin", "financialAdmin"]}
+              />
+            }
+          />
           {/* ...other protected routes... */}
           <Route path="/access-denied" element={<AccessDeniedPage />} />
           {/* Catch-all for undefined protected routes */}
@@ -422,9 +529,13 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <NotificationProvider>
-            <AppRoutes />
-          </NotificationProvider>
+          <SocketProvider>
+            <RealtimeNotificationProvider>
+              <NotificationProvider>
+                <AppRoutes />
+              </NotificationProvider>
+            </RealtimeNotificationProvider>
+          </SocketProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

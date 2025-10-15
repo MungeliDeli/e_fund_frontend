@@ -21,6 +21,7 @@ import FilterModal from "../../../../../components/FilterModal";
 import {
   fetchOrganizers,
   fetchAllOrganizers,
+  toggleOrganizerStatus,
 } from "../../../services/usersApi";
 import {
   TotalStatsCard,
@@ -48,6 +49,44 @@ function OrganizerPanel() {
 
   const handleView = (organizerId) => {
     navigate(`/admin/organizers/${organizerId}`);
+  };
+
+  const handleDeactivate = async (organizerId) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Find the organizer to get current status
+      const organizer = organizers.find((o) => o.userId === organizerId);
+      if (!organizer) {
+        throw new Error("Organizer not found");
+      }
+
+      // Toggle the organizer's active status
+      const newStatus = !organizer.active;
+      await toggleOrganizerStatus(organizerId, newStatus);
+
+      // Refresh the data after successful toggle
+      const searchFilters = {
+        ...filters,
+        search: searchTerm,
+      };
+      const updatedOrganizers = await fetchOrganizers(searchFilters);
+      setOrganizers(updatedOrganizers);
+
+      // Also update allOrganizers for stats
+      const updatedAllOrganizers = await fetchAllOrganizers();
+      setAllOrganizers(updatedAllOrganizers);
+
+      console.log(
+        `Organizer ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      console.error("Failed to toggle organizer status:", error);
+      setError(error.message || "Failed to toggle organizer status");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filterOptions = [
@@ -216,6 +255,7 @@ function OrganizerPanel() {
             <OrganizerTable
               data={organizers}
               onView={handleView}
+              onDeactivate={handleDeactivate}
               filters={filters}
             />
           </div>

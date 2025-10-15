@@ -54,12 +54,22 @@ function PaymentModal({
     }
 
     const cleanPhone = phone.trim();
-    // International format validation: +260 followed by 9 digits, or just 9 digits starting with 7/9
-    const phoneRegex = /^(\+260[79]\d{8}|[79]\d{8})$/;
 
-    if (!phoneRegex.test(cleanPhone)) {
-      return "Phone number must be in valid Zambian format (e.g., +2607XXXXXXXX or 7XXXXXXXX)";
+    // Check if phone number matches the selected payment method
+    if (selectedPaymentMethod === "airtel") {
+      // Airtel numbers: 097 or 077 (with or without leading 0)
+      const airtelRegex = /^(0?97|0?77)\d{7}$/;
+      if (!airtelRegex.test(cleanPhone)) {
+        return "Airtel Money requires a number starting with 097 or 077 (e.g., 0978882033 or 978882033)";
+      }
+    } else if (selectedPaymentMethod === "mtn") {
+      // MTN numbers: 096 or 076 (with or without leading 0)
+      const mtnRegex = /^(0?96|0?76)\d{7}$/;
+      if (!mtnRegex.test(cleanPhone)) {
+        return "MTN Mobile Money requires a number starting with 096 or 076 (e.g., 0968882033 or 968882033)";
+      }
     }
+
     return null;
   };
 
@@ -93,6 +103,7 @@ function PaymentModal({
   };
 
   const handleDonate = async () => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     const newErrors = {};
 
@@ -116,8 +127,18 @@ function PaymentModal({
     }
 
     try {
-      // Format phone number for backend
+      // Format phone number for backend - ensure consistent formatting
       let formattedPhone = phoneNumber.trim();
+
+      // Add leading 0 if missing (user might enter 978882033 instead of 0978882033)
+      if (
+        !formattedPhone.startsWith("0") &&
+        !formattedPhone.startsWith("+260")
+      ) {
+        formattedPhone = "0" + formattedPhone;
+      }
+
+      // Add +260 prefix if not present
       if (!formattedPhone.startsWith("+260")) {
         formattedPhone = "+260" + formattedPhone;
       }
@@ -141,6 +162,10 @@ function PaymentModal({
           .toString(36)
           .substr(2, 9)}`,
       });
+      // After initiation succeeds, clear fields to avoid accidental resubmits
+      setPhoneNumber("");
+      setMessage("");
+      // Keep donateAnonymously and subscribe selections as they are
     } catch (error) {
       console.error("Donation failed:", error);
       setErrors({
@@ -204,7 +229,13 @@ function PaymentModal({
             <div className="grid grid-cols-2 gap-3">
               {/* Airtel Money */}
               <button
-                onClick={() => setSelectedPaymentMethod("airtel")}
+                onClick={() => {
+                  setSelectedPaymentMethod("airtel");
+                  // Clear phone number error when switching payment methods
+                  if (errors.phoneNumber) {
+                    setErrors((prev) => ({ ...prev, phoneNumber: null }));
+                  }
+                }}
                 className={`p-4 rounded-lg transition-all ${
                   selectedPaymentMethod === "airtel"
                     ? "border-1 border-[color:var(--color-primary)] shadow-md"
@@ -225,7 +256,13 @@ function PaymentModal({
 
               {/* MTN Mobile Money */}
               <button
-                onClick={() => setSelectedPaymentMethod("mtn")}
+                onClick={() => {
+                  setSelectedPaymentMethod("mtn");
+                  // Clear phone number error when switching payment methods
+                  if (errors.phoneNumber) {
+                    setErrors((prev) => ({ ...prev, phoneNumber: null }));
+                  }
+                }}
                 className={`p-4 rounded-lg transition-all ${
                   selectedPaymentMethod === "mtn"
                     ? "border-1 border-[color:var(--color-primary)] shadow-md"
@@ -307,7 +344,11 @@ function PaymentModal({
                     ? "border-red-500 focus:border-red-500"
                     : "border-[color:var(--color-muted)] focus:border-[color:var(--color-primary)]"
                 }`}
-                placeholder="7XXXXXXXX or 9XXXXXXXX"
+                placeholder={
+                  selectedPaymentMethod === "airtel"
+                    ? "097XXXXXXXX or 077XXXXXXXX"
+                    : "096XXXXXXXX or 076XXXXXXXX"
+                }
               />
             </div>
             {errors.phoneNumber && (
@@ -317,7 +358,9 @@ function PaymentModal({
               </p>
             )}
             <p className="text-xs text-[color:var(--color-secondary-text)]">
-              Enter your mobile money number (Airtel or MTN)
+              {selectedPaymentMethod === "airtel"
+                ? "Enter your Airtel Money number (starts with 097 or 077)"
+                : "Enter your MTN Mobile Money number (starts with 096 or 076)"}
             </p>
           </div>
 
@@ -413,7 +456,7 @@ function PaymentModal({
           {/* Donate Button */}
           <button
             onClick={handleDonate}
-            disabled={isSubmitting || errors.campaign}
+            disabled={isSubmitting || !!errors.campaign}
             className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-colors ${
               isSubmitting || errors.campaign
                 ? "opacity-50 cursor-not-allowed"

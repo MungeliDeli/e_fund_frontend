@@ -26,7 +26,7 @@ const fetchImageUrl = async (mediaId) => {
   }
 
   // 2. If not in cache, fetch from API
-  const response = await getMediaUrl(mediaId);
+  const response = getMediaUrl(mediaId);
   const url = response?.url;
 
   if (url) {
@@ -41,6 +41,7 @@ const fetchImageUrl = async (mediaId) => {
 
 function ProfileImage({
   mediaId,
+  imageUrl,
   alt = "Profile",
   className = "",
   size = "md",
@@ -67,26 +68,33 @@ function ProfileImage({
     "2xl": "text-5xl",
   };
 
+  // Determine if we have a direct URL or need to fetch via mediaId
+  const hasDirectUrl = !!imageUrl;
+  const hasMediaId = !!mediaId;
+
   const {
-    data: imageUrl,
+    data: fetchedImageUrl,
     isLoading,
     isError,
   } = useQuery({
     queryKey: ["imageUrl", mediaId],
     queryFn: () => fetchImageUrl(mediaId),
-    enabled: !!mediaId,
+    enabled: hasMediaId && !hasDirectUrl,
     staleTime: Infinity, // URLs are permanent, no need to refetch
     refetchOnWindowFocus: false,
     retry: false, // Don't retry on failure, just show fallback
   });
 
-  // Reset image load error state when mediaId changes
+  // Reset image load error state when mediaId or imageUrl changes
   useEffect(() => {
     setImageLoadError(false);
-  }, [mediaId]);
+  }, [mediaId, imageUrl]);
 
-  // Loading state with skeleton animation
-  if (isLoading) {
+  // Determine the final image URL to use
+  const finalImageUrl = hasDirectUrl ? imageUrl : fetchedImageUrl;
+
+  // Loading state with skeleton animation (only when fetching via mediaId)
+  if (hasMediaId && !hasDirectUrl && isLoading) {
     return (
       <div
         className={`${sizeClasses[size]} rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center animate-pulse ${className}`}
@@ -95,7 +103,11 @@ function ProfileImage({
   }
 
   // Error state or no image - show fallback icon
-  if (isError || imageLoadError || !imageUrl) {
+  if (
+    (hasMediaId && !hasDirectUrl && isError) ||
+    imageLoadError ||
+    !finalImageUrl
+  ) {
     return (
       <div
         className={`${sizeClasses[size]} rounded-full bg-[color:var(--color-muted)] flex items-center justify-center ${className}`}
@@ -108,7 +120,7 @@ function ProfileImage({
   // Success state - render the actual image
   return (
     <img
-      src={imageUrl}
+      src={finalImageUrl}
       alt={alt}
       className={`${sizeClasses[size]} rounded-full object-cover ${className}`}
       onError={() => setImageLoadError(true)} // Handle broken image links

@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { formatTimeAgo } from "../../../utils/timeUtils";
 import MediaContainer from "../../../components/MediaContainer";
-import ImageSlider from "../../../components/ImageSlider";
+import MediaGallery from "../../campaigns/components/MediaGallery";
 
 const PostCard = ({ post }) => {
   const navigate = useNavigate();
   console.log(post);
+
+  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  const [liked, setLiked] = useState(!!post.liked);
 
   const handlePostClick = () => {
     navigate(`/post/${post.postId}`, {
@@ -25,15 +28,21 @@ const PostCard = ({ post }) => {
         return "Success Story";
       case "thank_you":
         return "Thank You";
+      case "campaign":
+        return "Campaign";
       default:
         return null;
     }
   };
 
-  const truncateText = (text, maxLength) => {
-    if (!text) return "";
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength).trim() + "...";
+  const getTruncatedHtml = (html, maxLength) => {
+    if (!html) return "";
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    const text = tmp.textContent || tmp.innerText || "";
+    if (text.length <= maxLength) return html;
+    const truncatedText = text.substring(0, maxLength).trim() + "...";
+    return `<p>${truncatedText}</p>`;
   };
 
   const getBodyMaxLength = () => {
@@ -45,103 +54,216 @@ const PostCard = ({ post }) => {
   const typeLabel = getTypeLabel(post.type);
 
   return (
-    <div className="bg-[var(--color-background)] rounded-lg  border border-[var(--color-muted)] p-6  hover:bg-[var(--color-surface)] transition-colors">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          {/* Profile Picture */}
-          <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-white font-medium text-sm">
-            {post.organizationName?.slice(0, 1)}
+    <>
+      <div className="bg-[var(--color-background)] rounded-lg  border border-[var(--color-muted)] p-2   transition-colors">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            {/* Profile Picture */}
+            <div
+              className="flex items-center space-x-3 cursor-pointer"
+              onClick={() => {
+                if (post.organizerId)
+                  navigate(`/organizers/${post.organizerId}`);
+              }}
+              role="button"
+              aria-label="View organizer profile"
+            >
+              {post.profilePictureUrl ? (
+                <img
+                  src={post.profilePictureUrl}
+                  alt={`${post.organizationName} profile`}
+                  className="w-8 h-8 rounded-full object-cover"
+                  onError={(e) => {
+                    // Fallback to initials if image fails to load
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
+                  }}
+                />
+              ) : null}
+              <div
+                className={`w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-white font-medium text-sm ${
+                  post.profilePictureUrl ? "hidden" : "flex"
+                }`}
+              >
+                {post.organizationName?.slice(0, 1)}
+              </div>
+
+              {/* Name and Time */}
+              <div>
+                <h3 className="font-medium text-[var(--color-text)] text-sm ">
+                  {post.organizationName}
+                </h3>
+                <p className="text-xs text-[var(--color-secondary-text)] opacity-70">
+                  {formatTimeAgo(post.createdAt)}
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Name and Time */}
-          <div>
-            <h3 className="font-medium text-[var(--color-text)] text-sm">
-              {post.organizationName}
-            </h3>
-            <p className="text-xs text-[var(--color-secondary-text)] opacity-70">
-              {formatTimeAgo(post.createdAt)}
-            </p>
-          </div>
-        </div>
-
-        {/* Post Type Badge */}
-        {typeLabel && (
-          <span className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--color-muted)] text-[var(--color-text)] opacity-80">
-            {typeLabel}
-          </span>
-        )}
-      </div>
-
-      {/* Title */}
-      {post.title && (
-        <h2
-          className="text-lg font-semibold text-[var(--color-text)] mb-3 leading-tight cursor-pointer  transition-colors"
-          onClick={handlePostClick}
-        >
-          {post.title}
-        </h2>
-      )}
-
-      {/* Body */}
-      {post.body && (
-        <div
-          className="text-[var(--color-text)] mb-4 cursor-pointer  transition-colors"
-          onClick={handlePostClick}
-        >
-          <p className="text-sm opacity-98 leading-relaxed whitespace-pre-wrap">
-            {truncateText(post.body, getBodyMaxLength())}
-          </p>
-        </div>
-      )}
-
-      {/* Media */}
-      {post.media && post.media.length > 0 && (
-        <div className="mb-4">
-          {post.media.length === 1 ? (
-            <MediaContainer
-              media={post.media[0]}
-              size="large"
-              className="w-full"
-            />
-          ) : (
-            <ImageSlider media={post.media} size="large" className="w-full" />
+          {/* Post Type Badge */}
+          {typeLabel && (
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--color-muted)] text-[var(--color-text)] opacity-80">
+              {typeLabel}
+            </span>
           )}
         </div>
-      )}
 
-      {/* Campaign Link - Only for pinned posts */}
-      {post.isPinnedToCampaign && post.campaignTitle && (
-        <div className="mt-4 pt-4 border-t border-[var(--color-muted)]">
-          <div
-            className="flex items-center justify-between bg-[var(--color-background)] rounded-lg p-3 hover:bg-[var(--color-surface)] transition-colors border border-[var(--color-muted)]"
-            onClick={(e) => e.stopPropagation()}
+        {/* Title */}
+        {post.title && (
+          <h2
+            className="text-lg font-semibold text-[var(--color-text)] mb-3 leading-tight cursor-pointer  transition-colors"
+            onClick={handlePostClick}
           >
-            <div className="flex-1">
-              <h4 className="text-sm font-medium text-[var(--color-text)] mb-1">
-                {post.campaignTitle}
-              </h4>
-              <p className="text-xs text-[var(--color-secondary-text)]">
-                Campaign Update
-              </p>
-            </div>
-            <Link
-              to={`/campaign/${post.campaignShareLink}-${(
-                post.campaignTitle || ""
-              )
-                .toLowerCase()
-                .trim()
-                .replace(/\s+/g, "-")
-                .replace(/[^a-z0-9-]/g, "")
-                .slice(0, 80)}`}
-              className="ml-3 px-4 py-2 text-xs font-medium text-[var(--color-primary)] border border-[var(--color-primary)] rounded-md hover:bg-[var(--color-surface)]  transition-colors"
-            >
-              Visit
-            </Link>
+            {post.title}
+          </h2>
+        )}
+
+        {/* Body */}
+        {post.body && (
+          <div
+            className="text-[var(--color-text)] mb-4 cursor-pointer  transition-colors"
+            onClick={handlePostClick}
+          >
+            <div
+              className="formatted-text line-clamp"
+              dangerouslySetInnerHTML={{
+                __html: getTruncatedHtml(post.body, getBodyMaxLength()),
+              }}
+            />
           </div>
+        )}
+
+        {/* Media and Campaign Link Combined */}
+        {((post.media && post.media.length > 0) ||
+          (post.isPinnedToCampaign && post.campaignTitle) ||
+          (post.type === "campaign" && post.campaignTitle)) && (
+          <div className="border border-[var(--color-muted)] rounded-lg overflow-hidden">
+            {/* Media Section */}
+            {post.media && post.media.length > 0 && (
+              <div className="p-3">
+                {post.media.length === 1 ? (
+                  <MediaContainer
+                    media={post.media[0]}
+                    size="large"
+                    className="w-full"
+                  />
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {post.media.slice(0, 4).map((media, index) => (
+                      <MediaContainer
+                        key={index}
+                        media={media}
+                        size="medium"
+                        className="w-full"
+                      />
+                    ))}
+                    {post.media.length > 4 && (
+                      <div className="aspect-[3/2] bg-[var(--color-muted)] rounded-lg flex items-center justify-center">
+                        <span className="text-[var(--color-secondary-text)] text-sm">
+                          +{post.media.length - 4} more
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Campaign Link Section */}
+            {((post.isPinnedToCampaign && post.campaignTitle) ||
+              (post.type === "campaign" && post.campaignTitle)) && (
+              <div
+                className="flex items-center justify-between bg-[var(--color-background)] p-3 hover:bg-[var(--color-surface)] transition-colors border-t border-[var(--color-muted)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-[var(--color-text)] mb-1">
+                    {post.campaignTitle}
+                  </h4>
+                  <p className="text-xs text-[var(--color-secondary-text)]">
+                    {post.type === "campaign"
+                      ? "New Campaign"
+                      : "Campaign Update"}
+                  </p>
+                </div>
+                <Link
+                  to={`/campaign/${post.campaignShareLink}-${(
+                    post.campaignTitle || ""
+                  )
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, "-")
+                    .replace(/[^a-z0-9-]/g, "")
+                    .slice(0, 80)}`}
+                  className="ml-3 px-4 py-2 text-xs font-medium text-[var(--color-primary)] border border-[var(--color-primary)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
+                >
+                  {post.type === "campaign" ? "Support" : "Visit"}
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+        {/* like heart can come here */}
+        <div className="flex items-center gap-2 mt-3">
+          <button
+            type="button"
+            aria-label={liked ? "Unlike" : "Like"}
+            onClick={async (e) => {
+              e.stopPropagation();
+              try {
+                const { toggleLikePost } = await import("../services/feedApi");
+                // optimistic update
+                setLiked((v) => !v);
+                setLikesCount((c) => (liked ? Math.max(0, c - 1) : c + 1));
+                const result = await toggleLikePost(post.postId);
+                if (result && typeof result.likesCount === "number") {
+                  setLikesCount(result.likesCount);
+                  setLiked(!!result.liked);
+                }
+              } catch (err) {
+                // revert on error
+                setLiked((v) => !v);
+                setLikesCount((c) => (liked ? c + 1 : Math.max(0, c - 1)));
+              }
+            }}
+            className={`transition-colors`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill={liked ? "currentColor" : "none"}
+              stroke="currentColor"
+              className={`${
+                liked
+                  ? "text-[var(--color-primary)]"
+                  : "text-[var(--color-secondary-text)]"
+              } w-5 h-5`}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+              />
+            </svg>
+          </button>
+          <span className="text-xs text-[var(--color-secondary-text)]">
+            {likesCount}
+          </span>
         </div>
-      )}
-    </div>
+      </div>
+      <style>{`
+      .formatted-text p { margin: 0.5rem 0; line-height: 1.5; }
+      .formatted-text p:first-child { margin-top: 0; }
+      .formatted-text p:last-child { margin-bottom: 0; }
+      .formatted-text strong { font-weight: 600; }
+      .formatted-text em { font-style: italic; }
+      .formatted-text ul { margin: 0.5rem 0; padding-left: 1.5rem; list-style-type: disc; }
+      .formatted-text li { margin: 0.25rem 0; line-height: 1.5; }
+      .line-clamp { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+    `}</style>
+    </>
   );
 };
 

@@ -125,3 +125,25 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
+
+// Analytics helper endpoints
+export const fetchTopOrganizers = async (limit = 5) => {
+  const res = await apiClient.get(`/leaderboard/top-organizers`, {
+    params: { limit },
+  });
+  return res.data?.data || res.data || [];
+};
+
+export const fetchTopCampaigns = async (limit = 5) => {
+  const res = await apiClient.get(`/leaderboard/top-campaigns`, {
+    params: { limit },
+  });
+  return res.data?.data || res.data || [];
+};
+
+export const getPublicMediaUrl = (fileName) => {
+  if (!fileName) return null;
+  // Assuming backend serves media via a public URL pattern
+  const base = import.meta.env.VITE_MEDIA_BASE_URL || "";
+  return `${base}/${fileName}`.replace(/\/+/, "/");
+};

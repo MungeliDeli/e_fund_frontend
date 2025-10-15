@@ -14,6 +14,26 @@ export const getFeaturedMessages = async (campaignId, limit = 10) => {
 };
 
 /**
+ * Get public approved messages for a campaign
+ * @param {string} campaignId - Campaign ID
+ * @param {Object} options - { limit, offset, status }
+ * @returns {Promise<Object>} Messages response
+ */
+export const getMessagesByCampaign = async (
+  campaignId,
+  { limit = 50, offset = 0, status = "approved" } = {}
+) => {
+  const params = new URLSearchParams();
+  if (status) params.append("status", status);
+  if (limit) params.append("limit", String(limit));
+  if (offset) params.append("offset", String(offset));
+  const response = await apiClient.get(
+    `/messages/campaign/${campaignId}?${params.toString()}`
+  );
+  return response.data;
+};
+
+/**
  * Get pending messages count for a campaign (organizer-only)
  * @param {string} campaignId - Campaign ID
  * @returns {Promise<Object>} Pending count

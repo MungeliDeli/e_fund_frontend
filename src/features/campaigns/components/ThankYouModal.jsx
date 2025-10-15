@@ -109,7 +109,15 @@ function ThankYouModal({
                   <span className="text-sm text-[color:var(--color-primary-text)]">
                     Payment Method:
                   </span>
-                  <span className="text-sm font-medium px-2 py-1 rounded bg-[color:var(--color-muted)] text-[color:var(--color-primary-text)]">
+                  <span
+                    className="text-sm font-medium px-2 py-1 rounded bg-[color:var(--color-muted)]"
+                    style={{
+                      color:
+                        donationDetails.paymentMethod === "airtel"
+                          ? "#FF0000"
+                          : "#FFCC08"
+                    }}
+                  >
                     {donationDetails.paymentMethod === "airtel"
                       ? "Airtel Money"
                       : "MTN Mobile Money"}

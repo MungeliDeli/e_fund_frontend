@@ -12,12 +12,21 @@ import ColoredIcon from "../../../components/ColoredIcon";
 import ReasonModal from "../components/ReasonModal";
 // PreviewCollapse import removed during demolition
 import { FaBullseye, FaRegCalendarCheck } from "react-icons/fa";
-import { FiCalendar, FiFlag } from "react-icons/fi";
+import {
+  FiCalendar,
+  FiFlag,
+  FiTrendingUp,
+  FiDownloadCloud,
+  
+} from "react-icons/fi";
+
 import Notification from "../../../components/Notification";
 import CampaignTemplatePage from "./CampaignTemplatePage";
 import AnalyticsSection from "../../donations/components/AnalyticsSection";
 import MessagesSection from "../../donations/components/MessagesSection";
 import { OutreachSection } from "../../Outreach/components";
+import { requestWithdrawal, getMyWithdrawals } from "../services/withdrawApi";
+import { fetchPrivateOrganizationProfile } from "../../users/services/usersApi";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -66,6 +75,10 @@ export default function CampaignViewPage() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [availableSummary, setAvailableSummary] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -86,6 +99,37 @@ export default function CampaignViewPage() {
     };
   }, [campaignId]);
 
+  // Load available summary when organizer opens modal
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!withdrawOpen) return;
+      try {
+        const resp = await getMyWithdrawals({ campaignId });
+        if (mounted && resp?.summary) {
+          setAvailableSummary(resp.summary);
+        } else if (mounted) {
+          setAvailableSummary({
+            completed: Number(campaign?.currentRaisedAmount || 0),
+            reserved: 0,
+            available: Number(campaign?.currentRaisedAmount || 0),
+          });
+        }
+      } catch {
+        if (mounted) {
+          setAvailableSummary({
+            completed: Number(campaign?.currentRaisedAmount || 0),
+            reserved: 0,
+            available: Number(campaign?.currentRaisedAmount || 0),
+          });
+        }
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [withdrawOpen, campaignId]);
+
   const status = campaign?.status;
   const canApproveReject = isAdmin && status === "pendingApproval";
   // Only the organizer (owner) can publish when status is pendingStart
@@ -101,6 +145,63 @@ export default function CampaignViewPage() {
     status !== "pendingApproval" &&
     status !== "cancelled" &&
     status !== "rejected";
+
+  const minWithdraw = useMemo(() => {
+    return Number(campaign?.goalAmount || 0) * 0.1;
+  }, [campaign]);
+  const canWithdrawButton = useMemo(() => {
+    const raised = Number(campaign?.currentRaisedAmount || 0);
+    return isOwner && raised >= minWithdraw;
+  }, [isOwner, campaign, minWithdraw]);
+
+  const withdrawTooltip = canWithdrawButton
+    ? "Request a withdrawal"
+    : `Withdrawals require at least 10% of goal (${formatCurrency(
+        minWithdraw
+      )}) to be raised`;
+
+  const openWithdraw = () => setWithdrawOpen(true);
+  const closeWithdraw = () => setWithdrawOpen(false);
+
+  const handleSubmitWithdraw = async (e) => {
+    e?.preventDefault?.();
+    setWithdrawLoading(true);
+    try {
+      const amountNum = Number(withdrawAmount);
+      if (isNaN(amountNum) || amountNum <= 0)
+        throw new Error("Enter a valid amount");
+      if (amountNum < minWithdraw)
+        throw new Error("Amount below minimum (10% of goal)");
+      const org = await fetchPrivateOrganizationProfile();
+      const profile = org?.data || org;
+      const phone =
+        profile?.payoutPhoneNumber || profile?.primaryContactPersonPhone;
+      const network = profile?.payoutNetwork || "mtn";
+      if (!phone)
+        throw new Error(
+          "Please set your payout phone number in Settings first"
+        );
+      await requestWithdrawal({
+        campaignId,
+        amount: amountNum,
+        currency: "ZMW",
+        phoneNumber: phone,
+        network: network,
+      });
+      setToastType("success");
+      setToastMessage("Withdrawal request submitted");
+      setToastVisible(true);
+      setWithdrawOpen(false);
+      setWithdrawAmount("");
+    } catch (e) {
+      const msg = e?.response?.data?.message || e?.message || "Request failed";
+      setToastType("error");
+      setToastMessage(msg);
+      setToastVisible(true);
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
 
   const handleTogglePreview = () => {
     setPreviewOpen((prev) => !prev);
@@ -265,6 +366,44 @@ export default function CampaignViewPage() {
         />
       </div>
 
+      {/* Withdraw section */}
+      <div className="mb-6 p-4 border border-[color:var(--color-muted)] rounded-xl bg-[color:var(--color-surface)]">
+        <h3 className="text-lg font-semibold text-[color:var(--color-primary-text)] mb-3">
+          Withdrawals
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
+          <MetaCard
+            title="Raised"
+            value={formatCurrency(campaign.currentRaisedAmount)}
+            Icon={FiTrendingUp}
+            color="#10b981"
+          />
+          <MetaCard
+            title="Withdrawn"
+            value={formatCurrency(campaign.totalWithdrawn || 0)}
+            Icon={FiDownloadCloud}
+            color="#f59e0b"
+          />
+          <MetaCard
+            title="Available"
+            value={formatCurrency(
+              availableSummary?.available ??
+                Number(campaign.currentRaisedAmount || 0) -
+                  Number(campaign.totalWithdrawn || 0)
+            )}
+            Icon={FiFlag}
+            color="#3b82f6"
+          />
+        </div>
+        {isOwner && (
+          <div>
+            <PrimaryButton onClick={openWithdraw} disabled={!canWithdrawButton}>
+              Request Withdrawal
+            </PrimaryButton>
+          </div>
+        )}
+      </div>
+
       {/* Actions row */}
       <div className="mb-2">
         <div className="flex flex-wrap items-center gap-2">
@@ -333,6 +472,18 @@ export default function CampaignViewPage() {
             >
               Cancel Campaign
             </SecondaryButton>
+          )}
+
+          {/* Withdraw (organizer) */}
+          {isOwner && (
+            <span title={withdrawTooltip}>
+              <PrimaryButton
+                onClick={openWithdraw}
+                disabled={!canWithdrawButton}
+              >
+                Request Withdrawal
+              </PrimaryButton>
+            </span>
           )}
         </div>
         {/* Errors are shown via Notification; no inline error text */}
@@ -411,6 +562,67 @@ export default function CampaignViewPage() {
         <div className="mt-6 p-6 rounded-xl border border-[color:var(--color-muted)] bg-[color:var(--color-surface)] text-[color:var(--color-secondary-text)]">
           <h3 className="text-lg font-bold mb-2">Status Reason</h3>
           <p className="whitespace-pre-wrap">{campaign.statusReason}</p>
+        </div>
+      )}
+
+      {/* Withdrawal Modal */}
+      {withdrawOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] text-[color:var(--color-primary-text)] rounded-xl w-full max-w-md p-5 shadow-xl">
+            <h3 className="text-lg font-semibold mb-3">Request Withdrawal</h3>
+            <div className="text-sm text-[color:var(--color-secondary-text)] mb-3">
+              <div>Rules:</div>
+              <ul className="list-disc ml-5">
+                <li>
+                  Minimum withdrawal: 10% of goal ({formatCurrency(minWithdraw)}
+                  )
+                </li>
+                <li>Max per request: available balance</li>
+                <li>Up to 2 requests per week</li>
+              </ul>
+            </div>
+            <div className="text-sm text-[color:var(--color-secondary-text)] mb-3">
+              <div>Available balance:</div>
+              <div className="font-mono">
+                {availableSummary
+                  ? `${formatCurrency(
+                      availableSummary.available
+                    )} (raised ${formatCurrency(
+                      availableSummary.completed
+                    )} - reserved ${formatCurrency(availableSummary.reserved)})`
+                  : "Loading..."}
+              </div>
+            </div>
+            <form onSubmit={handleSubmitWithdraw} className="space-y-3">
+              <div>
+                <label className="block text-sm mb-1 text-[color:var(--color-secondary-text)]">
+                  Amount (ZMW)
+                </label>
+                <input
+                  type="number"
+                  min={minWithdraw}
+                  step="0.01"
+                  className="w-full border border-[color:var(--color-muted)] rounded px-3 py-2 bg-[color:var(--color-background)] text-[color:var(--color-primary-text)]"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  required
+                />
+              </div>
+              {/* Phone/network removed; use organizer settings value */}
+              <div className="flex justify-end gap-2 mt-4">
+                <SecondaryButton type="button" onClick={closeWithdraw}>
+                  Cancel
+                </SecondaryButton>
+                <PrimaryButton
+                  type="submit"
+                  loading={withdrawLoading}
+                  disabled={withdrawLoading}
+                >
+                  Submit Request
+                </PrimaryButton>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

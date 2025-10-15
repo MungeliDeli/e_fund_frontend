@@ -36,3 +36,66 @@ export async function getAllDonations({ limit = 100, offset = 0 } = {}) {
   const response = await apiClient.get(`/donations?${params.toString()}`);
   return response;
 }
+
+/**
+ * Get donations by user ID
+ * @param {string} userId - User ID
+ * @param {Object} options - Query options
+ * @param {number} options.limit - Number of donations to fetch
+ * @param {number} options.offset - Number of donations to skip
+ * @returns {Promise<Object>} User donations
+ */
+export async function getDonationsByUser(
+  userId,
+  { limit = 50, offset = 0 } = {}
+) {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const response = await apiClient.get(
+    `/donations/user/${userId}?${params.toString()}`
+  );
+  return response;
+}
+
+/**
+ * Get donation statistics for a specific campaign
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<Object>} Donation statistics
+ */
+export async function getDonationStats(campaignId) {
+  const response = await apiClient.get(
+    `/donations/campaign/${campaignId}/stats`
+  );
+  return response.data.data;
+}
+
+/**
+ * Get donation status for polling
+ * @param {string} donationId - Donation ID
+ * @returns {Promise<{status: string, updatedAt: string}>}
+ */
+export async function getDonationStatus(donationId) {
+  const response = await apiClient.get(`/donations/${donationId}/status`);
+  // Backend uses ResponseFactory; unwrap common shapes
+  const data = response?.data?.data || response?.data || {};
+  return {
+    status: data.status,
+    updatedAt: data.updatedAt,
+  };
+}
+
+/**
+ * Get transaction status for polling (alternative)
+ * @param {string} transactionId - Transaction ID
+ * @returns {Promise<{status: string, updatedAt: string}>}
+ */
+export async function getTransactionStatus(transactionId) {
+  const response = await apiClient.get(`/transactions/${transactionId}/status`);
+  const data = response?.data?.data || response?.data || {};
+  return {
+    status: data.status,
+    updatedAt: data.updatedAt,
+  };
+}

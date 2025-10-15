@@ -162,10 +162,53 @@ export const validateDonationData = (donationData) => {
     errors.phoneNumber = "Phone number is required";
   } else {
     const cleanPhone = donationData.phoneNumber.trim();
-    const phoneRegex = /^(\+260[79]\d{8}|[79]\d{8})$/;
-    if (!phoneRegex.test(cleanPhone)) {
-      errors.phoneNumber =
-        "Phone number must be in valid Zambian format (e.g., +2607XXXXXXXX or 7XXXXXXXX)";
+    // Check if phone number is in international format (+260 prefix)
+    if (cleanPhone.startsWith("+260")) {
+      // Remove +260 prefix for validation
+      const localNumber = cleanPhone.substring(4);
+      // Validate based on payment method if available
+      if (donationData.paymentMethod === "airtel_money") {
+        const airtelRegex = /^(097|077)\d{7}$/;
+        if (!airtelRegex.test(localNumber)) {
+          errors.phoneNumber =
+            "Airtel Money requires a number starting with 097 or 077";
+        }
+      } else if (donationData.paymentMethod === "mtn_mobile_money") {
+        const mtnRegex = /^(096|076)\d{7}$/;
+        if (!mtnRegex.test(localNumber)) {
+          errors.phoneNumber =
+            "MTN Mobile Money requires a number starting with 096 or 076";
+        }
+      } else {
+        // General Zambian mobile number validation
+        const generalRegex = /^(097|077|096|076)\d{7}$/;
+        if (!generalRegex.test(localNumber)) {
+          errors.phoneNumber =
+            "Phone number must be a valid Zambian mobile number";
+        }
+      }
+    } else {
+      // Local format validation (without +260 prefix)
+      if (donationData.paymentMethod === "airtel_money") {
+        const airtelRegex = /^(0?97|0?77)\d{7}$/;
+        if (!airtelRegex.test(cleanPhone)) {
+          errors.phoneNumber =
+            "Airtel Money requires a number starting with 097 or 077";
+        }
+      } else if (donationData.paymentMethod === "mtn_mobile_money") {
+        const mtnRegex = /^(0?96|0?76)\d{7}$/;
+        if (!mtnRegex.test(cleanPhone)) {
+          errors.phoneNumber =
+            "MTN Mobile Money requires a number starting with 096 or 076";
+        }
+      } else {
+        // General Zambian mobile number validation
+        const generalRegex = /^(0?97|0?77|0?96|0?76)\d{7}$/;
+        if (!generalRegex.test(cleanPhone)) {
+          errors.phoneNumber =
+            "Phone number must be a valid Zambian mobile number";
+        }
+      }
     }
   }
 

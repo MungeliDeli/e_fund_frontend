@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import FormField from "../../../../../components/FormField";
 import ProfileImage from "../../../components/ProfileImage";
 import CoverImage from "../../../components/CoverImage";
@@ -7,12 +8,27 @@ import { organizationSchema } from "../../../services/userValidation";
 import { compressImage } from "../../../../../utils/imageCompression";
 import { useMutation } from "@tanstack/react-query";
 import { createOrganizationUser } from "../../../../auth/services/authApi";
+import {
+  fetchPrivateOrganizationProfile,
+  updateOrganizationProfile,
+  updateOrganizationProfileWithImages,
+  fetchOrganizerById,
+} from "../../../services/usersApi";
+import { useAuth } from "../../../../../contexts/AuthContext";
 
 const MAX_IMAGE_SIZE_MB = 10;
 const WARN_IMAGE_SIZE_MB = 2;
 const MAX_IMAGE_DIMENSION = 1024;
 
 function AddOrganizationPage() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { user } = useAuth();
+
+  // Determine mode based on user type
+  const isEditMode = user?.userType === "organizationUser";
+  const organizerId = id; // For admin editing specific organizer
+
   // Form state
   const [form, setForm] = useState({
     organizationName: "",
@@ -24,14 +40,13 @@ function AddOrganizationPage() {
     missionDescription: "",
     establishmentDate: "",
     campusAffiliationScope: "",
-    affiliatedSchoolsNames: "",
-    affiliatedDepartmentNames: "",
     primaryContactPersonName: "",
     primaryContactPersonEmail: "",
     primaryContactPersonPhone: "",
   });
   const [errors, setErrors] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [loading, setLoading] = useState(isEditMode);
   // Image state
   const [profileImage, setProfileImage] = useState(null);
   const [coverImage, setCoverImage] = useState(null);
@@ -48,39 +63,114 @@ function AddOrganizationPage() {
   const [showErrorDetails, setShowErrorDetails] = useState(false);
   const [apiSuccess, setApiSuccess] = useState("");
 
+  // Fetch data when in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          let data;
+
+          if (user?.userType === "organizationUser") {
+            // Organizer editing their own profile
+            data = await fetchPrivateOrganizationProfile();
+            console.log(data);
+          } else if (organizerId) {
+            // Admin editing specific organizer
+            data = await fetchOrganizerById(organizerId);
+          }
+
+          // Data is directly in data.data, not nested under profile
+          if (data?.data) {
+            setForm({
+              organizationName: data.data.organizationName || "",
+              organizationShortName: data.data.organizationShortName || "",
+              organizationType: data.data.organizationType || "",
+              officialEmail: data.data.officialEmail || data.data.email || "",
+              officialWebsiteUrl: data.data.officialWebsiteUrl || "",
+              address: data.data.address || "",
+              missionDescription: data.data.missionDescription || "",
+              establishmentDate: data.data.establishmentDate
+                ? new Date(data.data.establishmentDate)
+                    .toISOString()
+                    .split("T")[0]
+                : "",
+              campusAffiliationScope: data.data.campusAffiliationScope || "",
+              primaryContactPersonName:
+                data.data.primaryContactPersonName || "",
+              primaryContactPersonEmail:
+                data.data.primaryContactPersonEmail || "",
+              primaryContactPersonPhone:
+                data.data.primaryContactPersonPhone || "",
+            });
+          }
+        } catch (error) {
+          setApiError("Failed to fetch organization data");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchData();
+    }
+  }, [isEditMode, user?.userType, organizerId]);
+
   // React Query mutation
   const mutation = useMutation({
     mutationFn: async (formData) => {
       setApiError("");
       setApiErrorDetails(null);
       setApiSuccess("");
-      return createOrganizationUser(formData);
+
+      if (isEditMode) {
+        // Check if we have images to upload
+        const hasImages = profileFile || coverFile;
+        if (hasImages) {
+          // Use the new endpoint that handles both profile data and images
+          return updateOrganizationProfileWithImages(formData);
+        } else {
+          // Use the regular endpoint for profile data only
+          return updateOrganizationProfile(formData);
+        }
+      } else {
+        return createOrganizationUser(formData);
+      }
     },
     onSuccess: (data) => {
-      setApiSuccess("Organization created and invitation sent!");
-      setForm({
-        organizationName: "",
-        organizationShortName: "",
-        organizationType: "",
-        officialEmail: "",
-        officialWebsiteUrl: "",
-        address: "",
-        missionDescription: "",
-        establishmentDate: "",
+      if (isEditMode) {
+        setApiSuccess("Organization details updated successfully!");
+        // Redirect based on user type
+        setTimeout(() => {
+          if (user?.userType === "organizationUser") {
+            navigate("/organizer/settings");
+          } else {
+            navigate("/admin/organizers");
+          }
+        }, 2000);
+      } else {
+        setApiSuccess("Organization created and invitation sent!");
+        setForm({
+          organizationName: "",
+          organizationShortName: "",
+          organizationType: "",
+          officialEmail: "",
+          officialWebsiteUrl: "",
+          address: "",
+          missionDescription: "",
+          establishmentDate: "",
           campusAffiliationScope: "",
-        affiliatedSchoolsNames: "",
-        affiliatedDepartmentNames: "",
-        primaryContactPersonName: "",
-        primaryContactPersonEmail: "",
-        primaryContactPersonPhone: "",
-      });
-      setProfileImage(null);
-      setCoverImage(null);
-      setProfileFile(null);
-      setCoverFile(null);
-      setRemProfile(false);
-      setRemCover(false);
-      setSubmitAttempted(false);
+          primaryContactPersonName: "",
+          primaryContactPersonEmail: "",
+          primaryContactPersonPhone: "",
+        });
+        setProfileImage(null);
+        setCoverImage(null);
+        setProfileFile(null);
+        setCoverFile(null);
+        setRemProfile(false);
+        setRemCover(false);
+        setSubmitAttempted(false);
+      }
     },
     onError: (error) => {
       let msg = "An error occurred. Please try again.";
@@ -162,40 +252,62 @@ function AddOrganizationPage() {
     setApiSuccess("");
     try {
       await organizationSchema.validateAsync(form, { abortEarly: false });
-      // Build FormData
-      const formData = new FormData();
-      // Backend expects camelCase keys (see backend code)
-      formData.append("organizationName", form.organizationName);
-      formData.append("organizationShortName", form.organizationShortName);
-      formData.append("organizationType", form.organizationType);
-      formData.append("officialEmail", form.officialEmail);
-      formData.append("officialWebsiteUrl", form.officialWebsiteUrl);
-      formData.append("address", form.address);
-      formData.append("missionDescription", form.missionDescription);
-      formData.append("establishmentDate", form.establishmentDate);
-      formData.append("campusAffiliationScope", form.campusAffiliationScope);
-      formData.append("affiliatedSchoolsNames", form.affiliatedSchoolsNames);
-      formData.append(
-        "affiliatedDepartmentNames",
-        form.affiliatedDepartmentNames
-      );
-      formData.append(
-        "primaryContactPersonName",
-        form.primaryContactPersonName
-      );
-      formData.append(
-        "primaryContactPersonEmail",
-        form.primaryContactPersonEmail
-      );
-      formData.append(
-        "primaryContactPersonPhone",
-        form.primaryContactPersonPhone
-      );
-      if (profileFile) formData.append("profilePicture", profileFile);
-      if (coverFile) formData.append("coverPicture", coverFile);
-      // Email is required for user creation (see backend)
-      formData.append("email", form.officialEmail);
-      mutation.mutate(formData);
+
+      if (isEditMode) {
+        // Check if we have images to upload
+        const hasImages = profileFile || coverFile;
+        if (hasImages) {
+          // Create FormData for profile data and images
+          const formData = new FormData();
+          // Add profile data
+          Object.keys(form).forEach((key) => {
+            if (
+              form[key] !== undefined &&
+              form[key] !== null &&
+              form[key] !== ""
+            ) {
+              formData.append(key, form[key]);
+            }
+          });
+          // Add image files
+          if (profileFile) formData.append("profilePicture", profileFile);
+          if (coverFile) formData.append("coverPicture", coverFile);
+          mutation.mutate(formData);
+        } else {
+          // For edit mode without images, send JSON data
+          mutation.mutate(form);
+        }
+      } else {
+        // For create mode, send FormData
+        const formData = new FormData();
+        // Backend expects camelCase keys (see backend code)
+        formData.append("organizationName", form.organizationName);
+        formData.append("organizationShortName", form.organizationShortName);
+        formData.append("organizationType", form.organizationType);
+        formData.append("officialEmail", form.officialEmail);
+        formData.append("officialWebsiteUrl", form.officialWebsiteUrl);
+        formData.append("address", form.address);
+        formData.append("missionDescription", form.missionDescription);
+        formData.append("establishmentDate", form.establishmentDate);
+        formData.append("campusAffiliationScope", form.campusAffiliationScope);
+        formData.append(
+          "primaryContactPersonName",
+          form.primaryContactPersonName
+        );
+        formData.append(
+          "primaryContactPersonEmail",
+          form.primaryContactPersonEmail
+        );
+        formData.append(
+          "primaryContactPersonPhone",
+          form.primaryContactPersonPhone
+        );
+        if (profileFile) formData.append("profilePicture", profileFile);
+        if (coverFile) formData.append("coverPicture", coverFile);
+        // Email is required for user creation (see backend)
+        formData.append("email", form.officialEmail);
+        mutation.mutate(formData);
+      }
     } catch (err) {
       if (err.isJoi && err.details) {
         const fieldErrors = {};
@@ -209,14 +321,31 @@ function AddOrganizationPage() {
     }
   };
   const handleCancel = () => {
-    // Go back or reset
-    window.history.back();
+    if (isEditMode) {
+      if (user?.userType === "organizationUser") {
+        navigate("/organizer/settings");
+      } else {
+        navigate("/admin/organizers");
+      }
+    } else {
+      navigate("/admin/organizers");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto p-4 sm:p-8 bg-[color:var(--color-background)] min-h-screen transition-colors">
+        <div className="text-center text-[color:var(--color-secondary-text)] py-8">
+          Loading organization details...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-8 bg-[color:var(--color-background)] min-h-screen transition-colors">
       <h2 className="text-2xl font-bold mb-6 text-[color:var(--color-primary-text)]">
-        Add Organization
+        {isEditMode ? "Edit Organization Details" : "Add New Organization"}
       </h2>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -232,7 +361,7 @@ function AddOrganizationPage() {
           {/* Short Name */}
           <FormField
             label="Short Name"
-              name="organizationShortName"
+            name="organizationShortName"
             value={form.organizationShortName}
             onChange={handleChange}
             error={submitAttempted ? errors.organizationShortName : undefined}
@@ -294,40 +423,15 @@ function AddOrganizationPage() {
           {/* Campus Affiliation Scope */}
           <FormField
             label="Campus Affiliation Scope"
-              name="campusAffiliationScope"
+            name="campusAffiliationScope"
             value={form.campusAffiliationScope}
             onChange={handleChange}
             placeholder="e.g. Main, East, West"
-            error={
-              submitAttempted ? errors.campusAffiliationScope : undefined
-            }
+            error={submitAttempted ? errors.campusAffiliationScope : undefined}
           />
           <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-xs text-[color:var(--color-secondary-text)] mt-4">
-            Comma-separated for multiple values: Campus Affiliation Scope,
-            Affiliated Schools, Affiliated Departments.
+            Comma-separated for multiple values: Campus Affiliation Scope.
           </div>
-          {/* Affiliated Schools */}
-          <FormField
-            label="Affiliated Schools Names"
-            name="affiliatedSchoolsNames"
-            value={form.affiliatedSchoolsNames}
-            onChange={handleChange}
-            placeholder="e.g. School of Science, School of Engineering"
-            error={
-              submitAttempted ? errors.affiliatedSchoolsNames : undefined
-            }
-          />
-          {/* Affiliated Departments */}
-          <FormField
-            label="Affiliated Department Names"
-            name="affiliatedDepartmentNames"
-            value={form.affiliatedDepartmentNames}
-            onChange={handleChange}
-            placeholder="e.g. Dept. of Physics, Dept. of Chemistry"
-            error={
-              submitAttempted ? errors.affiliatedDepartmentNames : undefined
-            }
-          />
           {/* Primary Contact Name */}
           <FormField
             label="Primary Contact Name"
@@ -359,7 +463,7 @@ function AddOrganizationPage() {
             onChange={handleChange}
             required
             error={
-                submitAttempted ? errors.primaryContactPersonPhone : undefined
+              submitAttempted ? errors.primaryContactPersonPhone : undefined
             }
           />
         </div>
@@ -492,7 +596,13 @@ function AddOrganizationPage() {
             className="px-6 py-2 rounded bg-[color:var(--color-primary)] text-white font-medium hover:bg-[color:var(--color-accent)] transition-colors"
             disabled={mutation.isLoading}
           >
-            {mutation.isLoading ? "Saving..." : "Save"}
+            {mutation.isLoading
+              ? isEditMode
+                ? "Updating..."
+                : "Saving..."
+              : isEditMode
+              ? "Update"
+              : "Save"}
           </button>
           <button
             type="button"

@@ -174,13 +174,7 @@ function ContactsPage() {
           <SearchBar placeholder="Search..." />
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
-          <PrimaryButton
-            icon={FiPlus}
-            className="w-full sm:w-auto"
-            onClick={handleReachOut}
-          >
-            Reach out
-          </PrimaryButton>
+        
           <SecondaryButton
             icon={FiUsers}
             className="w-full sm:w-auto"

@@ -22,16 +22,30 @@ import { createDonation } from "../services/donationApi";
 import Notification from "../../../components/Notification";
 import FundraiseLogo from "./../../../assets/fundraise logo.svg";
 import PaymentModal from "../components/PaymentModal";
+import PaymentResultModal from "../components/PaymentResultModal";
 import ThankYouModal from "../components/ThankYouModal";
+import { useAuth } from "../../../contexts/AuthContext";
+import GuestAuthPrompt from "../../../components/GuestAuthPrompt";
+import { fetchOrganizerById } from "../../users/services/usersApi";
+import {
+  getDonationStats,
+  getDonationStatus,
+} from "../../donations/services/donationsApi";
 
 function Logo() {
+  const navigate = useNavigate();
   return (
-    <span className="flex items-center">
+    <button
+      type="button"
+      onClick={() => navigate("/")}
+      className="flex items-center cursor-pointer"
+      aria-label="Go to home"
+    >
       <img src={FundraiseLogo} alt="FundFlow Logo" className="w-10 h-10" />
       <span className="ml-2 font-bold text-2xl text-[color:var(--color-primary)] hidden sm:inline">
         FundFlow
       </span>
-    </span>
+    </button>
   );
 }
 
@@ -43,6 +57,7 @@ function CampaignTemplatePage({
   const campaignId = propCampaignId || paramCampaignId || null;
   const shareParam = shareSlug || null;
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const donationSectionRef = useRef(null);
 
   const [campaign, setCampaign] = useState(null);
@@ -55,10 +70,28 @@ function CampaignTemplatePage({
     message: "",
   });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPaymentResultModal, setShowPaymentResultModal] = useState(false);
+  const [paymentResultError, setPaymentResultError] = useState(null);
+  const [providerLabel, setProviderLabel] = useState("your selected provider");
   const [showThankYouModal, setShowThankYouModal] = useState(false);
   const [selectedDonationAmount, setSelectedDonationAmount] = useState("50");
   const [donationDetails, setDonationDetails] = useState(null);
   const [isProcessingDonation, setIsProcessingDonation] = useState(false);
+  const [paymentPhase, setPaymentPhase] = useState("idle"); // idle | submitting | processing | polling | success | failed | timeout
+  const pollingRef = useRef(null);
+  const [activeDonation, setActiveDonation] = useState({
+    donationId: null,
+    transactionId: null,
+    gatewayRequestId: null,
+  });
+  const [organizerProfile, setOrganizerProfile] = useState(null);
+  const [organizerAvatarUrl, setOrganizerAvatarUrl] = useState("");
+  const [donationStats, setDonationStats] = useState({
+    totalDonations: 0,
+    completedDonations: 0,
+    totalAmount: 0,
+    anonymousDonations: 0,
+  });
 
   // Theme color from campaign settings
   const themeColor = campaign?.customPageSettings?.themeColor || "#10B981";
@@ -119,6 +152,43 @@ function CampaignTemplatePage({
     }
   };
 
+  // Fetch organizer profile and image when campaign loads
+  useEffect(() => {
+    const loadOrganizer = async () => {
+      try {
+        if (!campaign?.organizerId) return;
+
+        const profRes = await fetchOrganizerById(campaign.organizerId);
+
+        const profile = profRes?.data || profRes || null;
+        setOrganizerProfile(profile);
+
+        // Use the profilePictureUrl directly from the backend response
+        const avatarUrl =
+          profile?.profilePictureUrl || profile?.coverPictureUrl || "";
+        setOrganizerAvatarUrl(avatarUrl);
+      } catch (_) {
+        setOrganizerAvatarUrl("");
+      }
+    };
+    loadOrganizer();
+  }, [campaign?.organizerId]);
+
+  // Fetch donation statistics when campaign loads
+  useEffect(() => {
+    const loadDonationStats = async () => {
+      try {
+        if (!campaign?.campaignId) return;
+        const stats = await getDonationStats(campaign.campaignId);
+        setDonationStats(stats);
+      } catch (error) {
+        console.error("Failed to fetch donation stats:", error);
+        // Keep default values on error
+      }
+    };
+    loadDonationStats();
+  }, [campaign?.campaignId]);
+
   const scrollToDonation = () => {
     if (donationSectionRef.current) {
       donationSectionRef.current.scrollIntoView({
@@ -142,7 +212,19 @@ function CampaignTemplatePage({
   const handlePaymentSubmit = async (paymentData) => {
     try {
       setIsProcessingDonation(true);
-      console.log("Processing donation:", paymentData);
+      setPaymentPhase("submitting");
+
+      // Open result modal immediately and close the payment modal
+      const provider =
+        paymentData?.paymentMethod === "airtel"
+          ? "Airtel Zambia"
+          : paymentData?.paymentMethod === "mtn"
+          ? "MTN Zambia"
+          : "your selected provider";
+      setProviderLabel(provider);
+      setPaymentResultError(null);
+      setShowPaymentResultModal(true);
+      setShowPaymentModal(false);
 
       // Add campaign ID to payment data
       const donationData = {
@@ -156,45 +238,122 @@ function CampaignTemplatePage({
       // Call the actual donation API
       const response = await createDonation(donationData);
 
-      console.log("Donation successful:", response);
+      const resData = response?.data || response;
+      const donationId =
+        resData?.donation?.donationId || resData?.donationId || null;
+      const transactionId =
+        resData?.transaction?.transactionId || resData?.transactionId || null;
+      const gatewayRequestId =
+        resData?.transaction?.gatewayRequestId ||
+        resData?.gatewayRequestId ||
+        null;
 
-      // Store donation details for ThankYouModal
+      setActiveDonation({ donationId, transactionId, gatewayRequestId });
+
+      // Prepare ThankYou data but do not show yet
       setDonationDetails({
         amount: paymentData.amount,
         paymentMethod: paymentData.paymentMethod,
         message: paymentData.messageText,
-        donationId:
-          response?.data?.donation?.donationId ||
-          response?.donation?.donationId,
+        donationId,
       });
 
-      // Close payment modal and show thank you modal
-      setShowPaymentModal(false);
-      setShowThankYouModal(true);
-
-      // Show success notification
+      // Move to processing and start polling for terminal state
+      setPaymentPhase("processing");
       setNotification({
         isVisible: true,
         type: "success",
-        message: `Donation of ${formatAmount(
-          paymentData.amount
-        )} submitted successfully!`,
+        message:
+          "Payment request sent to your phone. Please approve on your device.",
       });
 
-      // Refresh campaign data to show updated amounts
-      await fetchCampaign();
+      // Keep showing the result modal while we poll
+
+      // Begin polling donation status
+      setPaymentPhase("polling");
+      const startedAt = Date.now();
+      const timeoutMs = 2 * 60 * 1000; // 2 minutes
+      pollingRef.current && clearInterval(pollingRef.current);
+      if (donationId) {
+        pollingRef.current = setInterval(async () => {
+          try {
+            const { status } = await getDonationStatus(donationId);
+            if (status === "completed") {
+              clearInterval(pollingRef.current);
+              setPaymentPhase("success");
+              setShowPaymentModal(false);
+              setShowPaymentResultModal(false);
+              setShowThankYouModal(true);
+              await fetchCampaign();
+              try {
+                const stats = await getDonationStats(campaign.campaignId);
+                setDonationStats(stats);
+              } catch (_) {}
+            } else if (status === "failed") {
+              clearInterval(pollingRef.current);
+              setPaymentPhase("failed");
+              setPaymentResultError("Payment was declined. You can try again.");
+              setNotification({
+                isVisible: true,
+                type: "error",
+                message: "Payment was declined. You can try again.",
+              });
+            }
+          } catch (_) {
+            // ignore transient polling errors
+          }
+          if (Date.now() - startedAt > timeoutMs) {
+            clearInterval(pollingRef.current);
+            setPaymentPhase("timeout");
+            setPaymentResultError(
+              "Payment is taking longer than expected. If you approved, it will reflect shortly; otherwise, please retry."
+            );
+            setNotification({
+              isVisible: true,
+              type: "error",
+              message:
+                "Payment is taking longer than expected. If you approved, it will reflect shortly; otherwise, please retry.",
+            });
+          }
+        }, 2500);
+      }
     } catch (error) {
       console.error("Donation failed:", error);
+      setPaymentResultError(
+        mapProviderError(error?.message) ||
+          error?.message ||
+          "Failed to process donation. Please try again."
+      );
+      setShowPaymentResultModal(true);
       setNotification({
         isVisible: true,
         type: "error",
         message:
-          error.message || "Failed to process donation. Please try again.",
+          mapProviderError(error?.message) ||
+          error?.message ||
+          "Failed to process donation. Please try again.",
       });
-      throw error; // Re-throw to let PaymentModal handle it
+      // Keep the error visible in the result modal; also rethrow for any upstream handling
+      throw error;
     } finally {
       setIsProcessingDonation(false);
     }
+  };
+
+  const mapProviderError = (message = "") => {
+    if (message.includes("9905")) {
+      return "That phone number isn't eligible for Mobile Money payments.";
+    }
+    if (message.includes("9906")) {
+      return "Please retry; your previous attempt is still in progress.";
+    }
+    if (message.includes("995")) {
+      return "Payment was declined. You can try again.";
+    }
+    if (message.includes("2000") || message.includes("No active simulator")) {
+      return "Phone number not registered for Mobile Money. Please check your number or try a different payment method.";
+    }
+    return null;
   };
 
   const handleThankYouClose = () => {
@@ -239,7 +398,6 @@ function CampaignTemplatePage({
   };
 
   const calculateProgress = () => {
-    console.log(campaign);
     if (!campaign?.goalAmount) return 0;
     const currentAmount = campaign?.currentRaisedAmount || 0;
     return Math.min((currentAmount / campaign.goalAmount) * 100, 100);
@@ -320,15 +478,34 @@ function CampaignTemplatePage({
       <div className="px-1 sm:px-4 lg:px-6 max-w-7xl mx-auto py-4">
         {/* Organizer Header */}
         <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[color:var(--color-muted)] rounded-lg flex items-center justify-center">
-              <span className="text-xl font-bold text-[color:var(--color-primary-text)]">
-                {campaign.organizerName?.[0]?.toUpperCase() || "O"}
-              </span>
+          <div
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={() => {
+              if (campaign?.organizerId)
+                navigate(`/organizers/${campaign.organizerId}`);
+            }}
+            role="button"
+            aria-label="View organizer profile"
+          >
+            <div className="w-10 h-10 bg-[color:var(--color-muted)] rounded-lg flex items-center justify-center overflow-hidden">
+              {organizerAvatarUrl ? (
+                <img
+                  src={organizerAvatarUrl}
+                  alt="Organizer avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-[color:var(--color-primary-text)]">
+                  {campaign.organizerName?.[0]?.toUpperCase() || "O"}
+                </span>
+              )}
             </div>
-            <div>
-              <h2 className="font-bold text-xl text-[color:var(--color-primary-text)]">
-                {campaign.organizerName || "Organization"}
+            <div className="flex flex-wrap">
+              <h2 className="font-bold text-base sm:text-lg md:text-xl text-[color:var(--color-primary-text)] break-words whitespace-pre-line w-full">
+                {campaign.organizerName ||
+                  organizerProfile?.organizationName ||
+                  organizerProfile?.firstName ||
+                  "Organization"}
               </h2>
             </div>
           </div>
@@ -351,15 +528,28 @@ function CampaignTemplatePage({
             {/* Campaign Message */}
             <div className="bg-[color:var(--color-background)] rounded-lg p-4">
               <div className="prose max-w-none">
-                <p className="text-[color:var(--color-primary-text)] leading-relaxed">
-                  {showFullMessage
-                    ? campaign.customPageSettings?.message ||
-                      campaign.description
-                    : truncateMessage(
-                        campaign.customPageSettings?.message ||
-                          campaign.description
-                      )}
-                </p>
+                <div className="text-[color:var(--color-primary-text)] leading-relaxed">
+                  {showFullMessage ? (
+                    <div
+                      className="formatted-text"
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          campaign.customPageSettings?.message ||
+                          campaign.description,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="formatted-text"
+                      dangerouslySetInnerHTML={{
+                        __html: truncateMessage(
+                          campaign.customPageSettings?.message ||
+                            campaign.description
+                        ),
+                      }}
+                    />
+                  )}
+                </div>
                 {(campaign.customPageSettings?.message || campaign.description)
                   ?.length > 200 && (
                   <button
@@ -372,6 +562,27 @@ function CampaignTemplatePage({
                 )}
               </div>
             </div>
+
+            {/* Campaign Categories */}
+            {campaign?.categories && campaign.categories.length > 0 && (
+              <div className="px-4 mb-4">
+                <div className="flex flex-wrap gap-2">
+                  {campaign.categories.map((category) => (
+                    <span
+                      key={category.categoryId}
+                      className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                      style={{
+                        backgroundColor: `${themeColor}20`,
+                        border: `1px solid ${themeColor}40`,
+                        color: themeColor,
+                      }}
+                    >
+                      {category.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Donate and Share Buttons */}
             <div className="flex gap-3 px-4">
@@ -419,13 +630,16 @@ function CampaignTemplatePage({
               <div className="flex items-center gap-2 text-[color:var(--color-secondary-text)]">
                 <FiUsers className="w-4 h-4" />
                 <span className="text-sm">
-                  {campaign.donationCount || 0} supporters
+                  {donationStats.completedDonations || 0} supporters
                 </span>
               </div>
             </div>
 
             {/* Words of Support */}
-            <WordsOfSupport themeColor={themeColor} />
+            <WordsOfSupport
+              themeColor={themeColor}
+              campaignId={campaign.campaignId}
+            />
           </div>
 
           {/* Right Section - 1 column */}
@@ -436,7 +650,7 @@ function CampaignTemplatePage({
                 raisedAmount={campaign.currentRaisedAmount || 0}
                 goalAmount={campaign.goalAmount}
                 progress={progress}
-                donationCount={campaign.donationCount || 0}
+                donationCount={donationStats.completedDonations || 0}
                 predefinedAmounts={predefinedAmounts}
                 themeColor={themeColor}
                 formatAmount={formatAmount}
@@ -446,7 +660,10 @@ function CampaignTemplatePage({
             </div>
 
             {/* Recent Donations */}
-            <RecentDonations themeColor={themeColor} />
+            <RecentDonations
+              themeColor={themeColor}
+              campaignId={campaign.campaignId}
+            />
 
             {/* Success Stories */}
             <SuccessStories
@@ -459,6 +676,9 @@ function CampaignTemplatePage({
               themeColor={themeColor}
               onDonateClick={() => handleDonateClick("50")}
             />
+
+            {/* Auth Prompt for Guests (Mobile bottom) */}
+            <GuestAuthPrompt themeColor={themeColor} />
           </div>
         </div>
 
@@ -477,7 +697,7 @@ function CampaignTemplatePage({
               raisedAmount={campaign.currentRaisedAmount || 0}
               goalAmount={campaign.goalAmount}
               progress={progress}
-              donationCount={campaign.donationCount || 0}
+              donationCount={donationStats.completedDonations || 0}
               predefinedAmounts={predefinedAmounts}
               themeColor={themeColor}
               formatAmount={formatAmount}
@@ -489,14 +709,28 @@ function CampaignTemplatePage({
           {/* Campaign Message */}
           <div className="bg-[color:var(--color-background)] rounded-lg p-4">
             <div className="prose max-w-none">
-              <p className="text-[color:var(--color-primary-text)] leading-relaxed">
-                {showFullMessage
-                  ? campaign.customPageSettings?.message || campaign.description
-                  : truncateMessage(
-                      campaign.customPageSettings?.message ||
-                        campaign.description
-                    )}
-              </p>
+              <div className="text-[color:var(--color-primary-text)] leading-relaxed">
+                {showFullMessage ? (
+                  <div
+                    className="formatted-text"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        campaign.customPageSettings?.message ||
+                        campaign.description,
+                    }}
+                  />
+                ) : (
+                  <div
+                    className="formatted-text"
+                    dangerouslySetInnerHTML={{
+                      __html: truncateMessage(
+                        campaign.customPageSettings?.message ||
+                          campaign.description
+                      ),
+                    }}
+                  />
+                )}
+              </div>
               {(campaign.customPageSettings?.message || campaign.description)
                 ?.length > 200 && (
                 <button
@@ -509,6 +743,27 @@ function CampaignTemplatePage({
               )}
             </div>
           </div>
+
+          {/* Campaign Categories */}
+          {campaign?.categories && campaign.categories.length > 0 && (
+            <div className="px-4 mb-4">
+              <div className="flex flex-wrap gap-2">
+                {campaign.categories.map((category) => (
+                  <span
+                    key={category.categoryId}
+                    className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                    style={{
+                      backgroundColor: `${themeColor}20`,
+                      border: `1px solid ${themeColor}40`,
+                      color: themeColor,
+                    }}
+                  >
+                    {category.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Donate and Share Buttons */}
           <div className="flex flex-col gap-2">
@@ -562,22 +817,29 @@ function CampaignTemplatePage({
                 <FiUsers className="w-3 h-3" />
               </div>
               <span className="text-xs text-[color:var(--color-secondary-text)]">
-                {campaign.donationCount || 0} supporters
+                {donationStats.completedDonations || 0} supporters
               </span>
             </div>
           </div>
 
           {/* Recent Donations */}
-          <RecentDonations themeColor={themeColor} />
+          <RecentDonations
+            themeColor={themeColor}
+            campaignId={campaign.campaignId}
+          />
 
           {/* Words of Support */}
-          <WordsOfSupport themeColor={themeColor} />
+          <WordsOfSupport
+            themeColor={themeColor}
+            campaignId={campaign.campaignId}
+          />
 
           {/* Success Stories */}
           <SuccessStories
             themeColor={themeColor}
             campaignId={campaign.campaignId}
           />
+          <GuestAuthPrompt themeColor={themeColor} />
         </div>
       </div>
 
@@ -595,7 +857,20 @@ function CampaignTemplatePage({
         campaignStartDate={campaign?.startDate}
       />
 
-      {/* Thank You Modal */}
+      {/* Payment Result Modal */}
+      <PaymentResultModal
+        isOpen={showPaymentResultModal}
+        onClose={() => setShowPaymentResultModal(false)}
+        themeColor={themeColor}
+        providerLabel={providerLabel}
+        isProcessing={
+          paymentPhase === "processing" || paymentPhase === "polling"
+        }
+        errorMessage={paymentResultError}
+        title="Payment Result"
+      />
+
+      {/* Thank You Modal on success */}
       <ThankYouModal
         isOpen={showThankYouModal}
         onClose={handleThankYouClose}

@@ -1,8 +1,12 @@
-import React, { useState } from "react";
-import { FiPlay } from "react-icons/fi";
+import React, { useEffect, useRef, useState } from "react";
+import { FiPlay, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 function MediaGallery({ mainMedia, secondaryImages = [], title }) {
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const autoSlideRef = useRef(null);
+  const [fadeOpacity, setFadeOpacity] = useState(1);
+  const [slideOffset, setSlideOffset] = useState(0);
+  const [lastDirection, setLastDirection] = useState("next");
 
   // Combine all media into one array
   const allMedia = [
@@ -17,6 +21,43 @@ function MediaGallery({ mainMedia, secondaryImages = [], title }) {
   ].filter(Boolean);
 
   const selectedMedia = allMedia[selectedMediaIndex];
+
+  // Auto-slide every 5 seconds when multiple media are available
+  useEffect(() => {
+    if (allMedia.length <= 1) return;
+    autoSlideRef.current = setInterval(() => {
+      setLastDirection("next");
+      setSelectedMediaIndex((prev) => (prev + 1) % allMedia.length);
+    }, 5000);
+    return () => {
+      if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    };
+  }, [allMedia.length]);
+
+  // Animate on index change
+  useEffect(() => {
+    setFadeOpacity(0);
+    setSlideOffset(lastDirection === "next" ? 20 : -20);
+    const raf = requestAnimationFrame(() => {
+      setFadeOpacity(1);
+      setSlideOffset(0);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selectedMediaIndex, lastDirection]);
+
+  const goPrev = () => {
+    if (allMedia.length <= 1) return;
+    setLastDirection("prev");
+    setSelectedMediaIndex(
+      (prev) => (prev - 1 + allMedia.length) % allMedia.length
+    );
+  };
+
+  const goNext = () => {
+    if (allMedia.length <= 1) return;
+    setLastDirection("next");
+    setSelectedMediaIndex((prev) => (prev + 1) % allMedia.length);
+  };
 
   if (!allMedia.length) {
     return (
@@ -39,28 +80,64 @@ function MediaGallery({ mainMedia, secondaryImages = [], title }) {
     <div className="bg-[color:var(--color-background)] rounded-lg">
       {/* Campaign Title */}
       {title && (
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[color:var(--color-primary-text)] mb-4 leading-tight">
+        <h1 className="text-xl sm:text-2xl lg:text-2xl font-semibold text-[color:var(--color-primary-text)] mb-4 leading-tight">
           {title}
         </h1>
       )}
 
-      {/* Main Media Display */}
+      {/* Main Media Display with arrows */}
       <div className="aspect-video bg-black rounded-lg overflow-hidden mb-3 relative">
         {selectedMedia?.type === "video" ? (
           <video
+            key={selectedMedia.url}
             src={selectedMedia.url}
-            controls
             className="w-full h-full object-cover"
             poster={allMedia.find((m) => m.type === "image")?.url}
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+            style={{
+              opacity: fadeOpacity,
+              transform: `translateX(${slideOffset}px)`,
+              transition: "opacity 400ms ease, transform 400ms ease",
+            }}
           >
             Your browser does not support the video tag.
           </video>
         ) : (
           <img
+            key={selectedMedia.url}
             src={selectedMedia?.url}
             alt={`Campaign media ${selectedMediaIndex + 1}`}
-            className="w-full h-full object-cover transition-opacity duration-300"
+            className="w-full h-full object-cover"
+            style={{
+              opacity: fadeOpacity,
+              transform: `translateX(${slideOffset}px)`,
+              transition: "opacity 400ms ease, transform 400ms ease",
+            }}
           />
+        )}
+
+        {/* Overlaid arrows */}
+        {allMedia.length > 1 && (
+          <>
+            <button
+              aria-label="Previous media"
+              onClick={goPrev}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 focus:outline-none"
+            >
+              <FiChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              aria-label="Next media"
+              onClick={goNext}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 focus:outline-none"
+            >
+              <FiChevronRight className="w-6 h-6" />
+            </button>
+          </>
         )}
 
         {/* Video Play Indicator */}
@@ -72,38 +149,6 @@ function MediaGallery({ mainMedia, secondaryImages = [], title }) {
           </div>
         )}
       </div>
-
-      {/* Thumbnail Navigation */}
-      {allMedia.length > 1 && (
-        <div className="flex gap-3 py-2 justify-between">
-          {allMedia.map((media, index) => (
-            <button
-              key={index}
-              onClick={() => setSelectedMediaIndex(index)}
-              className={`flex-1 min-w-0 h-20 sm:h-24 md:h-28 rounded-lg overflow-hidden transition-all `}
-            >
-              {media.type === "video" ? (
-                <div className="w-full h-full bg-black flex items-center justify-center relative">
-                  <img
-                    src={media.url}
-                    alt={`Thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <FiPlay className="w-4 h-4 text-white" />
-                  </div>
-                </div>
-              ) : (
-                <img
-                  src={media.url}
-                  alt={`Thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

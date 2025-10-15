@@ -3,338 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>University Campaign | Campaign Title</title>
-    <!-- Use Inter font from Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN for utility classes -->
+    <title>Campaign Wireframe</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom CSS for a beautiful look and feel */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F8F8F8;
+            background-color: #ffffff;
+            color: #000000;
         }
-
-        /* Set the primary color as a CSS variable for easy use */
-        :root {
-            --primary-color: #007a35;
-            --primary-color-dark: #005a28;
-            --primary-color-light: #4caf50;
-        }
-
-        /* Custom styles for the progress bar animation */
-        .progress-bar {
-            transition: width 1s ease-in-out;
-        }
-
-        /* Custom styles for the sticky donation bar on mobile */
-        @media (max-width: 767px) {
-            #sticky-donate-bar {
-                transform: translateY(100%);
-                transition: transform 0.3s ease-in-out;
-            }
-            #sticky-donate-bar.visible {
-                transform: translateY(0);
-            }
-        }
-
-        /* Custom styles for the sticky donation bar on desktop */
-        @media (min-width: 768px) {
-            #sticky-donate-bar {
-                transition: transform 0.3s ease-in-out;
-            }
-        }
-        
-        .donate-button {
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .donate-button:hover {
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .share-button {
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .share-button:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            transform: translateY(-1px);
-        }
-        
-        /* Custom scrollbar for better aesthetics */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-color-dark);
+        .wireframe-box {
+            border: 1px solid #000000;
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="p-6 md:p-12">
+    <div class="max-w-4xl mx-auto space-y-12">
 
-    <!-- Sticky Donation Bar (Visible on scroll on all devices, but will be at top on desktop and bottom on mobile) -->
-    <div id="sticky-donate-bar" class="fixed top-0 left-0 w-full bg-white z-50 shadow-lg px-4 py-3 md:px-8 transition-transform transform md:translate-y-0" style="display: none;">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <span class="text-sm font-semibold text-gray-700 md:text-base">Campaign for a Brighter Future</span>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div class="flex-1 w-24 sm:w-48 bg-gray-200 rounded-full h-2.5">
-                    <div id="sticky-progress-bar" class="progress-bar bg-[--primary-color] h-2.5 rounded-full" style="width: 0%;"></div>
-                </div>
-                <div class="text-xs font-medium text-gray-700 whitespace-nowrap hidden sm:block">
-                    <span id="sticky-raised-amount">$0</span> / <span id="sticky-goal-amount">$10,000</span>
-                </div>
-                <a href="#donate-section" class="bg-[--primary-color] text-white text-sm md:text-base font-semibold py-2 px-4 rounded-full shadow-md hover:bg-[--primary-color-dark] donate-button">
-                    Donate Now
-                </a>
+        <!-- Header -->
+        <div class="flex justify-between items-center pb-4">
+            <h1 class="text-2xl md:text-3xl font-bold">Create New Campaign</h1>
+            <div class="flex space-x-4">
+                <button class="px-4 py-2 wireframe-box rounded-md">Preview</button>
+                <button class="px-4 py-2 wireframe-box rounded-md">Cancel</button>
             </div>
         </div>
-    </div>
 
-    <!-- Main Content Container -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Campaign Creation Section -->
+        <div class="wireframe-box p-6 rounded-lg space-y-8">
+            <div class="space-y-4">
+                <h2 class="text-xl md:text-2xl font-semibold">Campaign Page Content</h2>
 
-        <!-- Header: Website & Organizer Logos/Titles -->
-        <header class="flex flex-col sm:flex-row justify-between items-center mb-10 space-y-4 sm:space-y-0">
-            <div class="flex items-center space-x-3">
-                <img src="https://placehold.co/40x40/007a35/FFFFFF?text=UNI" alt="University Logo" class="rounded-full shadow-md">
-                <h1 class="text-xl font-bold text-[--primary-color]">University Fund</h1>
-            </div>
-            <div class="flex items-center space-x-3">
-                <img src="https://placehold.co/40x40/A9A9A9/000000?text=ORG" alt="Organizer Logo" class="rounded-full shadow-md">
-                <h2 class="text-xl font-semibold text-gray-700">Student Association Name</h2>
-            </div>
-        </header>
-
-        <!-- Hero Section -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16">
-            <div class="relative w-full h-72 sm:h-96 rounded-2xl overflow-hidden shadow-xl transform transition-transform duration-300 hover:scale-[1.01]">
-                <img src="https://placehold.co/1200x800/A9A9A9/000000?text=Main+Campaign+Media" alt="Main Campaign Media" class="w-full h-full object-cover">
-            </div>
-
-            <div class="space-y-6">
-                <span class="text-sm font-medium text-gray-500">Launched on: October 26, 2023</span>
-                <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight text-gray-900">
-                    Campaign for a Brighter Future
-                </h2>
-                <p class="text-lg text-gray-600 leading-relaxed">
-                    Join us in our mission to provide scholarships for underprivileged students. Your donation will directly fund tuition fees, textbooks, and essential living expenses, transforming lives and building a stronger academic community. Every contribution, big or small, brings us closer to our goal.
-                </p>
-
-                <!-- Donation Progress & Action -->
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 space-y-4">
-                    <div class="text-center">
-                        <p class="text-3xl font-bold text-[--primary-color] mb-1">
-                            $<span id="raised-amount">0</span>
-                        </p>
-                        <p class="text-lg text-gray-500">
-                            Raised of $<span id="goal-amount">10,000</span> goal
-                        </p>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-3.5">
-                        <div id="progress-bar" class="progress-bar bg-[--primary-color] h-3.5 rounded-full" style="width: 0%;"></div>
-                    </div>
-                    
-                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                        <a href="#donate-section" class="donate-button flex-1 text-center bg-[--primary-color] text-white text-lg font-semibold py-3 px-6 rounded-full shadow-md hover:bg-[--primary-color-dark]">
-                            Donate Now
-                        </a>
-                        <button class="share-button flex-1 text-center bg-gray-200 text-gray-700 text-lg font-semibold py-3 px-6 rounded-full shadow-md hover:bg-gray-300">
-                            Share Campaign
-                        </button>
+                <!-- Campaign Title -->
+                <div class="space-y-2">
+                    <label class="block font-medium">Campaign Title *</label>
+                    <div class="w-full h-10 wireframe-box rounded-md px-3 flex items-center">
+                        <span class="text-gray-400">Enter the title that will be displayed on your campaign page</span>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Secondary Media Section -->
-        <section class="mb-16">
-            <h3 class="text-2xl font-bold text-gray-900 mb-6">Explore More Media</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <img src="https://placehold.co/600x400/D3D3D3/000000?text=Secondary+Image+1" alt="Secondary Image 1" class="w-full h-48 sm:h-64 object-cover rounded-xl shadow-md transition-transform duration-300 hover:scale-[1.05]">
-                <img src="https://placehold.co/600x400/D3D3D3/000000?text=Secondary+Image+2" alt="Secondary Image 2" class="w-full h-48 sm:h-64 object-cover rounded-xl shadow-md transition-transform duration-300 hover:scale-[1.05]">
-                <img src="https://placehold.co/600x400/D3D3D3/000000?text=Secondary+Image+3" alt="Secondary Image 3" class="w-full h-48 sm:h-64 object-cover rounded-xl shadow-md transition-transform duration-300 hover:scale-[1.05]">
-                <img src="https://placehold.co/600x400/D3D3D3/000000?text=Secondary+Image+4" alt="Secondary Image 4" class="w-full h-48 sm:h-64 object-cover rounded-xl shadow-md transition-transform duration-300 hover:scale-[1.05]">
-            </div>
-        </section>
-
-        <!-- Success Stories Section -->
-        <section class="mb-16">
-            <h3 class="text-2xl font-bold text-gray-900 mb-6">Our Impact: Success Stories</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Story 1 -->
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 transition-transform duration-300 hover:scale-[1.02]">
-                    <img src="https://placehold.co/600x400/E5E5E5/000000?text=Story+Image" alt="Story 1" class="w-full h-48 object-cover rounded-xl mb-4">
-                    <h4 class="text-xl font-semibold text-gray-800 mb-2">Empowering Student Innovators</h4>
-                    <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-                        Through your generous support, our university's robotics team secured top honors at the national competition! Your donations funded...
-                    </p>
-                    <a href="#" class="text-[--primary-color] font-semibold hover:underline">View Full Story &rarr;</a>
-                </div>
-                <!-- Story 2 -->
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 transition-transform duration-300 hover:scale-[1.02]">
-                    <img src="https://placehold.co/600x400/E5E5E5/000000?text=Story+Image" alt="Story 2" class="w-full h-48 object-cover rounded-xl mb-4">
-                    <h4 class="text-xl font-semibold text-gray-800 mb-2">Bridging the Digital Divide</h4>
-                    <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-                        Thanks to your contributions, we provided over 100 laptops to underprivileged students, ensuring they have access to...
-                    </p>
-                    <a href="#" class="text-[--primary-color] font-semibold hover:underline">View Full Story &rarr;</a>
-                </div>
-                <!-- Story 3 -->
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 transition-transform duration-300 hover:scale-[1.02]">
-                    <img src="https://placehold.co/600x400/E5E5E5/000000?text=Story+Image" alt="Story 3" class="w-full h-48 object-cover rounded-xl mb-4">
-                    <h4 class="text-xl font-semibold text-gray-800 mb-2">Greening Our Campus Initiative</h4>
-                    <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-                        Our campus is now greener and more vibrant thanks to volunteers and donors who helped us plant over 500 trees...
-                    </p>
-                    <a href="#" class="text-[--primary-color] font-semibold hover:underline">View Full Story &rarr;</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Recent Donations Section -->
-        <section class="mb-16">
-            <h3 class="text-2xl font-bold text-gray-900 mb-6">Recent Supporters</h3>
-            <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <ul class="divide-y divide-gray-200">
-                    <li class="py-3 flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <span class="text-gray-800 font-medium">Jane Doe</span>
-                            <span class="bg-[--primary-color] text-white text-xs font-bold px-2 py-0.5 rounded-full">Top Donor</span>
+                <!-- Campaign Message -->
+                <div class="space-y-2">
+                    <label class="block font-medium">Campaign Message *</label>
+                    <div class="w-full h-32 wireframe-box rounded-md p-3 space-y-2">
+                        <div class="flex space-x-2">
+                            <span class="wireframe-box w-6 h-6 flex items-center justify-center font-bold rounded-sm">B</span>
+                            <span class="wireframe-box w-6 h-6 flex items-center justify-center italic rounded-sm">I</span>
                         </div>
-                        <span class="text-gray-600 font-semibold">$500</span>
-                    </li>
-                    <li class="py-3 flex items-center justify-between">
-                        <span class="text-gray-800 font-medium">Anonymous</span>
-                        <span class="text-gray-600 font-semibold">$100</span>
-                    </li>
-                    <li class="py-3 flex items-center justify-between">
-                        <span class="text-gray-800 font-medium">John Smith</span>
-                        <span class="text-gray-600 font-semibold">$50</span>
-                    </li>
-                    <li class="py-3 flex items-center justify-between">
-                        <span class="text-gray-800 font-medium">Anonymous</span>
-                        <span class="text-gray-600 font-semibold">$25</span>
-                    </li>
-                    <li class="py-3 flex items-center justify-between">
-                        <span class="text-gray-800 font-medium">Peter Jones</span>
-                        <span class="text-gray-600 font-semibold">$10</span>
-                    </li>
-                </ul>
-                <div class="mt-6 text-center">
-                    <button class="text-[--primary-color] font-semibold hover:underline">
-                        See More Donations &rarr;
-                    </button>
+                        <span class="block text-gray-400">Write a compelling message that will inspire people to donate to your campaign.</span>
+                    </div>
+                    <p class="text-xs text-right text-gray-400">0 characters</p>
                 </div>
-            </div>
-        </section>
 
-        <!-- Words of Support Section -->
-        <section class="mb-16">
-            <h3 class="text-2xl font-bold text-gray-900 mb-6">Messages from Our Supporters</h3>
-            <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-                <div class="flex overflow-x-auto space-x-4 pb-4">
-                    <!-- Message 1 -->
-                    <div class="flex-none w-64 md:w-80 bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200">
-                        <p class="italic text-gray-600 text-sm mb-2">"Proud to support such an important cause. Keep up the amazing work!"</p>
-                        <p class="text-sm font-semibold text-gray-800">- Jane D.</p>
-                    </div>
-                    <!-- Message 2 -->
-                    <div class="flex-none w-64 md:w-80 bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200">
-                        <p class="italic text-gray-600 text-sm mb-2">"Every bit counts! Hoping this helps you reach your goal."</p>
-                        <p class="text-sm font-semibold text-gray-800">- Anonymous</p>
-                    </div>
-                    <!-- Message 3 -->
-                    <div class="flex-none w-64 md:w-80 bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200">
-                        <p class="italic text-gray-600 text-sm mb-2">"Inspired by your dedication. Happy to contribute!"</p>
-                        <p class="text-sm font-semibold text-gray-800">- Peter S.</p>
-                    </div>
-                     <!-- Message 4 -->
-                    <div class="flex-none w-64 md:w-80 bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200">
-                        <p class="italic text-gray-600 text-sm mb-2">"A great initiative. Glad to be a part of it."</p>
-                        <p class="text-sm font-semibold text-gray-800">- Anonymous</p>
+                <!-- Theme Color -->
+                <div class="space-y-2">
+                    <label class="block font-medium">Theme Color</label>
+                    <div class="flex space-x-2">
+                        <div class="w-8 h-8 rounded-full wireframe-box flex items-center justify-center">
+                            <div class="w-4 h-4 rounded-full bg-black"></div>
+                        </div>
+                        <div class="w-8 h-8 rounded-full wireframe-box"></div>
+                        <div class="w-8 h-8 rounded-full wireframe-box"></div>
+                        <div class="w-8 h-8 rounded-full wireframe-box"></div>
+                        <div class="w-8 h-8 rounded-full wireframe-box"></div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Final Donate Button Section -->
-        <section id="donate-section" class="flex flex-col items-center text-center p-8 rounded-2xl shadow-lg border border-gray-100 bg-white">
-            <h3 class="text-2xl font-bold text-gray-900 mb-4">Help us reach our goal!</h3>
-            <p class="text-gray-600 max-w-lg mb-6">
-                Your support makes a real difference. Click the button below to join our community of supporters and help us make a lasting impact.
-            </p>
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-                <a href="#" class="donate-button text-center w-full bg-[--primary-color] text-white text-lg font-semibold py-3 px-6 rounded-full shadow-md hover:bg-[--primary-color-dark]">
-                    Donate Now
-                </a>
-                <button class="share-button text-center w-full bg-gray-200 text-gray-700 text-lg font-semibold py-3 px-6 rounded-full shadow-md hover:bg-gray-300">
-                    Share Campaign
-                </button>
-            </div>
-        </section>
+                <!-- Main Media -->
+                <div class="space-y-2">
+                    <label class="block font-medium">Main Media (Image or Video)</label>
+                    <div class="w-full h-40 border-2 border-dashed border-black rounded-lg flex flex-col items-center justify-center text-gray-400">
+                        <svg class="w-8 h-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Click to upload image or video</span>
+                    </div>
+                </div>
 
+                <!-- Additional Images -->
+                <div class="space-y-2">
+                    <label class="block font-medium">Additional Images (Optional)</label>
+                    <button class="px-4 py-2 wireframe-box rounded-md">+ Add Image (1/2)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="wireframe-box p-6 rounded-lg space-y-8">
+            <h2 class="text-xl md:text-2xl font-semibold">Campaign Metadata</h2>
+
+            <!-- Campaign Name -->
+            <div class="space-y-2">
+                <label class="block font-medium">Campaign Name *</label>
+                <div class="w-full h-10 wireframe-box rounded-md px-3 flex items-center">
+                    <span class="text-gray-400">Internal name for your campaign</span>
+                </div>
+            </div>
+
+            <!-- Campaign Description -->
+            <div class="space-y-2">
+                <label class="block font-medium">Campaign Description *</label>
+                <div class="w-full h-24 wireframe-box rounded-md p-3">
+                    <span class="text-gray-400">Detailed description of your campaign for internal use</span>
+                </div>
+            </div>
+
+            <!-- Goal & Dates -->
+            <div class="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
+                <div class="flex-1 space-y-2">
+                    <label class="block font-medium">Start Date (Optional)</label>
+                    <div class="w-full h-10 wireframe-box rounded-md px-3 flex items-center justify-between">
+                        <span class="text-gray-400">mm/dd/yyyy</span>
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1 space-y-2">
+                    <label class="block font-medium">End Date (Optional)</label>
+                    <div class="w-full h-10 wireframe-box rounded-md px-3 flex items-center justify-between">
+                        <span class="text-gray-400">mm/dd/yyyy</span>
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1 space-y-2">
+                    <label class="block font-medium">Goal Amount *</label>
+                    <div class="w-full h-10 wireframe-box rounded-md px-3 flex items-center">
+                        <span class="text-gray-400">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="space-y-2">
+                <label class="block font-medium">Categories (0/3)</label>
+                <button class="px-4 py-2 wireframe-box rounded-md">+ Add Category</button>
+            </div>
+
+            <!-- Donation Amounts -->
+            <div class="space-y-2">
+                <label class="block font-medium">Predefined Donation Amounts *</label>
+                <div class="flex flex-wrap gap-4">
+                    <div class="w-20 h-10 wireframe-box rounded-md flex items-center justify-center">25</div>
+                    <div class="w-20 h-10 wireframe-box rounded-md flex items-center justify-center">50</div>
+                    <div class="w-20 h-10 wireframe-box rounded-md flex items-center justify-center">100</div>
+                    <div class="w-20 h-10 wireframe-box rounded-md flex items-center justify-center">200</div>
+                </div>
+                <p class="text-xs text-gray-400">Enter exactly 4 donation amounts that donors can quickly select</p>
+            </div>
+        </div>
+        
+        <!-- Submit Buttons -->
+        <div class="flex justify-end space-x-4 pt-4">
+            <button class="px-6 py-2 wireframe-box rounded-md">Cancel</button>
+            <button class="px-6 py-2 wireframe-box rounded-md bg-black text-white">Submit</button>
+        </div>
+
+        <!-- --- -->
+        <div class="h-px bg-black my-8"></div>
+
+        <!-- Admin Wireframe (Desktop View) -->
+        <div class="wireframe-box p-6 rounded-lg space-y-4">
+            <h2 class="text-xl md:text-2xl font-semibold">Admin Dashboard (Desktop View)</h2>
+            <div class="flex space-x-4 items-center">
+                <div class="w-16 h-16 wireframe-box rounded-full"></div>
+                <div>
+                    <h3 class="text-lg font-bold">Admin User</h3>
+                    <p class="text-sm">Main navigation for administrator functions.</p>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <p class="wireframe-box px-4 py-2 rounded-md">Admin Dashboard</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Organizers</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">User Management</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Campaigns</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Donations</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Financial Reports</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Settings</p>
+            </div>
+        </div>
+
+        <!-- Admin Wireframe (Mobile View) -->
+        <div class="wireframe-box p-6 rounded-lg space-y-4">
+            <h2 class="text-xl md:text-2xl font-semibold">Admin Dashboard (Mobile View)</h2>
+            <div class="w-80 h-96 wireframe-box rounded-lg overflow-hidden flex">
+                <!-- Sidebar -->
+                <div class="w-48 bg-gray-100 wireframe-box p-4 flex-shrink-0 space-y-4">
+                    <div class="flex items-center space-x-2 pb-4">
+                        <div class="w-6 h-6 wireframe-box rounded-full"></div>
+                        <span class="font-bold text-lg">FundFlow</span>
+                    </div>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Admin Dashboard</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Organizers</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">User Management</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Campaigns</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Donations</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Financial Reports</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Settings</p>
+                </div>
+                <!-- Main Content Placeholder -->
+                <div class="flex-1 p-4">
+                    <div class="flex items-center justify-between pb-4">
+                        <div class="w-6 h-6 wireframe-box rounded-sm"></div>
+                        <div class="w-16 h-6 wireframe-box rounded-md"></div>
+                    </div>
+                    <div class="w-full h-24 wireframe-box rounded-md mb-4"></div>
+                    <div class="w-full h-24 wireframe-box rounded-md"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Organizer Wireframe (Desktop View) -->
+        <div class="wireframe-box p-6 rounded-lg space-y-4">
+            <h2 class="text-xl md:text-2xl font-semibold">Organizer Dashboard (Desktop View)</h2>
+            <div class="flex space-x-4 items-center">
+                <div class="w-16 h-16 wireframe-box rounded-full"></div>
+                <div>
+                    <h3 class="text-lg font-bold">Organizer User</h3>
+                    <p class="text-sm">Main navigation for campaign organizers.</p>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <p class="wireframe-box px-4 py-2 rounded-md">Dashboard</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Profile</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">My Campaigns</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">My Donations</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Create Campaign</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Create Post</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Outreach Analytics</p>
+                <p class="wireframe-box px-4 py-2 rounded-md">Settings</p>
+            </div>
+        </div>
+
+        <!-- Organizer Wireframe (Mobile View) -->
+        <div class="wireframe-box p-6 rounded-lg space-y-4">
+            <h2 class="text-xl md:text-2xl font-semibold">Organizer Dashboard (Mobile View)</h2>
+            <div class="w-80 h-96 wireframe-box rounded-lg overflow-hidden flex">
+                <!-- Sidebar -->
+                <div class="w-48 bg-gray-100 wireframe-box p-4 flex-shrink-0 space-y-4">
+                    <div class="flex items-center space-x-2 pb-4">
+                        <div class="w-6 h-6 wireframe-box rounded-full"></div>
+                        <span class="font-bold text-lg">FundFlow</span>
+                    </div>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Home</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Campaigns</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Dashboard</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Profile</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Notifications</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">My Campaigns</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">My Donations</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">My Contacts</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Create Campaign</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Create Post</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Outreach Analytics</p>
+                    <p class="wireframe-box px-2 py-1 rounded-md">Settings</p>
+                </div>
+                <!-- Main Content Placeholder -->
+                <div class="flex-1 p-4">
+                    <div class="flex items-center justify-between pb-4">
+                        <div class="w-6 h-6 wireframe-box rounded-sm"></div>
+                        <div class="w-16 h-6 wireframe-box rounded-md"></div>
+                    </div>
+                    <div class="w-full h-24 wireframe-box rounded-md mb-4"></div>
+                    <div class="w-full h-24 wireframe-box rounded-md"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donor Wireframe -->
+        <div class="wireframe-box p-6 rounded-lg space-y-4">
+            <h2 class="text-xl md:text-2xl font-semibold">Donor User Profile</h2>
+            <div class="flex space-x-4 items-center">
+                <div class="w-16 h-16 wireframe-box rounded-full"></div>
+                <div>
+                    <h3 class="text-lg font-bold">Donor User</h3>
+                    <p class="text-sm">Profile page for a typical donor user.</p>
+                </div>
+            </div>
+            <div class="mt-4 border-b border-black">
+                <div class="flex space-x-4">
+                    <span class="py-2 border-b-2 border-black">Overview</span>
+                    <span class="py-2 text-gray-400">Donations</span>
+                    <span class="py-2 text-gray-400">Campaigns</span>
+                    <span class="py-2 text-gray-400">Messages</span>
+                    <span class="py-2 text-gray-400">Account</span>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="wireframe-box p-4 rounded-lg">
+                    <h4 class="font-semibold">General Information</h4>
+                    <div class="space-y-2 mt-2">
+                        <p>First Name: <span class="text-gray-600">John</span></p>
+                        <p>Last Name: <span class="text-gray-600">Doe</span></p>
+                        <p>Gender: <span class="text-gray-600">Male</span></p>
+                        <p>Date of Birth: <span class="text-gray-600">01/01/1990</span></p>
+                        <p>City/Country: <span class="text-gray-600">Lusaka, Zambia</span></p>
+                    </div>
+                </div>
+                <div class="wireframe-box p-4 rounded-lg">
+                    <h4 class="font-semibold">Contact Details</h4>
+                    <div class="space-y-2 mt-2">
+                        <p>Email: <span class="text-gray-600">john.doe@example.com</span></p>
+                        <p>Phone: <span class="text-gray-600">555-1234</span></p>
+                        <p>Address: <span class="text-gray-600">123 Main St</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donation Process Section -->
+        <div class="flex flex-col md:flex-row space-y-12 md:space-y-0 md:space-x-8">
+
+            <!-- Donation Amount Selection -->
+            <div class="flex-1 wireframe-box p-6 rounded-lg space-y-4">
+                <h3 class="text-lg font-semibold">Choose Amount</h3>
+                <p class="text-xs text-gray-400">K 200 Raised</p>
+                <div class="w-full h-2 bg-gray-200 rounded-full">
+                    <div class="h-2 bg-black rounded-full" style="width: 1%;"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-400">
+                    <span>3 donations</span>
+                    <span>1%</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button class="px-4 py-2 wireframe-box rounded-md bg-black text-white">K 25</button>
+                    <button class="px-4 py-2 wireframe-box rounded-md">K 50</button>
+                    <button class="px-4 py-2 wireframe-box rounded-md">K 100</button>
+                    <button class="px-4 py-2 wireframe-box rounded-md">K 200</button>
+                </div>
+                <div class="w-full h-10 wireframe-box rounded-md px-3 flex items-center">
+                    <span class="text-gray-400">other amount</span>
+                </div>
+                <button class="w-full px-4 py-2 bg-black text-white rounded-md">Donate</button>
+            </div>
+
+            <!-- Payment Method Selection -->
+            <div class="flex-1 wireframe-box p-6 rounded-lg space-y-4">
+                <h3 class="text-lg font-semibold">Payment Method</h3>
+                <div class="space-y-2">
+                    <label class="block font-medium">Select Payment Method:</label>
+                    <div class="flex space-x-2">
+                        <div class="flex-1 h-20 wireframe-box rounded-md bg-black flex items-center justify-center text-white">Airtel Money</div>
+                        <div class="flex-1 h-20 wireframe-box rounded-md flex items-center justify-center">MTN Mobile Money</div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block font-medium">Phone Number *</label>
+                    <div class="w-full h-10 wireframe-box rounded-md px-3 flex items-center">
+                        <span class="text-gray-400">Enter your mobile money number</span>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block font-medium">Message (Optional)</label>
+                    <div class="w-full h-24 wireframe-box rounded-md p-3">
+                        <span class="text-gray-400">Leave a message for the campaign organizer</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 wireframe-box rounded-sm"></div>
+                    <span>Donate Anonymously</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 wireframe-box rounded-sm bg-black"></div>
+                    <span>Subscribe to this campaign</span>
+                </div>
+                <button class="w-full px-4 py-2 bg-black text-white rounded-md">Donate</button>
+            </div>
+
+            <!-- Donation Confirmation -->
+            <div class="flex-1 wireframe-box p-6 rounded-lg space-y-4 text-center">
+                <h3 class="text-lg font-semibold">Thank You!</h3>
+                <div class="w-16 h-16 rounded-full mx-auto wireframe-box flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h4 class="text-xl font-bold">Donation Successful!</h4>
+                <p>Your generous contribution has been received and will make a difference.</p>
+                <div class="text-left space-y-2">
+                    <p>Amount Donated: <span class="font-bold">K 25</span></p>
+                    <p>Payment Method: <span class="font-bold">Airtel Money</span></p>
+                </div>
+                <p class="text-xs text-gray-400">This modal will close automatically in 4 seconds</p>
+                <button class="w-full px-4 py-2 bg-black text-white rounded-md">Close</button>
+            </div>
+
+        </div>
     </div>
-
-    <!-- JavaScript for dynamic functionality -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const raisedAmount = 3500; // Example raised amount
-            const goalAmount = 10000;  // Example goal amount
-
-            // Update all elements with the initial values
-            const updateUI = () => {
-                const percentage = (raisedAmount / goalAmount) * 100;
-                
-                const formatCurrency = (amount) => `$${new Intl.NumberFormat('en-US').format(amount)}`;
-
-                const progressBars = document.querySelectorAll('.progress-bar');
-                progressBars.forEach(bar => {
-                    bar.style.width = `${Math.min(percentage, 100)}%`;
-                });
-
-                document.getElementById('raised-amount').textContent = formatCurrency(raisedAmount);
-                document.getElementById('goal-amount').textContent = formatCurrency(goalAmount);
-                document.getElementById('sticky-raised-amount').textContent = formatCurrency(raisedAmount);
-                document.getElementById('sticky-goal-amount').textContent = formatCurrency(goalAmount);
-            };
-
-            updateUI();
-            
-            // Sticky donation bar logic
-            const stickyBar = document.getElementById('sticky-donate-bar');
-            const heroSectionHeight = document.querySelector('.hero-section').offsetHeight;
-
-            window.addEventListener('scroll', () => {
-                // Determine the scroll position to show/hide the bar
-                const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-
-                // Show the sticky bar after scrolling past the hero section
-                if (scrollPosition > 200) {
-                    stickyBar.style.display = 'block';
-                } else {
-                    stickyBar.style.display = 'none';
-                }
-            });
-        });
-
-    </script>
 </body>
 </html>
