@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import Table from "../../../../../components/Table";
+import ErrorState from "../../../../../components/ErrorState";
 
-function TransactionTable({ data = [], onSort, sort }) {
+function TransactionTable({ data = [], onSort, sort, error, onRetry }) {
   const columns = useMemo(
     () => [
       {
@@ -85,6 +86,18 @@ function TransactionTable({ data = [], onSort, sort }) {
     ],
     []
   );
+
+  if (error) {
+    return (
+      <div className="py-6 px-4">
+        <ErrorState
+          title="Failed to load transactions"
+          description={String(error)}
+          onRetry={onRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <Table

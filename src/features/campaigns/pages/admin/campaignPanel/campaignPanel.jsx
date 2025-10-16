@@ -21,6 +21,7 @@ import CampaignTable from "../../../../users/components/CampaignTable";
 import { useNavigate } from "react-router-dom";
 import { campaignStatuses } from "../../../utils/campaignStatusConfig";
 import { getAllCampaigns } from "../../../services/campaignApi";
+import ErrorState from "../../../../../components/ErrorState";
 
 function CampaignPanel() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -230,16 +231,13 @@ function CampaignPanel() {
             </div>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-red-500 text-center">
-              <div className="mb-2">{error}</div>
-              <button
-                onClick={() => fetchCampaigns()}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Retry
-              </button>
-            </div>
+          <div className="flex items-center justify-center py-8 px-4">
+            <ErrorState
+              title="Failed to load campaigns"
+              description={error}
+              onRetry={() => fetchCampaigns(filters)}
+              secondaryAction={{ to: "/admin/campaigns", label: "Refresh" }}
+            />
           </div>
         ) : allCampaigns.length === 0 ? (
           <div className="flex items-center justify-center py-8">

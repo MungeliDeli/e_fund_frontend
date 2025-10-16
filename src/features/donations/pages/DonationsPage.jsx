@@ -23,6 +23,7 @@ import {
   getAllDonations,
 } from "../services/donationsApi";
 import { fetchAllOrganizers } from "../../users/services/usersApi";
+import ErrorState from "../../../components/ErrorState";
 
 function truncate(text, max = 40) {
   if (!text) return "No message";
@@ -115,8 +116,12 @@ function DonationsPage() {
         const mapped = donations.map((d) => ({
           donationId: d.donationId,
           donorUserId: d.donorUserId,
-          donorName: d.isAnonymous ? null : d.donorDetails.displayName,
-          donorType: d.isAnonymous ? null : d.donorDetails.donorType,
+          donorName: d.isAnonymous
+            ? null
+            : d?.donorDetails?.displayName || d?.donorName || null,
+          donorType: d.isAnonymous
+            ? null
+            : d?.donorDetails?.donorType || d?.donorType || null,
           isAnonymous: !!d.isAnonymous,
           campaignId: d.campaignId,
           campaignName: d.campaignName,
@@ -395,16 +400,12 @@ function DonationsPage() {
             </div>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-red-500 text-center">
-              <div className="mb-2">{error}</div>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Retry
-              </button>
-            </div>
+          <div className="flex items-center justify-center py-8 px-4">
+            <ErrorState
+              title="Failed to load donations"
+              description={error}
+              onRetry={() => window.location.reload()}
+            />
           </div>
         ) : filteredRows.length === 0 ? (
           <div className="flex items-center justify-center py-8">
