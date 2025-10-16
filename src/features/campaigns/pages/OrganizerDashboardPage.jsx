@@ -172,16 +172,32 @@ export default function OrganizerDashboardPage() {
       const name = d.donorDetails?.displayName || d.donorName || "Donor";
       const amount = Number(d.amount || 0);
       if (!key) return;
-      const prev = map.get(key) || { name, total: 0, lastDate: d.donationDate };
+      const prev = map.get(key) || {
+        name,
+        total: 0,
+        lastDate: d.donationDate,
+        donorId: d.donorDetails?.donorId || d.donorUserId || null,
+        donorType: d.donorDetails?.donorType || null,
+        profilePictureUrl: d.donorDetails?.profilePictureUrl || null,
+        latestCampaignName: d.campaignName || null,
+        latestDonationAmount: amount,
+      };
+      const isMoreRecent =
+        prev.lastDate && d.donationDate
+          ? new Date(d.donationDate) > new Date(prev.lastDate)
+          : !!d.donationDate;
       map.set(key, {
         name,
         total: prev.total + amount,
-        lastDate:
-          prev.lastDate &&
-          d.donationDate &&
-          new Date(d.donationDate) > new Date(prev.lastDate)
-            ? d.donationDate
-            : prev.lastDate,
+        lastDate: isMoreRecent ? d.donationDate : prev.lastDate,
+        donorId: prev.donorId,
+        donorType: prev.donorType,
+        profilePictureUrl:
+          prev.profilePictureUrl || d.donorDetails?.profilePictureUrl || null,
+        latestCampaignName: isMoreRecent
+          ? d.campaignName || prev.latestCampaignName
+          : prev.latestCampaignName,
+        latestDonationAmount: isMoreRecent ? amount : prev.latestDonationAmount,
       });
     });
     const arr = Array.from(map.values())
@@ -421,10 +437,87 @@ export default function OrganizerDashboardPage() {
         </div>
       </div>
 
-      {/* Donors section */}
+      {/* Donors section (Recent on top, Top below) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
-          <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-[color:var(--color-primary-text)]">
+              Recent Donors
+            </h3>
+            <SecondaryButton onClick={() => navigate("/donations")}>
+              View My Donations
+            </SecondaryButton>
+          </div>
+          {recentDonors.length === 0 ? (
+            <div className="text-[color:var(--color-secondary-text)]">
+              No donations yet
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentDonors.slice(0, 5).map((d, idx) => {
+                const displayName = d.isAnonymous
+                  ? "Anonymous"
+                  : d.donorDetails?.displayName || d.donorName || "Donor";
+                const profileUrl = d.isAnonymous
+                  ? null
+                  : d.donorDetails?.donorType === "organization"
+                  ? `/organizers/${d.donorDetails?.donorId}`
+                  : d.donorDetails?.donorType === "individual"
+                  ? `/users/${d.donorDetails?.donorId}`
+                  : null;
+                const avatarUrl = d.donorDetails?.profilePictureUrl || null;
+                return (
+                  <div key={idx} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full overflow-hidden bg-[color:var(--color-muted)] border border-[color:var(--color-muted)] flex items-center justify-center">
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt={displayName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs text-[color:var(--color-secondary-text)]">
+                            {displayName.charAt(0)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {profileUrl ? (
+                          <a
+                            href={profileUrl}
+                            className="text-[color:var(--color-primary-text)] font-semibold hover:underline truncate inline-block max-w-[220px]"
+                          >
+                            {displayName}
+                          </a>
+                        ) : (
+                          <span className="text-[color:var(--color-primary-text)] font-semibold truncate inline-block max-w-[220px]">
+                            {displayName}
+                          </span>
+                        )}
+                        <div className="text-xs text-[color:var(--color-secondary-text)] truncate">
+                          {new Date(d.donationDate).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span
+                        className="text-xs text-[color:var(--color-secondary-text)] truncate max-w-[180px]"
+                        title={d.campaignName || "Campaign"}
+                      >
+                        {d.campaignName || "Campaign"}
+                      </span>
+                      <span className="font-semibold text-[color:var(--color-primary-text)]">
+                        {formatCurrency(d.amount)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {/* Top donors below */}
+          <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mt-6 mb-3">
             Top Donors
           </h3>
           {topDonors.length === 0 ? (
@@ -433,61 +526,71 @@ export default function OrganizerDashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {topDonors.map((d, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[color:var(--color-background)] border border-[color:var(--color-muted)] flex items-center justify-center text-xs font-bold">
-                      #{idx + 1}
+              {topDonors.slice(0, 5).map((d, idx) => {
+                const profileUrl =
+                  d.donorType === "organization"
+                    ? `/organizers/${d.donorId}`
+                    : d.donorType === "individual"
+                    ? `/users/${d.donorId}`
+                    : null;
+                return (
+                  <div key={idx} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-[color:var(--color-background)] border border-[color:var(--color-muted)] flex items-center justify-center text-[10px] font-bold">
+                        #{idx + 1}
+                      </div>
+                      <div className="w-9 h-9 rounded-full overflow-hidden bg-[color:var(--color-muted)] border border-[color:var(--color-muted)] flex items-center justify-center">
+                        {d.profilePictureUrl ? (
+                          <img
+                            src={d.profilePictureUrl}
+                            alt={d.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs text-[color:var(--color-secondary-text)]">
+                            {d.name?.charAt(0) || "?"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {profileUrl ? (
+                          <a
+                            href={profileUrl}
+                            className="text-[color:var(--color-primary-text)] font-semibold hover:underline truncate inline-block max-w-[220px]"
+                          >
+                            {d.name}
+                          </a>
+                        ) : (
+                          <span className="text-[color:var(--color-primary-text)] font-semibold truncate inline-block max-w-[220px]">
+                            {d.name}
+                          </span>
+                        )}
+                        <div
+                          className="text-xs text-[color:var(--color-secondary-text)] truncate"
+                          title={d.latestCampaignName || "Campaign"}
+                        >
+                          {d.latestCampaignName || "Campaign"}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-[color:var(--color-primary-text)] font-semibold">
-                        {d.name}
-                      </div>
-                      <div className="text-xs text-[color:var(--color-secondary-text)]">
-                        Last donated{" "}
-                        {d.lastDate
-                          ? new Date(d.lastDate).toLocaleDateString()
-                          : "-"}
-                      </div>
+                    <div className="font-semibold text-[color:var(--color-primary-text)]">
+                      {formatCurrency(d.total)}
                     </div>
                   </div>
-                  <div className="font-semibold text-[color:var(--color-primary-text)]">
-                    {formatCurrency(d.total)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
+
+        {/* Right column now reserved for campaigns (placeholder container) */}
         <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
           <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
-            Recent Donors
+            Campaigns
           </h3>
-          {recentDonors.length === 0 ? (
-            <div className="text-[color:var(--color-secondary-text)]">
-              No donations yet
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {recentDonors.map((d, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div>
-                    <div className="text-[color:var(--color-primary-text)] font-semibold">
-                      {d.isAnonymous
-                        ? "Anonymous"
-                        : d.donorDetails?.displayName || d.donorName || "Donor"}
-                    </div>
-                    <div className="text-xs text-[color:var(--color-secondary-text)]">
-                      {new Date(d.donationDate).toLocaleString()}
-                    </div>
-                  </div>
-                  <div className="font-semibold text-[color:var(--color-primary-text)]">
-                    {formatCurrency(d.amount)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="text-[color:var(--color-secondary-text)]">
+            Coming soon…
+          </div>
         </div>
       </div>
 
