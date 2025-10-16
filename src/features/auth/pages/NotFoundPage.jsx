@@ -6,7 +6,7 @@ import notFoundIllustration from "../../../assets/404.svg";
 function NotFoundPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-5xl rounded-2xl shadow-lg bg-[color:var(--color-surface)]/60 backdrop-blur p-6 md:p-10 border border-[color:var(--color-muted)]/40">
+      <div className="w-full max-w-5xl rounded-2xl ">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="flex items-center justify-center order-2 md:order-1">
             <img

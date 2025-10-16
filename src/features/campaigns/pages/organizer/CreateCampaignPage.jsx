@@ -460,15 +460,7 @@ function CreateCampaignPage() {
             Create a compelling campaign to reach your fundraising goals
           </p>
         </div>
-        <div className="flex gap-2">
-          <SecondaryButton
-            icon={FiEye}
-            onClick={() => setShowPreview(!showPreview)}
-          >
-            {showPreview ? "Hide Preview" : "Preview"}
-          </SecondaryButton>
-          <SecondaryButton onClick={() => navigate(-1)}>Cancel</SecondaryButton>
-        </div>
+      
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">

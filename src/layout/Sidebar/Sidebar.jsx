@@ -111,20 +111,7 @@ const adminNavItems = [
       "financialAdmin",
     ],
   },
-  {
-    label: "Financial Reports",
-    icon: FiBarChart2,
-    key: "admin-financial",
-    path: "/admin/financial-reports",
-    allowedRoles: ["superAdmin", "financialAdmin"],
-  },
-  {
-    label: "Settings",
-    icon: FiSettings,
-    key: "admin-settings",
-    path: "/admin/settings",
-    allowedRoles: ["superAdmin"],
-  },
+  
 ];
 
 const navConfig = {

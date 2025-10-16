@@ -17,7 +17,6 @@ import {
   FiFlag,
   FiTrendingUp,
   FiDownloadCloud,
-  
 } from "react-icons/fi";
 
 import Notification from "../../../components/Notification";
@@ -27,6 +26,7 @@ import MessagesSection from "../../donations/components/MessagesSection";
 import { OutreachSection } from "../../Outreach/components";
 import { requestWithdrawal, getMyWithdrawals } from "../services/withdrawApi";
 import { fetchPrivateOrganizationProfile } from "../../users/services/usersApi";
+import ErrorState from "../../../components/ErrorState";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -82,22 +82,28 @@ export default function CampaignViewPage() {
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
         const res = await getCampaignById(campaignId);
         const data = res.data || res; // API format compatibility
         if (mounted) setCampaign(data);
+        if (mounted) setError(null);
       } catch (e) {
         if (mounted) setError(e.message || "Failed to load campaign");
       } finally {
         if (mounted) setLoading(false);
       }
-    })();
+    };
+    fetchData();
+    // expose for retry
+    setRetryFn(() => fetchData);
     return () => {
       mounted = false;
     };
   }, [campaignId]);
+
+  const [retryFn, setRetryFn] = useState(() => async () => {});
 
   // Load available summary when organizer opens modal
   useEffect(() => {
@@ -311,7 +317,14 @@ export default function CampaignViewPage() {
   }
   if (error || !campaign) {
     return (
-      <div className="p-6 text-red-500">{error || "Campaign not found"}</div>
+      <div className="p-4 md:p-6 lg:p-8">
+        <ErrorState
+          title="Failed to load campaign"
+          description={error || "Campaign not found"}
+          onRetry={retryFn}
+          secondaryAction={{ to: "/", label: "Go Home" }}
+        />
+      </div>
     );
   }
 

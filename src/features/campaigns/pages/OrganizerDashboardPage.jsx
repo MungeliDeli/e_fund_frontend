@@ -15,6 +15,8 @@ import {
   FiUsers,
   FiPlusCircle,
 } from "react-icons/fi";
+import ErrorState from "../../../components/ErrorState";
+import { SkeletonDashboard } from "../../../components/Skeleton";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -228,10 +230,26 @@ export default function OrganizerDashboardPage() {
   }, [donations]);
 
   if (loading) {
-    return <div className="p-6">Loading...</div>;
+    return <SkeletonDashboard />;
   }
   if (error) {
-    return <div className="p-6 text-red-500">{error}</div>;
+    return (
+      <div className="p-4 md:p-6 lg:p-8">
+        <ErrorState
+          title="Failed to load organizer dashboard"
+          description={error}
+          onRetry={() => window.location.reload()}
+          primaryAction={{
+            to: "/organizer/campaigns/create",
+            label: "Create Campaign",
+          }}
+          secondaryAction={{
+            to: "/organizer/campaigns",
+            label: "My Campaigns",
+          }}
+        />
+      </div>
+    );
   }
 
   return (

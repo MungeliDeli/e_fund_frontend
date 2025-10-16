@@ -6,6 +6,7 @@ import MediaGallery from "../../campaigns/components/MediaGallery";
 import { toggleLikePost } from "../services/feedApi";
 
 import { getPostById } from "../services/feedApi";
+import ErrorState from "../../../components/ErrorState";
 
 const PostDetailPage = () => {
   const { postId } = useParams();
@@ -97,41 +98,13 @@ const PostDetailPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[var(--color-background)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="pt-2 lg:px-6 xl:px-8 2xl:px-">
-            {/* Main content area */}
-            <div>
-              <div className="pt-6">
-                <button
-                  onClick={handleBackClick}
-                  className="flex items-center text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] mb-6 transition-colors"
-                >
-                  <svg
-                    className="w-5 h-5 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                  Back to Feed
-                </button>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                  <h2 className="text-lg font-medium text-red-800 mb-2">
-                    Error Loading Post
-                  </h2>
-                  <p className="text-red-600">{error}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
+        <ErrorState
+          title="Error Loading Post"
+          description={error}
+          onRetry={() => window.location.reload()}
+          secondaryAction={{ to: "/feed", label: "Back to Feed" }}
+        />
       </div>
     );
   }

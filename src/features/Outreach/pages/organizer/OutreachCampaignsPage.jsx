@@ -8,6 +8,7 @@ import {
 } from "../../services/outreachApi";
 import { getCampaignById } from "../../../campaigns/services/campaignApi";
 import StatusBadge from "../../../../components/StatusBadge";
+import ErrorState from "../../../../components/ErrorState";
 
 const OutreachCampaignsPage = () => {
   const { campaignId } = useParams();
@@ -156,14 +157,16 @@ const OutreachCampaignsPage = () => {
               </div>
             </div>
           ) : error ? (
-            <div className="text-center py-8">
-              <div className="text-red-500 mb-4">{error}</div>
-              <button
-                onClick={loadOutreachCampaigns}
-                className="px-4 py-2 bg-[color:var(--color-accent)] text-white rounded-lg hover:bg-[color:var(--color-accent)]/90 transition-colors"
-              >
-                Retry
-              </button>
+            <div className="text-center py-8 px-4">
+              <ErrorState
+                title="Failed to load outreach campaigns"
+                description={error}
+                onRetry={loadOutreachCampaigns}
+                secondaryAction={{
+                  to: `/campaigns/${campaignId}`,
+                  label: "Back to Campaign",
+                }}
+              />
             </div>
           ) : outreachCampaigns.length === 0 ? (
             <div className="text-center py-8">

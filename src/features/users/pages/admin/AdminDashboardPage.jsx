@@ -18,6 +18,7 @@ import {
   fetchAllAdmins,
 } from "../../services/usersApi";
 import { fetchAdminWithdrawals } from "../../../campaigns/services/adminWithdrawApi";
+import ErrorState from "../../../../components/ErrorState";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -265,7 +266,17 @@ export default function AdminDashboardPage() {
   }, [aggregates.totalOrganizers, aggregates.totalIndividuals]);
 
   if (loading) return <div className="p-6">Loading...</div>;
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
+  if (error)
+    return (
+      <div className="p-4 md:p-6 lg:p-8">
+        <ErrorState
+          title="Failed to load admin dashboard"
+          description={error}
+          onRetry={() => window.location.reload()}
+          primaryAction={{ to: "/admin/campaigns", label: "Open Campaigns" }}
+        />
+      </div>
+    );
 
   const renderBarChart = (data) => {
     const values = data.map((d) => Number(d.value || 0));

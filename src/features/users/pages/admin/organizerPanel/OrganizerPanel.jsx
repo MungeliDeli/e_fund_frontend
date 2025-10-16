@@ -27,6 +27,8 @@ import {
   TotalStatsCard,
   PieStatsCard,
 } from "../../../../../components/StatsCards";
+import ErrorState from "../../../../../components/ErrorState";
+import { SkeletonTable } from "../../../../../components/Skeleton";
 
 function OrganizerPanel() {
   const navigate = useNavigate();
@@ -245,11 +247,31 @@ function OrganizerPanel() {
         }}
       >
         {loading ? (
-          <div className="text-center text-[color:var(--color-secondary-text)] py-8">
-            Loading organizers...
+          <div className="flex items-center justify-center py-8">
+            <SkeletonTable rows={8} />
           </div>
         ) : error ? (
-          <div className="text-center text-red-500 py-8">{error}</div>
+          <div className="flex items-center justify-center py-8 px-4">
+            <ErrorState
+              title="Failed to load organizers"
+              description={error}
+              onRetry={() => {
+                setError(null);
+                const searchFilters = {
+                  ...filters,
+                  search: searchTerm,
+                };
+                setLoading(true);
+                fetchOrganizers(searchFilters)
+                  .then(setOrganizers)
+                  .catch((err) =>
+                    setError(err.message || "Failed to fetch organizers")
+                  )
+                  .finally(() => setLoading(false));
+              }}
+              secondaryAction={{ to: "/admin/users", label: "Manage Users" }}
+            />
+          </div>
         ) : (
           <div className="h-full overflow-hidden">
             <OrganizerTable

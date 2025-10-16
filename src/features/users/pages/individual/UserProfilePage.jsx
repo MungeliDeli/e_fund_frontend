@@ -36,6 +36,7 @@ import {
 } from "../../services/usersApi";
 import ProfileImage from "../../components/ProfileImage";
 import CoverImage from "../../components/CoverImage";
+import ErrorState from "../../../../components/ErrorState";
 
 /**
  * UserProfilePage
@@ -206,20 +207,16 @@ function UserProfilePage() {
   if (isError) {
     return (
       <div className="w-full flex flex-col items-center justify-center bg-[color:var(--color-background)] min-h-[80vh] text-center p-4">
-        <h2 className="text-2xl font-semibold text-red-500 mb-4">
-          Failed to Load Profile
-        </h2>
-        <p className="text-[color:var(--color-text-muted)] mb-6 max-w-md">
-          {error.response?.data?.message ||
-            error.message ||
-            "An unexpected error occurred. The profile could not be loaded. Please check your connection and try again."}
-        </p>
-        <button
-          onClick={() => refetch()}
-          className="px-6 py-2 bg-primary-500 text-white font-semibold rounded-lg shadow-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-opacity-75 transition-colors"
-        >
-          Retry
-        </button>
+        <ErrorState
+          title="Failed to Load Profile"
+          description={
+            error?.response?.data?.message ||
+            error?.message ||
+            "An unexpected error occurred. The profile could not be loaded."
+          }
+          onRetry={refetch}
+          secondaryAction={{ to: "/feed", label: "Open Feed" }}
+        />
       </div>
     );
   }
