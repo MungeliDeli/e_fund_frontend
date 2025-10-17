@@ -288,19 +288,54 @@ export default function AdminDashboardPage() {
         </div>
       );
     }
-    const containerPx = 256;
-    const minPx = 6;
-    const axisWidthPx = 56;
+
+    // Responsive container dimensions
+    const containerHeight = 256; // h-64 equivalent
+    const minBarHeight = 8;
+    const axisWidth = 60;
+
+    // Calculate available space for bars (in pixels)
+    const containerWidth = 100; // percentage
+    const availableSpacePx = containerWidth - axisWidth / 4; // Convert axis width to percentage
+
+    // Dynamic gap and bar width calculation
+    const numBars = data.length;
+    const minGap = 2; // Minimum gap in percentage
+    const maxGap = 8; // Maximum gap in percentage
+    const minBarWidth = 4; // Minimum bar width in percentage
+    const maxBarWidth = 15; // Maximum bar width in percentage
+
+    // Calculate optimal gap and bar width
+    const totalGapSpace = Math.max(
+      minGap * (numBars - 1),
+      Math.min(maxGap * (numBars - 1), availableSpacePx * 0.1)
+    );
+    const availableForBars = availableSpacePx - totalGapSpace;
+    const calculatedBarWidth = availableForBars / numBars;
+
+    const barWidth = Math.max(
+      minBarWidth,
+      Math.min(maxBarWidth, calculatedBarWidth)
+    );
+    const barGap =
+      numBars > 1
+        ? Math.max(minGap, Math.min(maxGap, totalGapSpace / (numBars - 1)))
+        : 0;
+
     const ticks = [1, 0.75, 0.5, 0.25, 0];
+
     return (
-      <div className="relative h-64 w-full">
+      <div
+        className="relative w-full"
+        style={{ height: `${containerHeight}px` }}
+      >
         <div
           className="absolute left-0 top-0 bottom-0"
-          style={{ width: `${axisWidthPx}px` }}
+          style={{ width: `${axisWidth}px` }}
         >
           <div className="relative h-full pr-2">
             {ticks.map((t, i) => {
-              const y = Math.round((1 - t) * containerPx);
+              const y = Math.round((1 - t) * containerHeight);
               const labelVal = Math.round(maxVal * t);
               return (
                 <div
@@ -310,7 +345,9 @@ export default function AdminDashboardPage() {
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-[color:var(--color-secondary-text)] whitespace-nowrap">
-                      {formatCurrency(labelVal)}
+                      {data === campaignBarData
+                        ? formatCurrency(labelVal)
+                        : labelVal}
                     </span>
                     <span className="flex-1 border-t border-[color:var(--color-muted)]" />
                   </div>
@@ -320,15 +357,28 @@ export default function AdminDashboardPage() {
           </div>
         </div>
         <div
-          className="absolute top-0 bottom-0 right-0 flex items-end gap-3"
-          style={{ left: `${axisWidthPx}px` }}
+          className="absolute top-0 bottom-0 right-0 flex items-end"
+          style={{
+            left: `${axisWidth}px`,
+            gap: `${barGap}%`,
+            paddingRight: "8px",
+            width: `${100 - axisWidth / 4}%`,
+          }}
         >
           {data.map((item, idx) => {
             const value = Number(item.value || 0);
-            const scaled = Math.round((value / maxVal) * containerPx);
-            const heightPx = value > 0 ? Math.max(scaled, minPx) : 0;
+            const scaled = Math.round((value / maxVal) * containerHeight);
+            const heightPx = value > 0 ? Math.max(scaled, minBarHeight) : 0;
             return (
-              <div key={idx} className="flex-1 flex flex-col items-center">
+              <div
+                key={idx}
+                className="flex flex-col items-center"
+                style={{
+                  width: `${barWidth}%`,
+                  minWidth: "4%",
+                  maxWidth: "15%",
+                }}
+              >
                 <div
                   className="w-full rounded-t"
                   style={{
@@ -337,12 +387,21 @@ export default function AdminDashboardPage() {
                     border: `1px solid ${item.color}66`,
                     transition: "height 700ms ease",
                     transitionDelay: `${idx * 60}ms`,
+                    maxHeight: `${containerHeight - 40}px`, // Prevent overflow
                   }}
-                  title={`${item.label}: ${formatCurrency(item.value)}`}
+                  title={`${item.label}: ${
+                    data === campaignBarData
+                      ? formatCurrency(item.value)
+                      : item.value
+                  }`}
                 />
                 <div
-                  className="mt-2 text-xs text-center text-[color:var(--color-secondary-text)] truncate w-full"
+                  className="mt-2 text-[10px] text-center text-[color:var(--color-secondary-text)] truncate w-full leading-tight"
                   title={item.label}
+                  style={{
+                    maxWidth: `${barWidth + 2}%`,
+                    fontSize: data.length > 6 ? "9px" : "10px",
+                  }}
                 >
                   {item.label}
                 </div>
@@ -476,14 +535,14 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Charts row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2 bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 mb-6">
+          <div className="xl:col-span-2 bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
             <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
               Campaigns vs Total Raised
             </h3>
             {renderBarChart(campaignBarData)}
           </div>
-          <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+          <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
             <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
               Funds Breakdown
             </h3>
@@ -510,9 +569,9 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Donations + Campaigns panels */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
           {/* Donations (recent + top donors) */}
-          <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+          <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
             <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
               Recent Donations
             </h3>
@@ -655,7 +714,7 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Campaigns (table + top campaign) */}
-          <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+          <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
             <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
               Campaigns
             </h3>
@@ -827,14 +886,14 @@ export default function AdminDashboardPage() {
             color="#64748b"
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2 bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 mb-6">
+          <div className="xl:col-span-2 bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
             <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
               User Breakdown
             </h3>
             {renderBarChart(userBarData)}
           </div>
-          <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+          <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
             <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
               Users Mix
             </h3>
@@ -862,8 +921,8 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* SECTION: Management (Pending Approvals) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
           <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
             Pending Campaign Approvals
           </h3>
@@ -891,7 +950,7 @@ export default function AdminDashboardPage() {
             </div>
           )}
         </div>
-        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
           <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
             Pending Withdrawal Requests
           </h3>

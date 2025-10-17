@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Table from "../../../components/Table";
 import { IconButton } from "../../../components/Buttons";
-import { FiEye, FiUserX, FiActivity } from "react-icons/fi";
+import { FiEye, FiUserX, FiActivity, FiFlag } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
+import { getOrganizerCampaignCounts } from "../services/usersApi";
 
 function getInitials(name) {
   if (!name) return "";
@@ -68,6 +69,17 @@ const columns = [
     sortable: true,
     render: (row) => <span className="font-mono text-xs">{row.email}</span>,
   },
+  {
+    key: "campaignCount",
+    label: "Campaigns",
+    sortable: true,
+    render: (row) => (
+      <span className="flex items-center gap-1 text-sm text-[color:var(--color-primary-text)]">
+        <FiFlag className="w-3 h-3" />
+        {row.campaignCount || 0}
+      </span>
+    ),
+  },
 ];
 
 function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
@@ -77,6 +89,7 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedOrganizer, setSelectedOrganizer] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [campaignCounts, setCampaignCounts] = useState({});
 
   // Sorting state
   const [sort, setSort] = useState({ key: "", direction: "asc" });
@@ -86,6 +99,26 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
 
   // Check if current user is super admin
   const isSuperAdmin = currentUser?.userType === "superAdmin";
+
+  // Fetch campaign counts for all organizers
+  useEffect(() => {
+    const fetchCampaignCounts = async () => {
+      if (!data || data.length === 0) return;
+
+      console.log("Organizer data:", data); // Debug log
+
+      try {
+        const counts = await getOrganizerCampaignCounts();
+        console.log("Final campaign counts:", counts); // Debug log
+        setCampaignCounts(counts);
+      } catch (error) {
+        console.error("Failed to fetch campaign counts:", error);
+        setCampaignCounts({});
+      }
+    };
+
+    fetchCampaignCounts();
+  }, [data]);
 
   // Handle organizer details modal
   const handleOrganizerDetails = (organizer) => {
@@ -131,6 +164,7 @@ function OrganizerTable({ data = [], onView, onDeactivate, filters = {} }) {
     status:
       row.status === true || row.status === "VERIFIED" ? "VERIFIED" : "PENDING",
     active: !!row.active,
+    campaignCount: campaignCounts[row.userId] || 0,
   }));
 
   // Apply filters

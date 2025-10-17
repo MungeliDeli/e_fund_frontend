@@ -119,20 +119,8 @@ function LoginPage() {
           </a>
           .
         </p>
-        <button
-          type="button"
-          className="flex items-center justify-center text-black w-full border border-[color:var(--color-muted)] rounded-full py-2 mb-4 bg-white hover:bg-gray-50 transition"
-        >
-          <img src={GoogleIcon} alt="Google" className="w-5 h-5 mr-2" />
-          Continue with Google
-        </button>
-        <div className="flex items-center w-full my-4">
-          <div className="flex-1 h-px bg-[color:var(--color-muted)]" />
-          <span className="mx-2 text-[color:var(--color-secondary-text)] text-xs font-medium">
-            OR
-          </span>
-          <div className="flex-1 h-px bg-[color:var(--color-muted)]" />
-        </div>
+       
+       
         <FormField
           label="Email"
           name="email"

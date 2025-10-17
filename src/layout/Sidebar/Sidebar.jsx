@@ -15,6 +15,7 @@ import {
   FiBell,
   FiDollarSign,
   FiCreditCard,
+  FiLogOut,
 } from "react-icons/fi";
 import SidebarItem from "../../components/SidebarItem/SidebarItem";
 import { useAuth } from "../../contexts/AuthContext";
@@ -111,7 +112,6 @@ const adminNavItems = [
       "financialAdmin",
     ],
   },
-  
 ];
 
 const navConfig = {
@@ -179,12 +179,12 @@ const navConfig = {
       path: "/feed/create",
     },
 
-    {
-      label: "Outreach Analytics",
-      icon: FiBarChart2,
-      key: "organizer-outreach-analytics",
-      path: "/organizer/outreach/analytics",
-    },
+    // {
+    //   label: "Outreach Analytics",
+    //   icon: FiBarChart2,
+    //   key: "organizer-outreach-analytics",
+    //   path: "/organizer/outreach/analytics",
+    // },
     {
       label: "My Withdrawals",
       icon: FiDollarSign,
@@ -210,7 +210,7 @@ const adminRoles = [
 
 function Sidebar({ open, onClose, className }) {
   const headerHeight = 56;
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const { unreadCount, handleNotificationsPageOpened } =
     useRealtimeNotification();
   const userType = user?.userType;
@@ -491,6 +491,19 @@ function Sidebar({ open, onClose, className }) {
             </div>
           )}
         </nav>
+
+        {/* Logout button at bottom */}
+        {isAuthenticated && (
+          <div className="p-3 border-t border-[color:var(--color-muted)]">
+            <button
+              onClick={logout}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+            >
+              <FiLogOut className="text-lg" />
+              Log Out
+            </button>
+          </div>
+        )}
       </aside>
       <style>{`
         /* Hide scrollbar for WebKit-based browsers */

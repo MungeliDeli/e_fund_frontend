@@ -1,8 +1,7 @@
 // Header.jsx
 // This file defines the Header component for the application's top navigation bar.
 // It includes the logo, search bar, theme toggle, and authentication buttons.
-import { FiMenu, FiBell, FiUser } from "react-icons/fi";
-import { FaRegSun, FaRegMoon } from "react-icons/fa";
+import { FiMenu, FiBell, FiSun, FiMoon } from "react-icons/fi";
 import SearchBar from "../../components/SearchBar/SearchBar";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -55,26 +54,9 @@ function Header({
     typeof isAuthenticatedProp === "boolean" ? isAuthenticatedProp : isAuthCtx;
   const isSignUp = location.pathname === "/signup";
   const isLogin = location.pathname === "/login";
-  const [profileOpen, setProfileOpen] = useState(false);
-  const profileRef = useRef();
 
   // Fetch user profile data for profile picture
   const { profile } = useUserProfile(user);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClick(e) {
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setProfileOpen(false);
-      }
-    }
-    if (profileOpen) {
-      document.addEventListener("mousedown", handleClick);
-    } else {
-      document.removeEventListener("mousedown", handleClick);
-    }
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [profileOpen]);
 
   // Handle notification click - mark all as read when navigating to notifications
   const handleNotificationClick = async () => {
@@ -98,47 +80,6 @@ function Header({
     return null;
   };
 
-  // Profile dropdown
-  const renderProfileMenu = () => (
-    <div
-      className="absolute right-0 mt-2 w-56 bg-[color:var(--color-surface)]  rounded shadow-lg z-[9999]"
-      style={{ display: profileOpen ? "block" : "none" }}
-    >
-      <button
-        className="w-full text-left px-4 py-2 text-sm  flex items-center gap-2"
-        onClick={() => {
-          navigate("/profile-view");
-          setProfileOpen(false);
-        }}
-      >
-        <FiUser className="inline" /> View Profile
-      </button>
-      <div className="px-4 py-2 flex items-center gap-2">
-        <span className="text-xs">Theme:</span>
-        <button
-          className="p-1 rounded "
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-        >
-          {dark ? (
-            <FaRegSun className="text-lg text-[color:var(--color-primary)]" />
-          ) : (
-            <FaRegMoon className="text-lg text-[color:var(--color-primary)]" />
-          )}
-        </button>
-      </div>
-      <button
-        className="w-full text-left px-4 py-2 text-sm text-red-600"
-        onClick={() => {
-          logout();
-          setProfileOpen(false);
-        }}
-      >
-        Log Out
-      </button>
-    </div>
-  );
-
   return (
     <header
       className={`w-full flex items-center gap-2 justify-between py-2 bg-[color:var(--color-background)] border-b border-[color:var(--color-muted)] relative ${className}`}
@@ -160,6 +101,18 @@ function Header({
         {isAuthenticated ? (
           <>
             {renderOrganizerActions()}
+            {/* Theme toggle */}
+            <button
+              className="p-2 rounded hover:bg-[color:var(--color-muted)] focus:outline-none"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+            >
+              {dark ? (
+                <FiSun className="text-xl text-[color:var(--color-primary)]" />
+              ) : (
+                <FiMoon className="text-xl text-[color:var(--color-primary)]" />
+              )}
+            </button>
             {/* Notification icon */}
             <button
               className="p-2 rounded hover:bg-[color:var(--color-muted)] focus:outline-none relative"
@@ -172,27 +125,20 @@ function Header({
                 <span className="absolute top-1 right-1 inline-flex h-2.5 w-2.5 rounded-full bg-[color:var(--color-accent)] ring-2 ring-[color:var(--color-background)]" />
               )}
             </button>
-            {/* Profile avatar */}
-            <div className="relative" ref={profileRef}>
-              <button
-                className="w-9 h-9 rounded-full focus:outline-none border border-[color:var(--color-muted)] hover:border-[color:var(--color-primary)] overflow-hidden"
-                onClick={() => setProfileOpen((v) => !v)}
-                aria-label="Profile menu"
-              >
-                {profile?.profilePictureUrl ? (
-                  <ProfileImage
-                    imageUrl={profile.profilePictureUrl}
-                    size="sm"
-                    alt="Profile"
-                    className="w-full h-full"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-[color:var(--color-muted)] flex items-center justify-center text-[color:var(--color-primary)] font-bold text-base">
-                    {getInitials(user?.name, user?.email)}
-                  </div>
-                )}
-              </button>
-              {renderProfileMenu()}
+            {/* Profile avatar - display only */}
+            <div className="w-9 h-9 rounded-full border border-[color:var(--color-muted)] overflow-hidden">
+              {profile?.profilePictureUrl ? (
+                <ProfileImage
+                  imageUrl={profile.profilePictureUrl}
+                  size="sm"
+                  alt="Profile"
+                  className="w-full h-full"
+                />
+              ) : (
+                <div className="w-full h-full bg-[color:var(--color-muted)] flex items-center justify-center text-[color:var(--color-primary)] font-bold text-base">
+                  {getInitials(user?.name, user?.email)}
+                </div>
+              )}
             </div>
           </>
         ) : (
@@ -203,9 +149,9 @@ function Header({
               aria-label="Toggle theme"
             >
               {dark ? (
-                <FaRegSun className="text-xl text-[color:var(--color-primary)]" />
+                <FiSun className="text-xl text-[color:var(--color-primary)]" />
               ) : (
-                <FaRegMoon className="text-xl text-[color:var(--color-primary)]" />
+                <FiMoon className="text-xl text-[color:var(--color-primary)]" />
               )}
             </button>
             {!isLogin && (

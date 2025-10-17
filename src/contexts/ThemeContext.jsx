@@ -18,6 +18,10 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     const root = document.documentElement;
+
+    // Add transition class temporarily to prevent flickering
+    root.style.transition = "none";
+
     if (dark) {
       root.classList.add("dark");
       localStorage.setItem("theme", "dark");
@@ -25,9 +29,19 @@ export function ThemeProvider({ children }) {
       root.classList.remove("dark");
       localStorage.setItem("theme", "light");
     }
+
+    // Force a reflow to ensure the class change is applied
+    root.offsetHeight;
+
+    // Re-enable transitions after a brief delay
+    setTimeout(() => {
+      root.style.transition = "";
+    }, 10);
   }, [dark]);
 
-  const toggleTheme = () => setDark((d) => !d);
+  const toggleTheme = () => {
+    setDark((d) => !d);
+  };
 
   return (
     <ThemeContext.Provider value={{ dark, toggleTheme }}>
@@ -38,4 +52,4 @@ export function ThemeProvider({ children }) {
 
 export function useTheme() {
   return useContext(ThemeContext);
-} 
+}

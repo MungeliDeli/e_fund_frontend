@@ -487,17 +487,7 @@ export default function CampaignViewPage() {
             </SecondaryButton>
           )}
 
-          {/* Withdraw (organizer) */}
-          {isOwner && (
-            <span title={withdrawTooltip}>
-              <PrimaryButton
-                onClick={openWithdraw}
-                disabled={!canWithdrawButton}
-              >
-                Request Withdrawal
-              </PrimaryButton>
-            </span>
-          )}
+          
         </div>
         {/* Errors are shown via Notification; no inline error text */}
       </div>
