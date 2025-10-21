@@ -245,6 +245,38 @@ export const fetchAllOrganizers = async () => {
 };
 
 /**
+ * Fetch campaign counts for all organizers by getting all campaigns and counting
+ * @returns {Promise<Object>} Object with organizerId as key and campaign count as value
+ *
+ * @example
+ * const counts = await getOrganizerCampaignCounts();
+ */
+export const getOrganizerCampaignCounts = async () => {
+  try {
+    console.log("Fetching all campaigns to count by organizer..."); // Debug log
+    const res = await apiClient.get("/campaigns/all");
+    const campaigns = res.data?.data || res.data || [];
+    console.log("All campaigns:", campaigns); // Debug log
+
+    // Count campaigns by organizer
+    const counts = {};
+    campaigns.forEach((campaign) => {
+      const organizerId = campaign.organizerId;
+      if (organizerId) {
+        counts[organizerId] = (counts[organizerId] || 0) + 1;
+      }
+    });
+
+    console.log("Campaign counts by organizer:", counts); // Debug log
+    return counts;
+  } catch (error) {
+    console.error("Failed to fetch campaign counts:", error);
+    console.error("Error details:", error.response?.data); // Debug log
+    return {};
+  }
+};
+
+/**
  * Fetch a list of individual users with optional filters
  * @param {Object} filters - { emailVerified, active, search }
  * @returns {Promise<Array>} List of individual users

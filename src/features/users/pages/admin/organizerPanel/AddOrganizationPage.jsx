@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import FormField from "../../../../../components/FormField";
 import ProfileImage from "../../../components/ProfileImage";
 import CoverImage from "../../../components/CoverImage";
-import { FiUpload, FiX } from "react-icons/fi";
+import { FiUpload, FiX, FiCheckCircle, FiMail } from "react-icons/fi";
 import { organizationSchema } from "../../../services/userValidation";
 import { compressImage } from "../../../../../utils/imageCompression";
 import { useMutation } from "@tanstack/react-query";
@@ -62,6 +62,7 @@ function AddOrganizationPage() {
   const [apiErrorDetails, setApiErrorDetails] = useState(null);
   const [showErrorDetails, setShowErrorDetails] = useState(false);
   const [apiSuccess, setApiSuccess] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Fetch data when in edit mode
   useEffect(() => {
@@ -148,7 +149,7 @@ function AddOrganizationPage() {
           }
         }, 2000);
       } else {
-        setApiSuccess("Organization created and invitation sent!");
+        setShowSuccessModal(true);
         setForm({
           organizationName: "",
           organizationShortName: "",
@@ -241,8 +242,25 @@ function AddOrganizationPage() {
 
   // Form handlers
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (submitAttempted) setErrors({ ...errors, [e.target.name]: undefined });
+    const { name, value } = e.target;
+
+    // Validate establishment date to prevent future dates
+    if (name === "establishmentDate" && value) {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // Set to end of today
+
+      if (selectedDate > today) {
+        setErrors({
+          ...errors,
+          establishmentDate: "Establishment date cannot be in the future",
+        });
+        return;
+      }
+    }
+
+    setForm({ ...form, [name]: value });
+    if (submitAttempted) setErrors({ ...errors, [name]: undefined });
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -330,6 +348,11 @@ function AddOrganizationPage() {
     } else {
       navigate("/admin/organizers");
     }
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    navigate("/admin/organizers");
   };
 
   if (loading) {
@@ -593,27 +616,63 @@ function AddOrganizationPage() {
         <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex gap-4 mt-4">
           <button
             type="submit"
-            className="px-6 py-2 rounded bg-[color:var(--color-primary)] text-white font-medium hover:bg-[color:var(--color-accent)] transition-colors"
-            disabled={mutation.isLoading}
+            className="px-6 py-2 rounded bg-[color:var(--color-primary)] text-white font-medium hover:bg-[color:var(--color-accent)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            disabled={mutation.isPending}
           >
-            {mutation.isLoading
-              ? isEditMode
-                ? "Updating..."
-                : "Saving..."
-              : isEditMode
-              ? "Update"
-              : "Save"}
+            {mutation.isPending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                {isEditMode
+                  ? "Updating Organization..."
+                  : "Creating Organization..."}
+              </>
+            ) : isEditMode ? (
+              "Update Organization"
+            ) : (
+              "Create Organization"
+            )}
           </button>
           <button
             type="button"
             className="px-6 py-2 rounded bg-[color:var(--color-muted)] text-[color:var(--color-primary-text)] font-medium hover:bg-[color:var(--color-surface)] transition-colors"
             onClick={handleCancel}
-            disabled={mutation.isLoading}
+            disabled={mutation.isPending}
           >
             Cancel
           </button>
         </div>
       </form>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[color:var(--color-background)] border border-[color:var(--color-muted)] rounded-lg p-8 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[color:var(--color-primary)] mb-4">
+                <FiCheckCircle className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-[color:var(--color-primary-text)] mb-2">
+                Organization Created Successfully!
+              </h3>
+              <p className="text-sm text-[color:var(--color-secondary-text)] mb-6">
+                The organization has been created and an invitation has been
+                sent to the primary contact email. They can check their email to
+                set up their password and access their account.
+              </p>
+              <div className="flex items-center justify-center text-sm text-[color:var(--color-primary)] mb-6">
+                <FiMail className="mr-2" />
+                Invitation sent to: {form.primaryContactPersonEmail}
+              </div>
+              <button
+                onClick={handleCloseSuccessModal}
+                className="w-full px-4 py-2 bg-[color:var(--color-primary)] text-white rounded-md hover:bg-[color:var(--color-accent)] transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -31,6 +31,7 @@ import {
   getDonationStats,
   getDonationStatus,
 } from "../../donations/services/donationsApi";
+import ErrorState from "../../../components/ErrorState";
 
 function Logo() {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ function Logo() {
     >
       <img src={FundraiseLogo} alt="FundFlow Logo" className="w-10 h-10" />
       <span className="ml-2 font-bold text-2xl text-[color:var(--color-primary)] hidden sm:inline">
-        FundFlow
+        FundIzo
       </span>
     </button>
   );
@@ -434,18 +435,13 @@ function CampaignTemplatePage({
 
   if (error || !campaign) {
     return (
-      <div className="min-h-screen bg-[color:var(--color-background)]">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <p className="text-red-500 mb-4">{error || "Campaign not found"}</p>
-            <button
-              onClick={() => navigate("/")}
-              className="px-4 py-2 bg-[color:var(--color-primary)] text-white rounded-md hover:bg-[color:var(--color-accent)]"
-            >
-              Go Home
-            </button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-[color:var(--color-background)] flex items-center justify-center p-4">
+        <ErrorState
+          title="Failed to load campaign"
+          description={error || "We couldn’t load this campaign right now."}
+          onRetry={fetchCampaign}
+          secondaryAction={{ to: "/", label: "Go to Home" }}
+        />
       </div>
     );
   }

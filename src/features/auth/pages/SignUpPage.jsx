@@ -173,20 +173,7 @@ function SignUpPage() {
           </a>
           .
         </p>
-        <button
-          type="button"
-          className="flex items-center justify-center w-full text-black rounded-full py-2 mb-4 bg-white   transition"
-        >
-          <img src={GoogleIcon} alt="Google" className="w-5 h-5 mr-2" />
-          Continue with Google
-        </button>
-        <div className="flex items-center w-full my-4">
-          <div className="flex-1 h-px bg-[color:var(--color-muted)]" />
-          <span className="mx-2 text-[color:var(--color-secondary-text)] text-xs font-medium">
-            OR
-          </span>
-          <div className="flex-1 h-px bg-[color:var(--color-muted)]" />
-        </div>
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mb-4">
           <FormField
             label="Email"

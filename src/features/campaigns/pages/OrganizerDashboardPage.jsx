@@ -15,6 +15,12 @@ import {
   FiUsers,
   FiPlusCircle,
 } from "react-icons/fi";
+import ErrorState from "../../../components/ErrorState";
+import { SkeletonDashboard } from "../../../components/Skeleton";
+import {
+  generateOrganizerDashboardReport,
+  downloadPDFReport,
+} from "../../../utils/pdfReports";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -39,6 +45,8 @@ export default function OrganizerDashboardPage() {
   const [campaigns, setCampaigns] = useState([]);
   const [donations, setDonations] = useState([]);
   const [campaignRaisedMap, setCampaignRaisedMap] = useState({});
+  const [animateGraphs, setAnimateGraphs] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Load campaigns and donations, and compute aggregates
   useEffect(() => {
@@ -119,6 +127,14 @@ export default function OrganizerDashboardPage() {
     };
   }, [user?.userId]);
 
+  // Trigger animations on first render after data load
+  useEffect(() => {
+    if (!loading && !error) {
+      const id = setTimeout(() => setAnimateGraphs(true), 50);
+      return () => clearTimeout(id);
+    }
+  }, [loading, error]);
+
   const totals = useMemo(() => {
     const totalCampaigns = campaigns.length;
     const totalDonations = campaigns.reduce(
@@ -172,16 +188,32 @@ export default function OrganizerDashboardPage() {
       const name = d.donorDetails?.displayName || d.donorName || "Donor";
       const amount = Number(d.amount || 0);
       if (!key) return;
-      const prev = map.get(key) || { name, total: 0, lastDate: d.donationDate };
+      const prev = map.get(key) || {
+        name,
+        total: 0,
+        lastDate: d.donationDate,
+        donorId: d.donorDetails?.donorId || d.donorUserId || null,
+        donorType: d.donorDetails?.donorType || null,
+        profilePictureUrl: d.donorDetails?.profilePictureUrl || null,
+        latestCampaignName: d.campaignName || null,
+        latestDonationAmount: amount,
+      };
+      const isMoreRecent =
+        prev.lastDate && d.donationDate
+          ? new Date(d.donationDate) > new Date(prev.lastDate)
+          : !!d.donationDate;
       map.set(key, {
         name,
         total: prev.total + amount,
-        lastDate:
-          prev.lastDate &&
-          d.donationDate &&
-          new Date(d.donationDate) > new Date(prev.lastDate)
-            ? d.donationDate
-            : prev.lastDate,
+        lastDate: isMoreRecent ? d.donationDate : prev.lastDate,
+        donorId: prev.donorId,
+        donorType: prev.donorType,
+        profilePictureUrl:
+          prev.profilePictureUrl || d.donorDetails?.profilePictureUrl || null,
+        latestCampaignName: isMoreRecent
+          ? d.campaignName || prev.latestCampaignName
+          : prev.latestCampaignName,
+        latestDonationAmount: isMoreRecent ? amount : prev.latestDonationAmount,
       });
     });
     const arr = Array.from(map.values())
@@ -189,6 +221,33 @@ export default function OrganizerDashboardPage() {
       .slice(0, 5);
     return arr;
   }, [donations]);
+
+  const handleExportPDF = async () => {
+    setExportLoading(true);
+    try {
+      const reportData = {
+        totals,
+        campaigns,
+        donations,
+        campaignRaisedMap,
+        topDonors,
+        recentDonors,
+      };
+
+      const doc = generateOrganizerDashboardReport(reportData);
+      downloadPDFReport(
+        doc,
+        `organizer-dashboard-report-${
+          new Date().toISOString().split("T")[0]
+        }.pdf`
+      );
+    } catch (error) {
+      console.error("Failed to generate PDF report:", error);
+      // You could add a toast notification here
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   const recentDonors = useMemo(() => {
     const rows = (donations || [])
@@ -203,10 +262,26 @@ export default function OrganizerDashboardPage() {
   }, [donations]);
 
   if (loading) {
-    return <div className="p-6">Loading...</div>;
+    return <SkeletonDashboard />;
   }
   if (error) {
-    return <div className="p-6 text-red-500">{error}</div>;
+    return (
+      <div className="p-4 md:p-6 lg:p-8">
+        <ErrorState
+          title="Failed to load organizer dashboard"
+          description={error}
+          onRetry={() => window.location.reload()}
+          primaryAction={{
+            to: "/organizer/campaigns/create",
+            label: "Create Campaign",
+          }}
+          secondaryAction={{
+            to: "/organizer/campaigns",
+            label: "My Campaigns",
+          }}
+        />
+      </div>
+    );
   }
 
   return (
@@ -217,6 +292,13 @@ export default function OrganizerDashboardPage() {
           Organizer Dashboard
         </h1>
         <div className="flex gap-2">
+          <SecondaryButton
+            onClick={handleExportPDF}
+            loading={exportLoading}
+            disabled={exportLoading}
+          >
+            Export PDF
+          </SecondaryButton>
           <SecondaryButton onClick={() => navigate("/organizer/campaigns")}>
             My Campaigns
           </SecondaryButton>
@@ -259,9 +341,9 @@ export default function OrganizerDashboardPage() {
       </div>
 
       {/* Charts section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 mb-6">
         {/* Bar chart */}
-        <div className="lg:col-span-2 bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+        <div className="xl:col-span-2 bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
           <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
             Campaigns vs Total Raised
           </h3>
@@ -281,21 +363,61 @@ export default function OrganizerDashboardPage() {
                     </div>
                   );
                 }
-                // Container height is h-64 (256px). Use pixel heights with a minimum for non-zero values
-                const containerPx = 256;
-                const minPx = 6;
-                const axisWidthPx = 56;
-                const ticks = [1, 0.75, 0.5, 0.25, 0]; // top to bottom
+
+                // Responsive container dimensions
+                const containerHeight = 256; // h-64 equivalent
+                const minBarHeight = 8;
+                const axisWidth = 60;
+
+                // Calculate available space for bars (in pixels)
+                const containerWidth = 100; // percentage
+                const availableSpacePx = containerWidth - axisWidth / 4; // Convert axis width to percentage
+
+                // Dynamic gap and bar width calculation
+                const numBars = barChartData.length;
+                const minGap = 2; // Minimum gap in percentage
+                const maxGap = 8; // Maximum gap in percentage
+                const minBarWidth = 4; // Minimum bar width in percentage
+                const maxBarWidth = 15; // Maximum bar width in percentage
+
+                // Calculate optimal gap and bar width
+                const totalGapSpace = Math.max(
+                  minGap * (numBars - 1),
+                  Math.min(maxGap * (numBars - 1), availableSpacePx * 0.1)
+                );
+                const availableForBars = availableSpacePx - totalGapSpace;
+                const calculatedBarWidth = availableForBars / numBars;
+
+                const barWidth = Math.max(
+                  minBarWidth,
+                  Math.min(maxBarWidth, calculatedBarWidth)
+                );
+                const barGap =
+                  numBars > 1
+                    ? Math.max(
+                        minGap,
+                        Math.min(maxGap, totalGapSpace / (numBars - 1))
+                      )
+                    : 0;
+
+                const ticks = [1, 0.75, 0.5, 0.25, 0];
+
                 return (
-                  <div className="relative h-64 w-full">
+                  <div
+                    className="relative w-full"
+                    style={{
+                      height: `${containerHeight + 48}px`,
+                      paddingBottom: "48px",
+                    }}
+                  >
                     {/* Y Axis with tick labels */}
                     <div
                       className="absolute left-0 top-0 bottom-0"
-                      style={{ width: `${axisWidthPx}px` }}
+                      style={{ width: `${axisWidth}px` }}
                     >
                       <div className="relative h-full pr-2">
                         {ticks.map((t, i) => {
-                          const y = Math.round((1 - t) * containerPx);
+                          const y = Math.round((1 - t) * containerHeight);
                           const labelVal = Math.round(maxVal * t);
                           return (
                             <div
@@ -320,35 +442,65 @@ export default function OrganizerDashboardPage() {
 
                     {/* Bars area */}
                     <div
-                      className="absolute top-0 bottom-0 right-0 flex items-end gap-3"
-                      style={{ left: `${axisWidthPx}px` }}
+                      className="absolute top-0 bottom-0 right-0 flex items-end"
+                      style={{
+                        left: `${axisWidth}px`,
+                        gap: `${barGap}%`,
+                        paddingRight: "8px",
+                        width: `${100 - axisWidth / 4}%`,
+                      }}
                     >
                       {barChartData.map((item, idx) => {
                         const value = Number(item.value || 0);
                         const scaled = Math.round(
-                          (value / maxVal) * containerPx
+                          (value / maxVal) * containerHeight
                         );
                         const heightPx =
-                          value > 0 ? Math.max(scaled, minPx) : 0;
+                          value > 0 ? Math.max(scaled, minBarHeight) : 0;
+
                         return (
                           <div
                             key={idx}
-                            className="flex-1 flex flex-col items-center"
+                            className="flex flex-col items-center"
+                            style={{
+                              width: `${barWidth}%`,
+                              minWidth: "4%",
+                              maxWidth: "15%",
+                            }}
                           >
                             <div
                               className="w-full rounded-t"
                               style={{
-                                height: `${heightPx}px`,
+                                height: `${animateGraphs ? heightPx : 0}px`,
                                 background: item.color + "aa",
                                 border: `1px solid ${item.color}66`,
+                                transition: "height 700ms ease",
+                                transitionDelay: `${idx * 60}ms`,
+                                maxHeight: `${containerHeight - 40}px`, // Prevent overflow
                               }}
                               title={`${item.label}: ${formatCurrency(
                                 item.value
                               )}`}
                             />
                             <div
-                              className="mt-2 text-xs text-center text-[color:var(--color-secondary-text)] truncate w-full"
+                              className="text-[10px] text-center text-[color:var(--color-secondary-text)] leading-tight"
                               title={item.label}
+                              style={{
+                                maxWidth: `${barWidth + 2}%`,
+                                fontSize:
+                                  barChartData.length > 6 ? "9px" : "10px",
+                                transform: "rotate(-45deg)",
+                                transformOrigin: "center",
+                                whiteSpace: "nowrap",
+                                overflow: "visible",
+                                height: "20px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginTop: "10px",
+                                position: "relative",
+                                top: "6px",
+                              }}
                             >
                               {item.label}
                             </div>
@@ -364,7 +516,7 @@ export default function OrganizerDashboardPage() {
         </div>
 
         {/* Pie chart */}
-        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
+        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
           <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
             Funds Breakdown
           </h3>
@@ -386,7 +538,18 @@ export default function OrganizerDashboardPage() {
                   const y2 = cy + r * Math.sin(endAngle);
                   const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
                   const el = (
-                    <path key={i} d={d} fill={slice.color} opacity={0.9} />
+                    <path
+                      key={i}
+                      d={d}
+                      fill={slice.color}
+                      opacity={animateGraphs ? 0.9 : 0}
+                      style={{
+                        transformOrigin: "100px 100px",
+                        transform: animateGraphs ? "scale(1)" : "scale(0.95)",
+                        transition: "opacity 600ms ease, transform 600ms ease",
+                        transitionDelay: `${i * 80}ms`,
+                      }}
+                    />
                   );
                   startAngle = endAngle;
                   return el;
@@ -421,10 +584,87 @@ export default function OrganizerDashboardPage() {
         </div>
       </div>
 
-      {/* Donors section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
-          <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
+      {/* Donors section (Recent on top, Top below) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
+        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-[color:var(--color-primary-text)]">
+              Recent Donors
+            </h3>
+            <SecondaryButton onClick={() => navigate("/donations")}>
+              View My Donations
+            </SecondaryButton>
+          </div>
+          {recentDonors.length === 0 ? (
+            <div className="text-[color:var(--color-secondary-text)]">
+              No donations yet
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentDonors.slice(0, 5).map((d, idx) => {
+                const displayName = d.isAnonymous
+                  ? "Anonymous"
+                  : d.donorDetails?.displayName || d.donorName || "Donor";
+                const profileUrl = d.isAnonymous
+                  ? null
+                  : d.donorDetails?.donorType === "organization"
+                  ? `/organizers/${d.donorDetails?.donorId}`
+                  : d.donorDetails?.donorType === "individual"
+                  ? `/users/${d.donorDetails?.donorId}`
+                  : null;
+                const avatarUrl = d.donorDetails?.profilePictureUrl || null;
+                return (
+                  <div key={idx} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full overflow-hidden bg-[color:var(--color-muted)] border border-[color:var(--color-muted)] flex items-center justify-center">
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt={displayName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs text-[color:var(--color-secondary-text)]">
+                            {displayName.charAt(0)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {profileUrl ? (
+                          <a
+                            href={profileUrl}
+                            className="text-[color:var(--color-primary-text)] font-semibold hover:underline truncate inline-block max-w-[220px]"
+                          >
+                            {displayName}
+                          </a>
+                        ) : (
+                          <span className="text-[color:var(--color-primary-text)] font-semibold truncate inline-block max-w-[220px]">
+                            {displayName}
+                          </span>
+                        )}
+                        <div className="text-xs text-[color:var(--color-secondary-text)] truncate">
+                          {new Date(d.donationDate).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span
+                        className="text-xs text-[color:var(--color-secondary-text)] truncate max-w-[180px]"
+                        title={d.campaignName || "Campaign"}
+                      >
+                        {d.campaignName || "Campaign"}
+                      </span>
+                      <span className="font-semibold text-[color:var(--color-primary-text)]">
+                        {formatCurrency(d.amount)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {/* Top donors below */}
+          <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mt-6 mb-3">
             Top Donors
           </h3>
           {topDonors.length === 0 ? (
@@ -433,78 +673,221 @@ export default function OrganizerDashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {topDonors.map((d, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[color:var(--color-background)] border border-[color:var(--color-muted)] flex items-center justify-center text-xs font-bold">
-                      #{idx + 1}
+              {topDonors.slice(0, 5).map((d, idx) => {
+                const profileUrl =
+                  d.donorType === "organization"
+                    ? `/organizers/${d.donorId}`
+                    : d.donorType === "individual"
+                    ? `/users/${d.donorId}`
+                    : null;
+                return (
+                  <div key={idx} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full overflow-hidden bg-[color:var(--color-muted)] border border-[color:var(--color-muted)] flex items-center justify-center">
+                        {d.profilePictureUrl ? (
+                          <img
+                            src={d.profilePictureUrl}
+                            alt={d.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs text-[color:var(--color-secondary-text)]">
+                            {d.name?.charAt(0) || "?"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {profileUrl ? (
+                          <a
+                            href={profileUrl}
+                            className="text-[color:var(--color-primary-text)] font-semibold hover:underline truncate inline-block max-w-[220px]"
+                          >
+                            {d.name}
+                          </a>
+                        ) : (
+                          <span className="text-[color:var(--color-primary-text)] font-semibold truncate inline-block max-w-[220px]">
+                            {d.name}
+                          </span>
+                        )}
+                        <div
+                          className="text-xs text-[color:var(--color-secondary-text)] truncate"
+                          title={d.latestCampaignName || "Campaign"}
+                        >
+                          {d.latestCampaignName || "Campaign"}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-[color:var(--color-primary-text)] font-semibold">
-                        {d.name}
-                      </div>
-                      <div className="text-xs text-[color:var(--color-secondary-text)]">
-                        Last donated{" "}
-                        {d.lastDate
-                          ? new Date(d.lastDate).toLocaleDateString()
-                          : "-"}
-                      </div>
+                    <div className="font-semibold text-[color:var(--color-primary-text)]">
+                      {formatCurrency(d.total)}
                     </div>
                   </div>
-                  <div className="font-semibold text-[color:var(--color-primary-text)]">
-                    {formatCurrency(d.total)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
-        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
-          <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
-            Recent Donors
-          </h3>
-          {recentDonors.length === 0 ? (
-            <div className="text-[color:var(--color-secondary-text)]">
-              No donations yet
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {recentDonors.map((d, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div>
-                    <div className="text-[color:var(--color-primary-text)] font-semibold">
-                      {d.isAnonymous
-                        ? "Anonymous"
-                        : d.donorDetails?.displayName || d.donorName || "Donor"}
-                    </div>
-                    <div className="text-xs text-[color:var(--color-secondary-text)]">
-                      {new Date(d.donationDate).toLocaleString()}
-                    </div>
-                  </div>
-                  <div className="font-semibold text-[color:var(--color-primary-text)]">
-                    {formatCurrency(d.amount)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Quick Links */}
-      <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-6">
-        <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
-          Quick Links
-        </h3>
-        <div className="flex flex-wrap gap-3">
-          <PrimaryButton
-            onClick={() => navigate("/organizer/campaigns/create")}
-          >
-            Create Campaign
-          </PrimaryButton>
-          <SecondaryButton onClick={() => navigate("/feed/create")}>
-            Create Post
-          </SecondaryButton>
+        {/* Campaigns container: table and top campaign card */}
+        <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded-xl p-4 md:p-6">
+          <h3 className="text-lg font-bold text-[color:var(--color-primary-text)] mb-4">
+            Campaigns
+          </h3>
+          {(() => {
+            // Sort campaigns by total raised desc
+            const rows = (campaigns || [])
+              .map((c) => {
+                const raised = Number(campaignRaisedMap[c.campaignId] || 0);
+                const goal = Number(c.goalAmount || 0);
+                const pct =
+                  goal > 0
+                    ? Math.min(100, Math.round((raised / goal) * 100))
+                    : 0;
+                const avatar = c.customPageSettings?.mainMedia?.url || null;
+                return {
+                  id: c.campaignId,
+                  name: c.name || "Campaign",
+                  avatar,
+                  raised,
+                  goal,
+                  pct,
+                };
+              })
+              .sort((a, b) => b.raised - a.raised);
+            const top5 = rows.slice(0, 5);
+            const top1 = rows[0];
+            return (
+              <>
+                {/* Table */}
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-[color:var(--color-secondary-text)] border-b border-[color:var(--color-muted)]">
+                        <th className="text-left py-2 font-medium">Campaign</th>
+                        <th className="text-right py-2 font-medium">Raised</th>
+                        <th className="text-right py-2 font-medium">% Goal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {top5.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="border-b border-[color:var(--color-muted)] hover:bg-[color:var(--color-background)] cursor-pointer"
+                          onClick={() => navigate(`/campaigns/${row.id}`)}
+                        >
+                          <td className="py-2 pr-2">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded overflow-hidden bg-[color:var(--color-muted)] border border-[color:var(--color-muted)] flex items-center justify-center">
+                                {row.avatar ? (
+                                  <img
+                                    src={row.avatar}
+                                    alt={row.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-xs text-[color:var(--color-secondary-text)]">
+                                    {row.name.charAt(0)}
+                                  </span>
+                                )}
+                              </div>
+                              <span
+                                className="text-[color:var(--color-primary-text)] font-semibold truncate max-w-[220px]"
+                                title={row.name}
+                              >
+                                {row.name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-2 text-right">
+                            <span className="font-semibold text-[color:var(--color-primary-text)]">
+                              {formatCurrency(row.raised)}
+                            </span>
+                          </td>
+                          <td className="py-2 text-right">
+                            <span className="text-[color:var(--color-primary-text)]">
+                              {row.pct}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Top campaign card */}
+                {top1 && (
+                  <div className="mt-6 border border-[color:var(--color-muted)] rounded-xl p-4 bg-[color:var(--color-background)]">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-md font-bold text-[color:var(--color-primary-text)]">
+                        Top Campaign
+                      </h4>
+                      <SecondaryButton
+                        onClick={() => navigate(`/campaigns/${top1.id}`)}
+                      >
+                        View
+                      </SecondaryButton>
+                    </div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-12 h-12 rounded overflow-hidden bg-[color:var(--color-muted)] border border-[color:var(--color-muted)] flex items-center justify-center">
+                        {top1.avatar ? (
+                          <img
+                            src={top1.avatar}
+                            alt={top1.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm text-[color:var(--color-secondary-text)]">
+                            {top1.name.charAt(0)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div
+                          className="text-[color:var(--color-primary-text)] font-semibold truncate max-w-[260px]"
+                          title={top1.name}
+                        >
+                          {top1.name}
+                        </div>
+                        <div className="text-xs text-[color:var(--color-secondary-text)]">
+                          Raised {formatCurrency(top1.raised)} of{" "}
+                          {formatCurrency(top1.goal)}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="w-full h-3 bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded overflow-hidden mb-3">
+                      <div
+                        className="h-full"
+                        style={{
+                          width: `${animateGraphs ? top1.pct : 0}%`,
+                          background: "var(--color-primary)",
+                          transition: "width 700ms ease",
+                        }}
+                        title={`${top1.pct}%`}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded p-3">
+                        <div className="text-[color:var(--color-secondary-text)]">
+                          Total Raised
+                        </div>
+                        <div className="font-semibold text-[color:var(--color-primary-text)]">
+                          {formatCurrency(top1.raised)}
+                        </div>
+                      </div>
+                      <div className="bg-[color:var(--color-surface)] border border-[color:var(--color-muted)] rounded p-3">
+                        <div className="text-[color:var(--color-secondary-text)]">
+                          Goal
+                        </div>
+                        <div className="font-semibold text-[color:var(--color-primary-text)]">
+                          {formatCurrency(top1.goal)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
     </div>

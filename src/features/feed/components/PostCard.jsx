@@ -138,7 +138,7 @@ const PostCard = ({ post }) => {
         {((post.media && post.media.length > 0) ||
           (post.isPinnedToCampaign && post.campaignTitle) ||
           (post.type === "campaign" && post.campaignTitle)) && (
-          <div className="border border-[var(--color-muted)] rounded-lg overflow-hidden">
+          <div className="  overflow-hidden">
             {/* Media Section */}
             {post.media && post.media.length > 0 && (
               <div className="p-3">

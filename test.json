@@ -1,0 +1,122 @@
+[
+  {
+    "email": "chanda.banda@zambia.co.zm",
+    "phoneNumber": "+260975123456",
+    "firstName": "Chanda",
+    "lastName": "Banda",
+    "country": "Zambia",
+    "city": "Lusaka",
+    "address": "123 Cairo Road, Lusaka",
+    "dateOfBirth": "1985-03-15",
+    "gender": "Male",
+    "password": "VictoriaFalls@2024"
+  },
+  {
+    "email": "naomi.mwale@gmail.com",
+    "phoneNumber": "+260976234567",
+    "firstName": "Naomi",
+    "lastName": "Mwale",
+    "country": "Zambia",
+    "city": "Ndola",
+    "address": "45 Masala Street, Ndola",
+    "dateOfBirth": "1992-07-22",
+    "gender": "Female",
+    "password": "Copperbelt#123"
+  },
+  {
+    "email": "davison.sichinga@yahoo.com",
+    "phoneNumber": "+260977345678",
+    "firstName": "Davison",
+    "lastName": "Sichinga",
+    "country": "Zambia",
+    "city": "Kitwe",
+    "address": "78 Buchi Road, Kitwe",
+    "dateOfBirth": "1988-11-08",
+    "gender": "Male",
+    "password": "Zambezi$River1"
+  },
+  {
+    "email": "grace.phiri@outlook.com",
+    "phoneNumber": "+260978456789",
+    "firstName": "Grace",
+    "lastName": "Phiri",
+    "country": "Zambia",
+    "city": "Livingstone",
+    "address": "56 Mosi-oa-Tunya Road, Livingstone",
+    "dateOfBirth": "1990-04-30",
+    "gender": "Female",
+    "password": "Livingstone@Maramba"
+  },
+  {
+    "email": "kabwe.musonda@hotmail.com",
+    "phoneNumber": "+260979567890",
+    "firstName": "Kabwe",
+    "lastName": "Musonda",
+    "country": "Zambia",
+    "city": "Kabwe",
+    "address": "34 Independence Avenue, Kabwe",
+    "dateOfBirth": "1987-12-14",
+    "gender": "Male",
+    "password": "BrokenHill!2024"
+  },
+  {
+    "email": "ruth.nkhuwa@zamtel.zm",
+    "phoneNumber": "+260980678901",
+    "firstName": "Ruth",
+    "lastName": "Nkhuwa",
+    "country": "Zambia",
+    "city": "Chipata",
+    "address": "89 Great East Road, Chipata",
+    "dateOfBirth": "1993-09-05",
+    "gender": "Female",
+    "password": "Eastern$Province1"
+  },
+  {
+    "email": "mulenga.chilufya@protonmail.com",
+    "phoneNumber": "+260981789012",
+    "firstName": "Mulenga",
+    "lastName": "Chilufya",
+    "country": "Zambia",
+    "city": "Solwezi",
+    "address": "23 Kansanshi Road, Solwezi",
+    "dateOfBirth": "1984-06-18",
+    "gender": "Male",
+    "password": "NorthWestern#2024"
+  },
+  {
+    "email": "sara.mwamba@icloud.com",
+    "phoneNumber": "+260982890123",
+    "firstName": "Sara",
+    "lastName": "Mwamba",
+    "country": "Zambia",
+    "city": "Mongu",
+    "address": "67 Barotse Road, Mongu",
+    "dateOfBirth": "1991-01-25",
+    "gender": "Female",
+    "password": "Western$Province1"
+  },
+  {
+    "email": "peter.kapata@mail.com",
+    "phoneNumber": "+260983901234",
+    "firstName": "Peter",
+    "lastName": "Kapata",
+    "country": "Zambia",
+    "city": "Kasama",
+    "address": "12 Chishimba Road, Kasama",
+    "dateOfBirth": "1986-08-12",
+    "gender": "Male",
+    "password": "Northern@Region1"
+  },
+  {
+    "email": "miriam.lungu@aol.com",
+    "phoneNumber": "+260984012345",
+    "firstName": "Miriam",
+    "lastName": "Lungu",
+    "country": "Zambia",
+    "city": "Choma",
+    "address": "78 Kafue Road, Choma",
+    "dateOfBirth": "1994-02-28",
+    "gender": "Female",
+    "password": "Southern$Prov1nce"
+  }
+]

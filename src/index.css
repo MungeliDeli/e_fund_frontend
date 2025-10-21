@@ -34,7 +34,13 @@
   body {
     background-color: var(--color-background);
     color: var(--color-text);
-    transition: background 0.2s, color 0.2s;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+  }
+
+  /* Prevent transitions during theme changes to avoid flickering */
+  html:not([style*="transition"]) * {
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
+      border-color 0.15s ease-in-out;
   }
 }
 

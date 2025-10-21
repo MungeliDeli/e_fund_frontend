@@ -436,7 +436,7 @@ function PaymentModal({
                 </span>
               </label>
 
-              <label className="flex items-center space-x-3 cursor-pointer">
+              {/* <label className="flex items-center space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={subscribeToCampaign}
@@ -449,7 +449,7 @@ function PaymentModal({
                 <span className="text-sm text-[color:var(--color-primary-text)]">
                   Subscribe to this campaign
                 </span>
-              </label>
+              </label> */}
             </div>
           )}
 
