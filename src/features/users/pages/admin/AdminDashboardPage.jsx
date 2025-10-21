@@ -19,6 +19,10 @@ import {
 } from "../../services/usersApi";
 import { fetchAdminWithdrawals } from "../../../campaigns/services/adminWithdrawApi";
 import ErrorState from "../../../../components/ErrorState";
+import {
+  generateAdminDashboardReport,
+  downloadPDFReport,
+} from "../../../../utils/pdfReports";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -46,6 +50,7 @@ export default function AdminDashboardPage() {
   const [admins, setAdmins] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [animateGraphs, setAnimateGraphs] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -265,6 +270,32 @@ export default function AdminDashboardPage() {
     }));
   }, [aggregates.totalOrganizers, aggregates.totalIndividuals]);
 
+  const handleExportPDF = async () => {
+    setExportLoading(true);
+    try {
+      const reportData = {
+        aggregates,
+        campaigns,
+        donations,
+        organizers,
+        users,
+        admins,
+        withdrawals,
+      };
+
+      const doc = generateAdminDashboardReport(reportData);
+      downloadPDFReport(
+        doc,
+        `admin-dashboard-report-${new Date().toISOString().split("T")[0]}.pdf`
+      );
+    } catch (error) {
+      console.error("Failed to generate PDF report:", error);
+      // You could add a toast notification here
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   if (loading) return <div className="p-6">Loading...</div>;
   if (error)
     return (
@@ -302,8 +333,11 @@ export default function AdminDashboardPage() {
     const numBars = data.length;
     const minGap = 2; // Minimum gap in percentage
     const maxGap = 8; // Maximum gap in percentage
-    const minBarWidth = 4; // Minimum bar width in percentage
-    const maxBarWidth = 15; // Maximum bar width in percentage
+
+    // Different width constraints for user breakdown vs campaign charts
+    const isUserChart = data === userBarData;
+    const minBarWidth = isUserChart ? 8 : 4; // Bigger bars for user chart
+    const maxBarWidth = isUserChart ? 25 : 15; // Much bigger max width for user chart
 
     // Calculate optimal gap and bar width
     const totalGapSpace = Math.max(
@@ -327,7 +361,7 @@ export default function AdminDashboardPage() {
     return (
       <div
         className="relative w-full"
-        style={{ height: `${containerHeight}px` }}
+        style={{ height: `${containerHeight + 52}px`, paddingBottom: "52px" }}
       >
         <div
           className="absolute left-0 top-0 bottom-0"
@@ -375,8 +409,8 @@ export default function AdminDashboardPage() {
                 className="flex flex-col items-center"
                 style={{
                   width: `${barWidth}%`,
-                  minWidth: "4%",
-                  maxWidth: "15%",
+                  minWidth: isUserChart ? "8%" : "4%",
+                  maxWidth: isUserChart ? "25%" : "15%",
                 }}
               >
                 <div
@@ -396,11 +430,22 @@ export default function AdminDashboardPage() {
                   }`}
                 />
                 <div
-                  className="mt-2 text-[10px] text-center text-[color:var(--color-secondary-text)] truncate w-full leading-tight"
+                  className="text-[10px] text-center text-[color:var(--color-secondary-text)] leading-tight"
                   title={item.label}
                   style={{
                     maxWidth: `${barWidth + 2}%`,
                     fontSize: data.length > 6 ? "9px" : "10px",
+                    transform: "rotate(-45deg)",
+                    transformOrigin: "center",
+                    whiteSpace: "nowrap",
+                    overflow: "visible",
+                    height: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginTop: "12px",
+                    position: "relative",
+                    top: "8px",
                   }}
                 >
                   {item.label}
@@ -466,6 +511,13 @@ export default function AdminDashboardPage() {
           Admin Dashboard
         </h1>
         <div className="flex gap-2">
+          <SecondaryButton
+            onClick={handleExportPDF}
+            loading={exportLoading}
+            disabled={exportLoading}
+          >
+            Export PDF
+          </SecondaryButton>
           <SecondaryButton onClick={() => navigate("/admin/users")}>
             Manage Users
           </SecondaryButton>

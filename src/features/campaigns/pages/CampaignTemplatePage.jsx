@@ -44,7 +44,7 @@ function Logo() {
     >
       <img src={FundraiseLogo} alt="FundFlow Logo" className="w-10 h-10" />
       <span className="ml-2 font-bold text-2xl text-[color:var(--color-primary)] hidden sm:inline">
-        FundFlow
+        FundIzo
       </span>
     </button>
   );

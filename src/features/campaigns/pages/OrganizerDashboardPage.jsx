@@ -17,6 +17,10 @@ import {
 } from "react-icons/fi";
 import ErrorState from "../../../components/ErrorState";
 import { SkeletonDashboard } from "../../../components/Skeleton";
+import {
+  generateOrganizerDashboardReport,
+  downloadPDFReport,
+} from "../../../utils/pdfReports";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -42,6 +46,7 @@ export default function OrganizerDashboardPage() {
   const [donations, setDonations] = useState([]);
   const [campaignRaisedMap, setCampaignRaisedMap] = useState({});
   const [animateGraphs, setAnimateGraphs] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Load campaigns and donations, and compute aggregates
   useEffect(() => {
@@ -217,6 +222,33 @@ export default function OrganizerDashboardPage() {
     return arr;
   }, [donations]);
 
+  const handleExportPDF = async () => {
+    setExportLoading(true);
+    try {
+      const reportData = {
+        totals,
+        campaigns,
+        donations,
+        campaignRaisedMap,
+        topDonors,
+        recentDonors,
+      };
+
+      const doc = generateOrganizerDashboardReport(reportData);
+      downloadPDFReport(
+        doc,
+        `organizer-dashboard-report-${
+          new Date().toISOString().split("T")[0]
+        }.pdf`
+      );
+    } catch (error) {
+      console.error("Failed to generate PDF report:", error);
+      // You could add a toast notification here
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const recentDonors = useMemo(() => {
     const rows = (donations || [])
       .filter((d) => d)
@@ -260,6 +292,13 @@ export default function OrganizerDashboardPage() {
           Organizer Dashboard
         </h1>
         <div className="flex gap-2">
+          <SecondaryButton
+            onClick={handleExportPDF}
+            loading={exportLoading}
+            disabled={exportLoading}
+          >
+            Export PDF
+          </SecondaryButton>
           <SecondaryButton onClick={() => navigate("/organizer/campaigns")}>
             My Campaigns
           </SecondaryButton>
@@ -366,7 +405,10 @@ export default function OrganizerDashboardPage() {
                 return (
                   <div
                     className="relative w-full"
-                    style={{ height: `${containerHeight}px` }}
+                    style={{
+                      height: `${containerHeight + 48}px`,
+                      paddingBottom: "48px",
+                    }}
                   >
                     {/* Y Axis with tick labels */}
                     <div
@@ -441,12 +483,23 @@ export default function OrganizerDashboardPage() {
                               )}`}
                             />
                             <div
-                              className="mt-2 text-[10px] text-center text-[color:var(--color-secondary-text)] truncate w-full leading-tight"
+                              className="text-[10px] text-center text-[color:var(--color-secondary-text)] leading-tight"
                               title={item.label}
                               style={{
                                 maxWidth: `${barWidth + 2}%`,
                                 fontSize:
                                   barChartData.length > 6 ? "9px" : "10px",
+                                transform: "rotate(-45deg)",
+                                transformOrigin: "center",
+                                whiteSpace: "nowrap",
+                                overflow: "visible",
+                                height: "20px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginTop: "10px",
+                                position: "relative",
+                                top: "6px",
                               }}
                             >
                               {item.label}

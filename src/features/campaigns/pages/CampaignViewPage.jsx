@@ -5,6 +5,7 @@ import {
   updateCampaign,
   publishPendingStartCampaign,
 } from "../../campaigns/services/campaignApi";
+import { getDonationsByCampaign } from "../../donations/services/donationsApi";
 import { useAuth } from "../../../contexts/AuthContext";
 import { PrimaryButton, SecondaryButton } from "../../../components/Buttons";
 import MetaCard from "../components/MetaCard";
@@ -27,6 +28,10 @@ import { OutreachSection } from "../../Outreach/components";
 import { requestWithdrawal, getMyWithdrawals } from "../services/withdrawApi";
 import { fetchPrivateOrganizationProfile } from "../../users/services/usersApi";
 import ErrorState from "../../../components/ErrorState";
+import {
+  generateCampaignReport,
+  downloadPDFReport,
+} from "../../../utils/pdfReports";
 
 function formatCurrency(amount) {
   if (amount === null || amount === undefined) return "-";
@@ -79,6 +84,7 @@ export default function CampaignViewPage() {
   const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [availableSummary, setAvailableSummary] = useState(null);
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -312,6 +318,56 @@ export default function CampaignViewPage() {
     }
   };
 
+  const handleExportPDF = async () => {
+    setExportLoading(true);
+    try {
+      // Fetch additional data needed for the report
+      let donations = [];
+      let withdrawals = [];
+
+      try {
+        // Get donations for this campaign
+        const donationsResp = await getDonationsByCampaign(campaignId, {
+          limit: 1000,
+        });
+        donations =
+          donationsResp?.data?.data ||
+          donationsResp?.data ||
+          donationsResp ||
+          [];
+      } catch (error) {
+        console.warn("Could not fetch donations for report:", error);
+      }
+
+      try {
+        // Get withdrawals for this campaign
+        const withdrawalsResp = await getMyWithdrawals({ campaignId });
+        withdrawals =
+          withdrawalsResp?.data?.data ||
+          withdrawalsResp?.data ||
+          withdrawalsResp ||
+          [];
+      } catch (error) {
+        console.warn("Could not fetch withdrawals for report:", error);
+      }
+
+      const doc = generateCampaignReport(campaign, donations, withdrawals);
+      downloadPDFReport(
+        doc,
+        `campaign-report-${
+          campaign.name?.replace(/[^a-zA-Z0-9]/g, "-") || campaignId
+        }-${new Date().toISOString().split("T")[0]}.pdf`
+      );
+    } catch (error) {
+      console.error("Failed to generate PDF report:", error);
+      setToastType("error");
+      setToastMessage("Failed to generate PDF report");
+      setToastVisible(true);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Loading...</div>;
   }
@@ -340,7 +396,15 @@ export default function CampaignViewPage() {
       {/* Header actions */}
       <div className="flex items-center justify-between mb-4">
         <SecondaryButton onClick={() => navigate(-1)}>Go Back</SecondaryButton>
-        <div className="flex gap-2"></div>
+        <div className="flex gap-2">
+          <SecondaryButton
+            onClick={handleExportPDF}
+            loading={exportLoading}
+            disabled={exportLoading}
+          >
+            Export PDF
+          </SecondaryButton>
+        </div>
       </div>
 
       {/* Name and description */}
@@ -486,8 +550,6 @@ export default function CampaignViewPage() {
               Cancel Campaign
             </SecondaryButton>
           )}
-
-          
         </div>
         {/* Errors are shown via Notification; no inline error text */}
       </div>
