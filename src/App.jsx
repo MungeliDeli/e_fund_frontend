@@ -68,7 +68,7 @@ const AdminWithdrawalPanel = lazy(() =>
 const OrganizerWithdrawalPage = lazy(() =>
   import("./features/campaigns/pages/organizer/OrganizerWithdrawalPage")
 );
-// Builder components removed during demolition
+
 const MyCampaignsPage = lazy(() =>
   import("./features/campaigns/pages/organizer/MyCampaignsPage")
 );
@@ -270,7 +270,7 @@ function AppRoutes() {
               />
             }
           />
-          {/* Campaign Builder Routes removed during demolition */}
+      
           <Route
             path="/campaigns/:campaignId"
             element={
@@ -514,9 +514,9 @@ function AppRoutes() {
               />
             }
           />
-          {/* ...other protected routes... */}
+         
           <Route path="/access-denied" element={<AccessDeniedPage />} />
-          {/* Catch-all for undefined protected routes */}
+   
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
